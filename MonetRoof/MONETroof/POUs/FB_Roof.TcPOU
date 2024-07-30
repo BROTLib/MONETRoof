@@ -7,15 +7,46 @@ END_VAR
 VAR_OUTPUT
 END_VAR
 VAR
-	motors	: ARRAY[1..2] OF FB_RoofMotor;
-	i		: INT;
+	motors			: ARRAY[1..2] OF FB_RoofMotor;
+	sync_error		: BOOL;
+	direction_error	: BOOL;
+	i				: INT;
+	state			: E_RoofState;
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[FOR i := 1 TO 2 DO
 	motors[i]();
 END_FOR
-]]></ST>
+
+// consistency check
+direction_error := motors[1].direction <> motors[2].direction;
+sync_error := ABS(motors[1].position - motors[2].position) >= 5;
+
+// stop on error
+IF direction_error OR sync_error THEN
+	motors[1].stop();
+	motors[2].stop();
+END_IF
+
+// set state
+IF direction_error OR sync_error THEN
+	state := E_RoofState.error;
+ELSIF motors[1].moving OR motors[2].moving THEN
+	IF motors[1].direction THEN
+		state := E_RoofState.opening;
+	ELSE
+		state := E_RoofState.closing;
+	END_IF
+ELSIF motors[1].opened AND motors[2].opened THEN
+	state := E_RoofState.opened;
+ELSIF motors[1].closed AND motors[2].closed THEN
+	state := E_RoofState.closed;
+ELSIF NOT motors[1].moving AND NOT motors[2].moving THEN
+	state := E_RoofState.stopped;
+ELSE
+	state := E_RoofState.error;	
+END_IF]]></ST>
     </Implementation>
     <Method Name="close" Id="{61d8273a-3637-4f75-891a-a676fd1df1ef}">
       <Declaration><![CDATA[METHOD close : BOOL
@@ -55,7 +86,27 @@ END_FOR;]]></ST>
       <LineId Id="16" Count="0" />
       <LineId Id="9" Count="0" />
       <LineId Id="17" Count="0" />
+      <LineId Id="34" Count="1" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="46" Count="1" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="36" Count="1" />
+      <LineId Id="39" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="28" Count="0" />
       <LineId Id="15" Count="0" />
+      <LineId Id="48" Count="1" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="54" Count="1" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="56" Count="1" />
+      <LineId Id="60" Count="1" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="65" Count="1" />
+      <LineId Id="32" Count="0" />
     </LineIds>
     <LineIds Name="FB_Roof.close">
       <LineId Id="6" Count="1" />
