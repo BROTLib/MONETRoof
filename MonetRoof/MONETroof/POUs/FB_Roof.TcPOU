@@ -1,0 +1,74 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_Roof" Id="{522d8680-feaf-4d00-ac9f-47554bf0503b}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Roof
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	motors	: ARRAY[1..2] OF FB_RoofMotor;
+	i		: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[FOR i := 1 TO 2 DO
+	motors[i]();
+END_FOR
+]]></ST>
+    </Implementation>
+    <Method Name="close" Id="{61d8273a-3637-4f75-891a-a676fd1df1ef}">
+      <Declaration><![CDATA[METHOD close : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[FOR i := 1 TO 2 DO
+	motors[i].close();
+END_FOR;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="open" Id="{a996c996-0ed0-4e45-8297-c49f0ce9e4f1}">
+      <Declaration><![CDATA[METHOD open : BOOL
+VAR_INPUT
+END_VAR
+VAR
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[FOR i := 1 TO 2 DO
+	motors[i].open();
+END_FOR;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="stop" Id="{1f32f30b-7d83-4389-9405-dd9528b72d8a}">
+      <Declaration><![CDATA[METHOD stop : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[FOR i := 1 TO 2 DO
+	motors[i].stop();
+END_FOR;]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_Roof">
+      <LineId Id="16" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="15" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Roof.close">
+      <LineId Id="6" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Roof.open">
+      <LineId Id="6" Count="0" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Roof.stop">
+      <LineId Id="6" Count="1" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

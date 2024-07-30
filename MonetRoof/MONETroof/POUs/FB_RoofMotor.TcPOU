@@ -1,0 +1,133 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_RoofMotor" Id="{47cefcf1-8ba0-4c06-bdcd-b7d169ce9c61}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_RoofMotor
+VAR_INPUT
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
+	// signals from limit switches
+	opened			AT%I*	: BOOL;
+	closed			AT%I*	: BOOL;
+
+	// position
+	position				: LREAL;
+	
+	// moving and direction
+	moving					: BOOL;
+	direction		AT%Q*	: BOOL;
+
+	// move speed
+	vel_ramp				: FB_Ramp;
+	speed			AT%Q*	: LREAL;
+	target_speed			: LREAL;		
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// ramp for roof velocity
+vel_ramp(
+	enable		:= moving,
+	start		:= speed,
+	target		:= target_speed,
+	speed		:= 0.01,
+	value		=> speed);
+	
+// stop on limit switches
+IF (NOT direction AND closed) OR (direction AND opened) THEN
+	stop();
+END_IF
+
+// reset speed, if not moving
+IF NOT MOVING THEN
+	speed := 0;
+	target_speed := 0;
+END_IF
+
+// DEBUG
+IF moving THEN
+	IF direction THEN
+		position := position + speed;
+	ELSE
+		position := position - speed;
+	END_IF
+END_IF
+closed := position <= 0;
+opened := position >= 1000;]]></ST>
+    </Implementation>
+    <Method Name="close" Id="{40cd4081-a8ac-4d75-aaee-c72d59685ab9}">
+      <Declaration><![CDATA[METHOD close : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT closed THEN
+	moving := TRUE;
+	direction := FALSE;
+	target_speed := RoofControl.MAX_SPEED;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="open" Id="{e1a1847d-b8ba-48c6-8250-57df9d3b1f67}">
+      <Declaration><![CDATA[METHOD open : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF NOT opened THEN
+	moving := TRUE;
+	direction := TRUE;
+	target_speed := RoofControl.MAX_SPEED;
+END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="stop" Id="{ecb23643-511b-4e32-9b6a-78443c9c1a37}">
+      <Declaration><![CDATA[METHOD stop : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[moving 			:= FALSE;
+speed  			:= 0;
+target_speed 	:= 0;]]></ST>
+      </Implementation>
+    </Method>
+    <LineIds Name="FB_RoofMotor">
+      <LineId Id="30" Count="0" />
+      <LineId Id="25" Count="4" />
+      <LineId Id="9" Count="0" />
+      <LineId Id="31" Count="2" />
+      <LineId Id="50" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="53" Count="1" />
+      <LineId Id="56" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="48" Count="0" />
+      <LineId Id="42" Count="3" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="46" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_RoofMotor.close">
+      <LineId Id="8" Count="0" />
+      <LineId Id="6" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_RoofMotor.open">
+      <LineId Id="8" Count="0" />
+      <LineId Id="6" Count="1" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_RoofMotor.stop">
+      <LineId Id="7" Count="0" />
+      <LineId Id="10" Count="1" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

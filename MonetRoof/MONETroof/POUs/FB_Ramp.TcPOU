@@ -1,0 +1,66 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="FB_Ramp" Id="{4c8732d7-c459-4056-a387-72e8aeca0bce}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_Ramp
+VAR_INPUT
+	enable	: BOOL;
+	start	: LREAL;
+	target	: LREAL;
+	speed	: LREAL;
+END_VAR
+VAR_OUTPUT
+	value	: LREAL;
+	done	: BOOL;
+END_VAR
+VAR
+	diff	: LREAL;
+	trig	: R_TRIG;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// steigende Flanke von enable erkennen und value setzen
+trig(CLK := enable);
+IF trig.Q THEN
+	value := start;
+	done := FALSE;
+END_IF
+
+IF enable AND NOT done THEN
+	// step
+	IF target - value > 0 THEN	
+		value := value + speed;
+	ELSE
+		value := value - speed;
+	END_IF
+
+	// done?
+	IF speed > 0 AND value >= target THEN
+		value := target;
+		done := TRUE;
+	END_IF
+	IF speed < 0 AND value <= target THEN
+		value := target;
+		done := TRUE;
+	END_IF
+END_IF]]></ST>
+    </Implementation>
+    <LineIds Name="FB_Ramp">
+      <LineId Id="24" Count="3" />
+      <LineId Id="42" Count="0" />
+      <LineId Id="19" Count="0" />
+      <LineId Id="51" Count="0" />
+      <LineId Id="47" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="66" Count="2" />
+      <LineId Id="49" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="38" Count="1" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="40" Count="0" />
+      <LineId Id="44" Count="2" />
+      <LineId Id="43" Count="0" />
+      <LineId Id="52" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

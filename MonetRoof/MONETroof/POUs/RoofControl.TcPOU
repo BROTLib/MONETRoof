@@ -1,0 +1,79 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <POU Name="RoofControl" Id="{c6ad4756-c196-4e89-b031-015370ff4b7e}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM RoofControl
+VAR CONSTANT
+	// max speed
+	MAX_SPEED					: LREAL := 1;
+END_VAR
+VAR
+	// commands for roofs
+	open_roof1					: BOOL;
+	close_roof1					: BOOL;
+	stop_roof1					: BOOL;	
+	open_roof2					: BOOL;
+	close_roof2					: BOOL;
+	stop_roof2					: BOOL;
+	
+	// roofs
+	roofs						: ARRAY[1..2] OF FB_Roof;
+	
+	// loop variable	
+	i, j						: INT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// commands
+IF open_roof1 THEN
+	roofs[1].open();
+	open_roof1 := FALSE;
+END_IF
+IF open_roof2 THEN
+	roofs[2].open();
+	open_roof2 := FALSE;
+END_IF
+IF close_roof1 THEN
+	roofs[1].close();
+	close_roof1 := FALSE;
+END_IF
+IF close_roof2 THEN
+	roofs[2].close();
+	close_roof2 := FALSE;
+END_IF
+IF stop_roof1 THEN
+	roofs[1].stop();
+	stop_roof1 := FALSE;
+END_IF
+IF stop_roof2 THEN
+	roofs[2].stop();
+	stop_roof2 := FALSE;
+END_IF
+
+// call roofs
+FOR i := 1 TO 2 DO
+	roofs[i]();
+END_FOR]]></ST>
+    </Implementation>
+    <LineIds Name="RoofControl">
+      <LineId Id="121" Count="1" />
+      <LineId Id="259" Count="0" />
+      <LineId Id="263" Count="0" />
+      <LineId Id="124" Count="0" />
+      <LineId Id="144" Count="1" />
+      <LineId Id="262" Count="0" />
+      <LineId Id="143" Count="0" />
+      <LineId Id="212" Count="1" />
+      <LineId Id="261" Count="0" />
+      <LineId Id="215" Count="2" />
+      <LineId Id="260" Count="0" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="289" Count="6" />
+      <LineId Id="264" Count="0" />
+      <LineId Id="296" Count="0" />
+      <LineId Id="256" Count="0" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="271" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

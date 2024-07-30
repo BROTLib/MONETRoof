@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+  <GVL Name="GVL_Roof" Id="{36ac59c0-875c-4faa-b3fd-660f48a145a6}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL
+	roof1_open		: BOOL;
+	roof1_closed	: BOOL;
+	roof1_opening	: BOOL;
+	roof1_closing	: BOOL;
+	roof1_stopped	: BOOL;
+	
+	roof2_open		: BOOL;
+	roof2_closed	: BOOL;
+	roof2_opening	: BOOL;
+	roof2_closing	: BOOL;
+	roof2_stopped	: BOOL;
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>
