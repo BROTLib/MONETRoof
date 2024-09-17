@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="FB_RoofControl" Id="{d87693f7-b561-4571-8c76-2cffdf8ef5fe}" SpecialFunc="None">
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_RoofControl
+VAR_INPUT
+	// commands for roofs
+	open_roof1		: BOOL := FALSE;
+	close_roof1		: BOOL := FALSE;
+	stop_roof1		: BOOL := FALSE;	
+	open_roof2		: BOOL := FALSE;
+	close_roof2		: BOOL := FALSE;
+	stop_roof2		: BOOL := FALSE;
+	
+	// global commands
+	open			: BOOL := FALSE;
+	close			: BOOL := FALSE;
+	stop			: BOOL := FALSE;
+	reset			: BOOL := FALSE;	
+END_VAR
+VAR_OUTPUT
+	// state
+	closed			: BOOL;
+	opened			: BOOL;
+	stopped			: BOOL;
+	opening			: BOOL;
+	closing			: BOOL;
+	error			: BOOL;
+END_VAR
+VAR
+	// roofs
+	roofs			: ARRAY[1..2] OF FB_Roof;
+	
+	// state
+	state			: E_RoofState;
+	
+	// loop variable	
+	i, j			: INT;
+END_VAR]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[// open commands
+IF open THEN
+	open_roof1 := TRUE;
+	open_roof2 := TRUE;
+	open := FALSE;
+END_IF
+IF open_roof1 THEN
+	roofs[1].open();
+	open_roof1 := FALSE;
+END_IF
+IF open_roof2 THEN
+	roofs[2].open();
+	open_roof2 := FALSE;
+END_IF
+
+// close commands
+IF close THEN
+	close_roof1 := TRUE;
+	close_roof2 := TRUE;
+	close := FALSE;
+END_IF
+IF close_roof1 THEN
+	roofs[1].close();
+	close_roof1 := FALSE;
+END_IF
+IF close_roof2 THEN
+	roofs[2].close();
+	close_roof2 := FALSE;
+END_IF
+
+// stop commands
+IF stop THEN
+	stop_roof1 := TRUE;
+	stop_roof2 := TRUE;
+	stop := FALSE;
+END_IF
+IF stop_roof1 THEN
+	roofs[1].stop();
+	stop_roof1 := FALSE;
+END_IF
+IF stop_roof2 THEN
+	roofs[2].stop();
+	stop_roof2 := FALSE;
+END_IF
+
+// call roofs
+FOR i := 1 TO 2 DO
+	roofs[i]();
+END_FOR
+
+// set state
+IF roofs[1].state = E_RoofState.error OR roofs[2].state = E_RoofState.error THEN
+	state := E_RoofState.error;
+ELSIF roofs[1].state = E_RoofState.opened AND roofs[2].state = E_RoofState.opened THEN
+	state := E_RoofState.opened;
+ELSIF roofs[1].state = E_RoofState.closed AND roofs[2].state = E_RoofState.closed THEN
+	state := E_RoofState.closed;
+ELSIF roofs[1].state = E_RoofState.opening OR roofs[2].state = E_RoofState.opening THEN
+	state := E_RoofState.opening;	
+ELSIF roofs[1].state = E_RoofState.closing OR roofs[2].state = E_RoofState.closing THEN
+	state := E_RoofState.closing;
+ELSIF (roofs[1].state = E_RoofState.stopped OR roofs[1].state = E_RoofState.opened OR roofs[1].state = E_RoofState.closed) AND 
+      (roofs[2].state = E_RoofState.stopped OR roofs[2].state = E_RoofState.opened OR roofs[2].state = E_RoofState.closed) THEN
+	state := E_RoofState.stopped;
+ELSE
+	state := E_RoofState.error;	
+END_IF
+
+// GVL state
+closed := state = E_RoofState.closed;
+opened := state = E_RoofState.opened;
+stopped := state = E_RoofState.stopped;
+opening := state = E_RoofState.opening;
+closing := state = E_RoofState.closing;
+error := state = E_RoofState.error;
+]]></ST>
+    </Implementation>
+    <LineIds Name="FB_RoofControl">
+      <LineId Id="10" Count="74" />
+      <LineId Id="9" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>

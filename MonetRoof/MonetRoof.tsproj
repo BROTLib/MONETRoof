@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.40">
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.60">
 	<Project ProjectGUID="{886225E6-AF24-4259-BDB7-C131B3BFB76D}" Target64Bit="true" ShowHideConfigurations="#x106">
 		<System>
 			<Tasks>
@@ -10,86 +10,86 @@
 		</System>
 		<Plc>
 			<Project GUID="{69EF3A5D-605B-4F5C-8B9F-420938A0CACB}" Name="MONETroof" PrjFilePath="MONETroof\MONETroof.plcproj" TmcFilePath="MONETroof\MONETroof.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="PLC\PLC.tmc" TmcHash="{E688F9DD-DE8B-FEBB-46C5-E00EC77A876C}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MONETroof.tmc" TmcHash="{6875B417-42D5-71FB-A1E2-5A3B88EF8826}">
 					<Name>MONETroof Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
 						<Name>PlcTask Inputs</Name>
 						<Var>
-							<Name>RoofControl.roofs[1].motors[1].opened</Name>
+							<Name>MAIN.RoofControl.roofs[1].motors[1].opened</Name>
 							<Comment><![CDATA[ signals from limit switches]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>RoofControl.roofs[1].motors[1].closed</Name>
+							<Name>MAIN.RoofControl.roofs[1].motors[1].closed</Name>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>RoofControl.roofs[1].motors[2].opened</Name>
+							<Name>MAIN.RoofControl.roofs[1].motors[2].opened</Name>
 							<Comment><![CDATA[ signals from limit switches]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>RoofControl.roofs[1].motors[2].closed</Name>
+							<Name>MAIN.RoofControl.roofs[1].motors[2].closed</Name>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>RoofControl.roofs[2].motors[1].opened</Name>
+							<Name>MAIN.RoofControl.roofs[2].motors[1].opened</Name>
 							<Comment><![CDATA[ signals from limit switches]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>RoofControl.roofs[2].motors[1].closed</Name>
+							<Name>MAIN.RoofControl.roofs[2].motors[1].closed</Name>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>RoofControl.roofs[2].motors[2].opened</Name>
+							<Name>MAIN.RoofControl.roofs[2].motors[2].opened</Name>
 							<Comment><![CDATA[ signals from limit switches]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>RoofControl.roofs[2].motors[2].closed</Name>
+							<Name>MAIN.RoofControl.roofs[2].motors[2].closed</Name>
 							<Type>BOOL</Type>
 						</Var>
 					</Vars>
 					<Vars VarGrpType="2" AreaNo="1">
 						<Name>PlcTask Outputs</Name>
 						<Var>
-							<Name>RoofControl.roofs[1].motors[1].direction</Name>
+							<Name>MAIN.RoofControl.roofs[1].motors[1].direction</Name>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>RoofControl.roofs[1].motors[1].speed</Name>
+							<Name>MAIN.RoofControl.roofs[1].motors[1].speed</Name>
 							<Type>LREAL</Type>
 						</Var>
 						<Var>
-							<Name>RoofControl.roofs[1].motors[2].direction</Name>
+							<Name>MAIN.RoofControl.roofs[1].motors[2].direction</Name>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>RoofControl.roofs[1].motors[2].speed</Name>
+							<Name>MAIN.RoofControl.roofs[1].motors[2].speed</Name>
 							<Type>LREAL</Type>
 						</Var>
 						<Var>
-							<Name>RoofControl.roofs[2].motors[1].direction</Name>
+							<Name>MAIN.RoofControl.roofs[2].motors[1].direction</Name>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>RoofControl.roofs[2].motors[1].speed</Name>
+							<Name>MAIN.RoofControl.roofs[2].motors[1].speed</Name>
 							<Type>LREAL</Type>
 						</Var>
 						<Var>
-							<Name>RoofControl.roofs[2].motors[2].direction</Name>
+							<Name>MAIN.RoofControl.roofs[2].motors[2].direction</Name>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>RoofControl.roofs[2].motors[2].speed</Name>
+							<Name>MAIN.RoofControl.roofs[2].motors[2].speed</Name>
 							<Type>LREAL</Type>
 						</Var>
 					</Vars>
 					<Contexts>
 						<Context>
-							<Id NeedCalleeCall="true">0</Id>
+							<Id>0</Id>
 							<Name>PlcTask</Name>
 							<ManualConfig>
 								<OTCID>#x02010030</OTCID>

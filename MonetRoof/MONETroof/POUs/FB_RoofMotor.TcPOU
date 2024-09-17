@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="FB_RoofMotor" Id="{47cefcf1-8ba0-4c06-bdcd-b7d169ce9c61}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_RoofMotor
 VAR_INPUT
@@ -23,7 +23,10 @@ VAR
 	speed			AT%Q*	: LREAL;
 	target_speed			: LREAL;		
 END_VAR
-]]></Declaration>
+VAR CONSTANT
+	// max speed
+	MAX_SPEED	: LREAL := 1;	
+END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// ramp for roof velocity
 vel_ramp(
@@ -64,7 +67,7 @@ END_VAR
         <ST><![CDATA[IF NOT closed THEN
 	moving := TRUE;
 	direction := FALSE;
-	target_speed := RoofControl.MAX_SPEED;
+	target_speed := MAX_SPEED;
 END_IF]]></ST>
       </Implementation>
     </Method>
@@ -77,7 +80,7 @@ END_VAR
         <ST><![CDATA[IF NOT opened THEN
 	moving := TRUE;
 	direction := TRUE;
-	target_speed := RoofControl.MAX_SPEED;
+	target_speed := MAX_SPEED;
 END_IF]]></ST>
       </Implementation>
     </Method>
@@ -114,9 +117,7 @@ target_speed 	:= 0;]]></ST>
       <LineId Id="46" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofMotor.close">
-      <LineId Id="8" Count="0" />
-      <LineId Id="6" Count="1" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="13" Count="3" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofMotor.open">

@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <Task Name="PlcTask" Id="{1c906528-4778-4fa9-a606-842a0b0b5a5c}">
     <!--CycleTime in micro seconds.-->
     <CycleTime>10000</CycleTime>
     <Priority>20</Priority>
     <PouCall>
-      <Name>RoofControl</Name>
+      <Name>MAIN</Name>
     </PouCall>
     <TaskFBGuid>{434b7d6f-0195-4aa7-b57a-a5542f9ee115}</TaskFBGuid>
     <Fb_init>{38a0e879-0475-4806-ad4a-6f1a75bcf012}</Fb_init>

@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+  <POU Name="MAIN" Id="{c6ad4756-c196-4e89-b031-015370ff4b7e}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	RoofControl		: FB_RoofControl;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[RoofControl();]]></ST>
+    </Implementation>
+    <LineIds Name="MAIN">
+      <LineId Id="319" Count="0" />
+    </LineIds>
+  </POU>
+</TcPlcObject>
