@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
   <POU Name="FB_RoofControl" Id="{d87693f7-b561-4571-8c76-2cffdf8ef5fe}" SpecialFunc="None">
-    <Declaration><![CDATA[FUNCTION_BLOCK FB_RoofControl
+    <Declaration><![CDATA[FUNCTION_BLOCK FB_RoofControl IMPLEMENTS I_Roof
 VAR_INPUT
 	// commands for roofs
 	open_roof1		: BOOL := FALSE;
@@ -10,12 +10,6 @@ VAR_INPUT
 	open_roof2		: BOOL := FALSE;
 	close_roof2		: BOOL := FALSE;
 	stop_roof2		: BOOL := FALSE;
-	
-	// global commands
-	open			: BOOL := FALSE;
-	close			: BOOL := FALSE;
-	stop			: BOOL := FALSE;
-	reset			: BOOL := FALSE;	
 END_VAR
 VAR_OUTPUT
 	// state
@@ -38,11 +32,6 @@ VAR
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// open commands
-IF open THEN
-	open_roof1 := TRUE;
-	open_roof2 := TRUE;
-	open := FALSE;
-END_IF
 IF open_roof1 THEN
 	roofs[1].open();
 	open_roof1 := FALSE;
@@ -53,11 +42,6 @@ IF open_roof2 THEN
 END_IF
 
 // close commands
-IF close THEN
-	close_roof1 := TRUE;
-	close_roof2 := TRUE;
-	close := FALSE;
-END_IF
 IF close_roof1 THEN
 	roofs[1].close();
 	close_roof1 := FALSE;
@@ -68,11 +52,6 @@ IF close_roof2 THEN
 END_IF
 
 // stop commands
-IF stop THEN
-	stop_roof1 := TRUE;
-	stop_roof2 := TRUE;
-	stop := FALSE;
-END_IF
 IF stop_roof1 THEN
 	roofs[1].stop();
 	stop_roof1 := FALSE;
@@ -114,9 +93,66 @@ closing := state = E_RoofState.closing;
 error := state = E_RoofState.error;
 ]]></ST>
     </Implementation>
+    <Method Name="Close" Id="{09e5ef83-053e-434a-9daf-0f46715c9ca8}">
+      <Declaration><![CDATA[METHOD Close : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[close_roof1 := TRUE;
+close_roof2 := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Open" Id="{158f37cb-bd12-4fa4-ba18-0d91b517278d}">
+      <Declaration><![CDATA[METHOD Open : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[open_roof1 := TRUE;
+open_roof2 := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Reset" Id="{e643a7f5-953f-43e5-b293-e4f6fb37cbd6}">
+      <Declaration><![CDATA[METHOD Reset : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Stop" Id="{b18a1fc2-196a-46c9-9a0b-0d399c89b25a}">
+      <Declaration><![CDATA[METHOD Stop : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[stop_roof1 := TRUE;
+stop_roof2 := TRUE;]]></ST>
+      </Implementation>
+    </Method>
     <LineIds Name="FB_RoofControl">
-      <LineId Id="10" Count="74" />
+      <LineId Id="10" Count="0" />
+      <LineId Id="16" Count="9" />
+      <LineId Id="31" Count="9" />
+      <LineId Id="46" Count="38" />
       <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_RoofControl.Close">
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_RoofControl.Open">
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_RoofControl.Reset">
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_RoofControl.Stop">
+      <LineId Id="6" Count="0" />
+      <LineId Id="5" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>

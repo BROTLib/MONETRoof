@@ -7923,7 +7923,7 @@
                         </o>
                         <o>
                           <v n="Id">743958181L</v>
-                          <v n="Value">"Main.RoofControl.open"</v>
+                          <v n="Value">"Main.open"</v>
                         </o>
                         <o>
                           <v n="Id">2597686782L</v>
@@ -8025,7 +8025,7 @@
                         </o>
                         <o>
                           <v n="Id">743958181L</v>
-                          <v n="Value">"Main.RoofControl.close"</v>
+                          <v n="Value">"Main.close"</v>
                         </o>
                         <o>
                           <v n="Id">2597686782L</v>
@@ -8385,7 +8385,7 @@
                         </o>
                         <o>
                           <v n="Id">743958181L</v>
-                          <v n="Value">"Main.RoofControl.stop"</v>
+                          <v n="Value">"Main.stop"</v>
                         </o>
                         <o>
                           <v n="Id">2597686782L</v>
