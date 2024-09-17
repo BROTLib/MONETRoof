@@ -7379,7 +7379,7 @@
                         </o>
                         <o>
                           <v n="Id">743958181L</v>
-                          <v n="Value">"Main.RoofControl.opened"</v>
+                          <v n="Value">"Main.opened"</v>
                         </o>
                       </l>
                     </o>
@@ -7473,7 +7473,7 @@
                         </o>
                         <o>
                           <v n="Id">743958181L</v>
-                          <v n="Value">"Main.RoofControl.closed"</v>
+                          <v n="Value">"Main.closed"</v>
                         </o>
                       </l>
                     </o>
@@ -7696,7 +7696,7 @@
                         </o>
                         <o>
                           <v n="Id">743958181L</v>
-                          <v n="Value">"Main.RoofControl.opening"</v>
+                          <v n="Value">"Main.opening"</v>
                         </o>
                       </l>
                     </o>
@@ -8612,7 +8612,7 @@
                         </o>
                         <o>
                           <v n="Id">743958181L</v>
-                          <v n="Value">"Main.RoofControl.closing"</v>
+                          <v n="Value">"Main.closing"</v>
                         </o>
                       </l>
                     </o>
@@ -8835,7 +8835,7 @@
                         </o>
                         <o>
                           <v n="Id">743958181L</v>
-                          <v n="Value">"Main.RoofControl.stopped"</v>
+                          <v n="Value">"Main.stopped"</v>
                         </o>
                       </l>
                     </o>
@@ -9006,7 +9006,7 @@
                         </o>
                         <o>
                           <v n="Id">357335551L</v>
-                          <v n="Value">230</v>
+                          <v n="Value">231</v>
                         </o>
                         <o>
                           <v n="Id">2422045748L</v>
@@ -9058,7 +9058,7 @@
                         </o>
                         <o>
                           <v n="Id">743958181L</v>
-                          <v n="Value">"Main.RoofControl.error"</v>
+                          <v n="Value">"Main.error"</v>
                         </o>
                       </l>
                     </o>

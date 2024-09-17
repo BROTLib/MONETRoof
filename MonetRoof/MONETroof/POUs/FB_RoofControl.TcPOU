@@ -12,20 +12,13 @@ VAR_INPUT
 	stop_roof2		: BOOL := FALSE;
 END_VAR
 VAR_OUTPUT
-	// state
-	closed			: BOOL;
-	opened			: BOOL;
-	stopped			: BOOL;
-	opening			: BOOL;
-	closing			: BOOL;
-	error			: BOOL;
 END_VAR
 VAR
 	// roofs
 	roofs			: ARRAY[1..2] OF FB_Roof;
 	
 	// state
-	state			: E_RoofState;
+	roof_state		: E_RoofState;
 	
 	// loop variable	
 	i, j			: INT;
@@ -68,29 +61,21 @@ END_FOR
 
 // set state
 IF roofs[1].state = E_RoofState.error OR roofs[2].state = E_RoofState.error THEN
-	state := E_RoofState.error;
+	roof_state := E_RoofState.error;
 ELSIF roofs[1].state = E_RoofState.opened AND roofs[2].state = E_RoofState.opened THEN
-	state := E_RoofState.opened;
+	roof_state := E_RoofState.opened;
 ELSIF roofs[1].state = E_RoofState.closed AND roofs[2].state = E_RoofState.closed THEN
-	state := E_RoofState.closed;
+	roof_state := E_RoofState.closed;
 ELSIF roofs[1].state = E_RoofState.opening OR roofs[2].state = E_RoofState.opening THEN
-	state := E_RoofState.opening;	
+	roof_state := E_RoofState.opening;	
 ELSIF roofs[1].state = E_RoofState.closing OR roofs[2].state = E_RoofState.closing THEN
-	state := E_RoofState.closing;
+	roof_state := E_RoofState.closing;
 ELSIF (roofs[1].state = E_RoofState.stopped OR roofs[1].state = E_RoofState.opened OR roofs[1].state = E_RoofState.closed) AND 
       (roofs[2].state = E_RoofState.stopped OR roofs[2].state = E_RoofState.opened OR roofs[2].state = E_RoofState.closed) THEN
-	state := E_RoofState.stopped;
+	roof_state := E_RoofState.stopped;
 ELSE
-	state := E_RoofState.error;	
+	roof_state := E_RoofState.error;	
 END_IF
-
-// GVL state
-closed := state = E_RoofState.closed;
-opened := state = E_RoofState.opened;
-stopped := state = E_RoofState.stopped;
-opening := state = E_RoofState.opening;
-closing := state = E_RoofState.closing;
-error := state = E_RoofState.error;
 ]]></ST>
     </Implementation>
     <Method Name="Close" Id="{09e5ef83-053e-434a-9daf-0f46715c9ca8}">
@@ -122,6 +107,17 @@ END_VAR
         <ST><![CDATA[]]></ST>
       </Implementation>
     </Method>
+    <Property Name="State" Id="{7611ff11-7d75-4e77-a763-7a45ea36a762}">
+      <Declaration><![CDATA[PROPERTY State : E_RoofState]]></Declaration>
+      <Get Name="Get" Id="{63bdd3e1-4e74-409f-b6c0-a0531e107c7a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[State := roof_state;]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Method Name="Stop" Id="{b18a1fc2-196a-46c9-9a0b-0d399c89b25a}">
       <Declaration><![CDATA[METHOD Stop : BOOL
 VAR_INPUT
@@ -136,7 +132,7 @@ stop_roof2 := TRUE;]]></ST>
       <LineId Id="10" Count="0" />
       <LineId Id="16" Count="9" />
       <LineId Id="31" Count="9" />
-      <LineId Id="46" Count="38" />
+      <LineId Id="46" Count="30" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.Close">
@@ -149,6 +145,9 @@ stop_roof2 := TRUE;]]></ST>
     </LineIds>
     <LineIds Name="FB_RoofControl.Reset">
       <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_RoofControl.State.Get">
+      <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.Stop">
       <LineId Id="6" Count="0" />

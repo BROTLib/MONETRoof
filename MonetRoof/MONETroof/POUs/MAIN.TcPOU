@@ -8,12 +8,18 @@ VAR
 	close			: BOOL := FALSE;
 	stop			: BOOL := FALSE;
 	reset			: BOOL := FALSE;
+	
+	// state
+	closed			: BOOL;
+	opened			: BOOL;
+	stopped			: BOOL;
+	opening			: BOOL;
+	closing			: BOOL;
+	error			: BOOL;	
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[RoofControl();
-
-IF open THEN
+      <ST><![CDATA[IF open THEN
 	RoofControl.Open();
 	open := FALSE;
 END_IF
@@ -28,11 +34,19 @@ END_IF
 IF reset THEN
 	RoofControl.Reset();
 	reset := FALSE;
-END_IF]]></ST>
+END_IF
+
+RoofControl();
+
+// state
+closed := RoofControl.State = E_RoofState.closed;
+opened := RoofControl.State = E_RoofState.opened;
+stopped := RoofControl.State = E_RoofState.stopped;
+opening := RoofControl.State = E_RoofState.opening;
+closing := RoofControl.State = E_RoofState.closing;
+error := RoofControl.State = E_RoofState.error;]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="319" Count="0" />
-      <LineId Id="329" Count="0" />
       <LineId Id="328" Count="0" />
       <LineId Id="330" Count="0" />
       <LineId Id="332" Count="0" />
@@ -43,6 +57,10 @@ END_IF]]></ST>
       <LineId Id="337" Count="0" />
       <LineId Id="342" Count="2" />
       <LineId Id="341" Count="0" />
+      <LineId Id="361" Count="0" />
+      <LineId Id="363" Count="0" />
+      <LineId Id="346" Count="6" />
+      <LineId Id="345" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>
