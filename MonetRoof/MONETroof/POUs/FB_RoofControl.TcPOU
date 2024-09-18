@@ -1,15 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="FB_RoofControl" Id="{d87693f7-b561-4571-8c76-2cffdf8ef5fe}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_RoofControl IMPLEMENTS I_Roof
 VAR_INPUT
 	// commands for roofs
-	open_roof1		: BOOL := FALSE;
-	close_roof1		: BOOL := FALSE;
-	stop_roof1		: BOOL := FALSE;	
-	open_roof2		: BOOL := FALSE;
-	close_roof2		: BOOL := FALSE;
-	stop_roof2		: BOOL := FALSE;
+	open_roof		AT%I*	: ARRAY[1..2] OF BOOL;
+	close_roof		AT%I*	: ARRAY[1..2] OF BOOL;
+	stop_roof1				: BOOL;	
+	stop_roof2				: BOOL;
+	
+	// automatic mode
+	automatic		AT%I*	: BOOL;
+	
+	// UPS failure
+	ups_fail		AT%I*	: BOOL;
 END_VAR
 VAR_OUTPUT
 END_VAR
@@ -24,25 +28,16 @@ VAR
 	i, j			: INT;
 END_VAR]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// open commands
-IF open_roof1 THEN
-	roofs[1].open();
-	open_roof1 := FALSE;
-END_IF
-IF open_roof2 THEN
-	roofs[2].open();
-	open_roof2 := FALSE;
-END_IF
-
-// close commands
-IF close_roof1 THEN
-	roofs[1].close();
-	close_roof1 := FALSE;
-END_IF
-IF close_roof2 THEN
-	roofs[2].close();
-	close_roof2 := FALSE;
-END_IF
+      <ST><![CDATA[// open/close commands
+FOR i := 1 TO 2 DO
+	IF open_roof[i] THEN
+		roofs[i].open();
+	ELSIF close_roof[i] THEN
+		roofs[i].close();
+	ELSE
+		roofs[i].soft_stop();
+	END_IF
+END_FOR
 
 // stop commands
 IF stop_roof1 THEN
@@ -84,8 +79,8 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[close_roof1 := TRUE;
-close_roof2 := TRUE;]]></ST>
+        <ST><![CDATA[close_roof[1] := TRUE;
+close_roof[2] := TRUE;]]></ST>
       </Implementation>
     </Method>
     <Method Name="Open" Id="{158f37cb-bd12-4fa4-ba18-0d91b517278d}">
@@ -94,8 +89,8 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[open_roof1 := TRUE;
-open_roof2 := TRUE;]]></ST>
+        <ST><![CDATA[open_roof[1] := TRUE;
+open_roof[2] := TRUE;]]></ST>
       </Implementation>
     </Method>
     <Method Name="Reset" Id="{e643a7f5-953f-43e5-b293-e4f6fb37cbd6}">
@@ -130,9 +125,15 @@ stop_roof2 := TRUE;]]></ST>
     </Method>
     <LineIds Name="FB_RoofControl">
       <LineId Id="10" Count="0" />
-      <LineId Id="16" Count="9" />
-      <LineId Id="31" Count="9" />
-      <LineId Id="46" Count="30" />
+      <LineId Id="127" Count="0" />
+      <LineId Id="130" Count="6" />
+      <LineId Id="129" Count="0" />
+      <LineId Id="39" Count="1" />
+      <LineId Id="46" Count="1" />
+      <LineId Id="138" Count="0" />
+      <LineId Id="49" Count="2" />
+      <LineId Id="137" Count="0" />
+      <LineId Id="53" Count="23" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.Close">

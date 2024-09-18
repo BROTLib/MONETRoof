@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
   <POU Name="FB_RoofMotor" Id="{47cefcf1-8ba0-4c06-bdcd-b7d169ce9c61}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_RoofMotor
 VAR_INPUT
@@ -10,53 +10,73 @@ VAR
 	// signals from limit switches
 	opened			AT%I*	: BOOL;
 	closed			AT%I*	: BOOL;
+	
+	// error
+	error			AT%I*	: BOOL;
 
+	// hall sensor for counting rotation
+	counter			AT%I*	: BOOL;
+	
+	// reset command to drive
+	reset			AT%Q*	: BOOL;
+	
 	// position
 	position				: LREAL;
 	
 	// moving and direction
 	moving					: BOOL;
-	direction		AT%Q*	: BOOL;
+	direction_open	AT%Q*	: BOOL;
+	direction_close	AT%Q*	: BOOL;
 
 	// move speed
 	vel_ramp				: FB_Ramp;
-	speed			AT%Q*	: LREAL;
-	target_speed			: LREAL;		
+	speed			AT%Q*	: INT;
+	real_speed				: INT;
+	target_speed			: INT;		
 END_VAR
 VAR CONSTANT
 	// max speed
-	MAX_SPEED	: LREAL := 1;	
+	MAX_SPEED				: INT := 30000;
+	// acceleration
+	ACCELERATION			: UINT := 100;	
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// ramp for roof velocity
 vel_ramp(
-	enable		:= moving,
-	start		:= speed,
+	start		:= real_speed,
 	target		:= target_speed,
-	speed		:= 0.01,
-	value		=> speed);
+	accel		:= ACCELERATION,
+	value		=> real_speed);
+speed := ABS(real_speed);
+
+// get direction
+direction_open := real_speed > 0;
+direction_close := real_speed < 0;
 	
 // stop on limit switches
-IF (NOT direction AND closed) OR (direction AND opened) THEN
+IF (direction_close AND closed) OR (direction_open AND opened) THEN
 	stop();
 END_IF
 
+// set moving to zero, if no movement
+moving := real_speed <> 0;
+
 // reset speed, if not moving
-IF NOT MOVING THEN
+IF NOT moving THEN
 	speed := 0;
 	target_speed := 0;
 END_IF
 
 // DEBUG
-IF moving THEN
-	IF direction THEN
-		position := position + speed;
-	ELSE
-		position := position - speed;
-	END_IF
-END_IF
-closed := position <= 0;
-opened := position >= 1000;]]></ST>
+//IF moving THEN
+//	IF direction_open THEN
+//		position := position + speed;
+//	ELSE
+//		position := position - speed;
+//	END_IF
+//END_IF
+//closed := position <= 0;
+//opened := position >= 1000;]]></ST>
     </Implementation>
     <Method Name="close" Id="{40cd4081-a8ac-4d75-aaee-c72d59685ab9}">
       <Declaration><![CDATA[METHOD close : BOOL
@@ -66,8 +86,7 @@ END_VAR
       <Implementation>
         <ST><![CDATA[IF NOT closed THEN
 	moving := TRUE;
-	direction := FALSE;
-	target_speed := MAX_SPEED;
+	target_speed := -MAX_SPEED;
 END_IF]]></ST>
       </Implementation>
     </Method>
@@ -79,9 +98,17 @@ END_VAR
       <Implementation>
         <ST><![CDATA[IF NOT opened THEN
 	moving := TRUE;
-	direction := TRUE;
 	target_speed := MAX_SPEED;
 END_IF]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="soft_stop" Id="{a2916879-d03b-4d3c-a270-5ed857d57bc6}">
+      <Declaration><![CDATA[METHOD soft_stop : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[target_speed 	:= 0;]]></ST>
       </Implementation>
     </Method>
     <Method Name="stop" Id="{ecb23643-511b-4e32-9b6a-78443c9c1a37}">
@@ -97,11 +124,19 @@ target_speed 	:= 0;]]></ST>
     </Method>
     <LineIds Name="FB_RoofMotor">
       <LineId Id="30" Count="0" />
-      <LineId Id="25" Count="4" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="27" Count="2" />
       <LineId Id="9" Count="0" />
+      <LineId Id="95" Count="0" />
+      <LineId Id="99" Count="0" />
+      <LineId Id="98" Count="0" />
+      <LineId Id="100" Count="1" />
       <LineId Id="31" Count="2" />
       <LineId Id="50" Count="0" />
       <LineId Id="35" Count="0" />
+      <LineId Id="103" Count="0" />
+      <LineId Id="102" Count="0" />
+      <LineId Id="104" Count="0" />
       <LineId Id="52" Count="0" />
       <LineId Id="51" Count="0" />
       <LineId Id="53" Count="1" />
@@ -117,14 +152,18 @@ target_speed 	:= 0;]]></ST>
       <LineId Id="46" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofMotor.close">
-      <LineId Id="13" Count="3" />
+      <LineId Id="13" Count="1" />
+      <LineId Id="16" Count="0" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofMotor.open">
       <LineId Id="8" Count="0" />
-      <LineId Id="6" Count="1" />
+      <LineId Id="6" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_RoofMotor.soft_stop">
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofMotor.stop">
       <LineId Id="7" Count="0" />

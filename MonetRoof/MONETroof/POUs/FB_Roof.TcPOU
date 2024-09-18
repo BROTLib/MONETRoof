@@ -20,7 +20,8 @@ END_VAR
 END_FOR
 
 // consistency check
-direction_error := motors[1].direction <> motors[2].direction;
+direction_error := motors[1].direction_open <> motors[2].direction_open;
+direction_error := motors[1].direction_close <> motors[2].direction_close;
 sync_error := ABS(motors[1].position - motors[2].position) >= 5;
 
 // stop on error
@@ -33,10 +34,12 @@ END_IF
 IF direction_error OR sync_error THEN
 	state := E_RoofState.error;
 ELSIF motors[1].moving OR motors[2].moving THEN
-	IF motors[1].direction THEN
+	IF motors[1].direction_open THEN
 		state := E_RoofState.opening;
-	ELSE
+	ELSIF motors[1].direction_close THEN
 		state := E_RoofState.closing;
+	ELSE
+		; // error
 	END_IF
 ELSIF motors[1].opened AND motors[2].opened THEN
 	state := E_RoofState.opened;
@@ -71,6 +74,17 @@ END_VAR]]></Declaration>
 END_FOR;]]></ST>
       </Implementation>
     </Method>
+    <Method Name="soft_stop" Id="{ae8d7a4a-b701-4693-902f-f1904e5a7ece}">
+      <Declaration><![CDATA[METHOD soft_stop : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[FOR i := 1 TO 2 DO
+	motors[i].soft_stop();
+END_FOR;]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="stop" Id="{1f32f30b-7d83-4389-9405-dd9528b72d8a}">
       <Declaration><![CDATA[METHOD stop : BOOL
 VAR_INPUT
@@ -88,6 +102,7 @@ END_FOR;]]></ST>
       <LineId Id="17" Count="0" />
       <LineId Id="34" Count="1" />
       <LineId Id="44" Count="0" />
+      <LineId Id="79" Count="0" />
       <LineId Id="46" Count="1" />
       <LineId Id="45" Count="0" />
       <LineId Id="36" Count="1" />
@@ -100,6 +115,7 @@ END_FOR;]]></ST>
       <LineId Id="33" Count="0" />
       <LineId Id="52" Count="0" />
       <LineId Id="54" Count="1" />
+      <LineId Id="80" Count="1" />
       <LineId Id="53" Count="0" />
       <LineId Id="56" Count="1" />
       <LineId Id="60" Count="1" />
@@ -115,6 +131,10 @@ END_FOR;]]></ST>
     <LineIds Name="FB_Roof.open">
       <LineId Id="6" Count="0" />
       <LineId Id="9" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Roof.soft_stop">
+      <LineId Id="6" Count="1" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_Roof.stop">
