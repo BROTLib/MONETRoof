@@ -3,10 +3,13 @@
   <POU Name="FB_RoofControl" Id="{d87693f7-b561-4571-8c76-2cffdf8ef5fe}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_RoofControl IMPLEMENTS I_Roof
 VAR_INPUT
-	// commands for roofs
-	open_roof		AT%I*	: ARRAY[1..2] OF BOOL;
-	close_roof		AT%I*	: ARRAY[1..2] OF BOOL;
-	stop_roof				: ARRAY[1..2] OF BOOL;	
+	// commands for automatic roof controls
+	open_roofs				: BOOL;
+	close_roofs				: BOOL;
+	stop_roofs				: BOOL;	
+	open_roof				: ARRAY[1..2] OF BOOL;
+	close_roof				: ARRAY[1..2] OF BOOL;
+	stop_roof				: ARRAY[1..2] OF BOOL;
 	
 	// automatic mode
 	automatic		AT%I*	: BOOL;
@@ -28,21 +31,18 @@ VAR
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// open/close commands
-FOR i := 1 TO 2 DO
-	IF open_roof[i] THEN
-		roofs[i].open();
-	ELSIF close_roof[i] THEN
-		roofs[i].close();
-	ELSIF stop_roof[i] THEN
-		roofs[i].stop();
-		stop_roof[i] := FALSE;
-	ELSE
-		roofs[i].soft_stop();
-	END_IF
-END_FOR
+
 
 // call roofs
 FOR i := 1 TO 2 DO
+	// automatic or manual mode
+	IF automatic THEN
+		roofs[i].Automatic(open_roof := open_roofs OR open_roof[i], close_roof := close_roofs OR close_roof[i], stop_roof := stop_roofs OR stop_roof[i]);
+	ELSE
+		roofs[i].Manual();
+	END_IF
+
+	// run 
 	roofs[i]();
 END_FOR
 
@@ -117,12 +117,14 @@ stop_roof[2] := TRUE;]]></ST>
     </Method>
     <LineIds Name="FB_RoofControl">
       <LineId Id="10" Count="0" />
-      <LineId Id="127" Count="0" />
-      <LineId Id="130" Count="3" />
-      <LineId Id="164" Count="2" />
-      <LineId Id="134" Count="2" />
-      <LineId Id="129" Count="0" />
-      <LineId Id="54" Count="22" />
+      <LineId Id="193" Count="0" />
+      <LineId Id="54" Count="2" />
+      <LineId Id="208" Count="0" />
+      <LineId Id="202" Count="3" />
+      <LineId Id="201" Count="0" />
+      <LineId Id="207" Count="0" />
+      <LineId Id="206" Count="0" />
+      <LineId Id="57" Count="19" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.Close">

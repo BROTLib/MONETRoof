@@ -2347,7 +2347,7 @@
                         </o>
                         <o>
                           <v n="Id">743958181L</v>
-                          <v n="Value">"MAIN.RoofControl.open_roof1"</v>
+                          <v n="Value">"MAIN.RoofControl.open_roof[1]"</v>
                         </o>
                         <o>
                           <v n="Id">2597686782L</v>
@@ -5864,7 +5864,7 @@
                         </o>
                         <o>
                           <v n="Id">743958181L</v>
-                          <v n="Value">"MAIN.RoofControl.open_roof2"</v>
+                          <v n="Value">"MAIN.RoofControl.open_roof[2]"</v>
                         </o>
                         <o>
                           <v n="Id">2597686782L</v>
@@ -7923,7 +7923,7 @@
                         </o>
                         <o>
                           <v n="Id">743958181L</v>
-                          <v n="Value">"Main.open"</v>
+                          <v n="Value">"MAIN.RoofControl.open_roofs"</v>
                         </o>
                         <o>
                           <v n="Id">2597686782L</v>
@@ -8025,7 +8025,7 @@
                         </o>
                         <o>
                           <v n="Id">743958181L</v>
-                          <v n="Value">"Main.close"</v>
+                          <v n="Value">"MAIN.RoofControl.close_roofs"</v>
                         </o>
                         <o>
                           <v n="Id">2597686782L</v>
@@ -8385,7 +8385,7 @@
                         </o>
                         <o>
                           <v n="Id">743958181L</v>
-                          <v n="Value">"Main.stop"</v>
+                          <v n="Value">"MAIN.RoofControl.stop_roofs"</v>
                         </o>
                         <o>
                           <v n="Id">2597686782L</v>
