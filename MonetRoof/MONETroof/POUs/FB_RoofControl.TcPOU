@@ -5,6 +5,9 @@
 VAR_INPUT
 	max_speed				: INT;
 	acceleration			: UINT;
+	min_position			: INT;
+	max_position			: INT;		
+	max_position_diff		: INT;
 END_VAR
 VAR_OUTPUT
 END_VAR
@@ -43,7 +46,13 @@ FOR i := 1 TO 2 DO
 	END_IF
 
 	// run 
-	roofs[i](max_speed := max_speed, acceleration := acceleration);
+	roofs[i](		
+		max_speed := max_speed, 
+		acceleration := acceleration, 
+		min_position := min_position, 
+		max_position := max_position,
+		max_position_diff := max_position_diff
+	);
 END_FOR
 
 // set state
@@ -122,7 +131,13 @@ stop_roof[2] := TRUE;]]></ST>
       <LineId Id="201" Count="0" />
       <LineId Id="207" Count="0" />
       <LineId Id="206" Count="0" />
-      <LineId Id="57" Count="19" />
+      <LineId Id="254" Count="0" />
+      <LineId Id="257" Count="0" />
+      <LineId Id="255" Count="1" />
+      <LineId Id="57" Count="0" />
+      <LineId Id="260" Count="0" />
+      <LineId Id="258" Count="0" />
+      <LineId Id="58" Count="18" />
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.Close">

@@ -15,7 +15,13 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[RoofControl(max_speed := 30000, acceleration := 500);
+      <ST><![CDATA[RoofControl(
+	max_speed 			:= 30000, 
+	acceleration 		:= 500,
+	min_position 		:= 0,
+	max_position 		:= 10,
+	max_position_diff	:= 5
+);
 
 // state
 closed := RoofControl.State = E_RoofState.closed;
@@ -27,6 +33,9 @@ error := RoofControl.State = E_RoofState.error;]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
       <LineId Id="363" Count="0" />
+      <LineId Id="380" Count="3" />
+      <LineId Id="385" Count="0" />
+      <LineId Id="384" Count="0" />
       <LineId Id="346" Count="6" />
       <LineId Id="345" Count="0" />
     </LineIds>

@@ -56,7 +56,7 @@
 		</System>
 		<Plc>
 			<Project GUID="{69EF3A5D-605B-4F5C-8B9F-420938A0CACB}" Name="MONETroof" PrjFilePath="MONETroof\MONETroof.plcproj" TmcFilePath="MONETroof\MONETroof.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MONETroof.tmc" TmcHash="{5CA67CB6-1EEE-D92E-11C5-D14DF66DFDD7}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MONETroof.tmc" TmcHash="{96166C53-2E0E-B8CF-382C-17230D9056A5}">
 					<Name>MONETroof Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -175,6 +175,7 @@
 						</Var>
 						<Var>
 							<Name>MAIN.RoofControl.roofs[1].motors[1].direction_open</Name>
+							<Comment><![CDATA[ moving]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -192,6 +193,7 @@
 						</Var>
 						<Var>
 							<Name>MAIN.RoofControl.roofs[1].motors[2].direction_open</Name>
+							<Comment><![CDATA[ moving]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -209,6 +211,7 @@
 						</Var>
 						<Var>
 							<Name>MAIN.RoofControl.roofs[2].motors[1].direction_open</Name>
+							<Comment><![CDATA[ moving]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -226,6 +229,7 @@
 						</Var>
 						<Var>
 							<Name>MAIN.RoofControl.roofs[2].motors[2].direction_open</Name>
+							<Comment><![CDATA[ moving]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>

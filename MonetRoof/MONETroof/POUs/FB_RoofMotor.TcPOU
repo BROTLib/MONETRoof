@@ -5,13 +5,27 @@
 VAR_INPUT
 	max_speed				: INT;
 	acceleration			: UINT;	
+	min_position			: INT;
+	max_position			: INT;
 END_VAR
 VAR_OUTPUT
+	// position
+	position				: INT;
+	
+	// moving
+	moving					: BOOL;
+	
+	// real speed
+	real_speed				: INT;	
 END_VAR
 VAR
 	// signals from limit switches
 	opened			AT%I*	: BOOL;
 	closed			AT%I*	: BOOL;
+	
+	// triggers for opened/closed
+	opened_trigger			: R_TRIG;
+	closed_trigger			: R_TRIG;
 	
 	// error
 	error			AT%I*	: BOOL;
@@ -23,18 +37,13 @@ VAR
 	// reset command to drive
 	reset			AT%Q*	: BOOL;
 	
-	// position
-	position				: INT;
-	
-	// moving and direction
-	moving					: BOOL;
+	// moving
 	direction_open	AT%Q*	: BOOL;
 	direction_close	AT%Q*	: BOOL;
 
 	// move speed
 	vel_ramp				: FB_Ramp;
 	speed			AT%Q*	: INT;
-	real_speed				: INT;
 	target_speed			: INT;		
 END_VAR]]></Declaration>
     <Implementation>
@@ -56,8 +65,18 @@ IF counter_trig.Q THEN
 	IF direction_open THEN
 		position := position + 1;
 	ELSE
-		position := position + 1;
+		position := position - 1;
 	END_IF
+END_IF
+
+// if in limits, reset position
+closed_trigger(CLK := closed);
+IF closed_trigger.Q THEN
+	position := min_position;
+END_IF
+opened_trigger(CLK := opened);
+IF opened_trigger.Q THEN
+	position := max_position;
 END_IF
 	
 // stop on limit switches
@@ -129,6 +148,12 @@ target_speed 	:= 0;]]></ST>
       <LineId Id="152" Count="1" />
       <LineId Id="151" Count="0" />
       <LineId Id="149" Count="0" />
+      <LineId Id="159" Count="0" />
+      <LineId Id="158" Count="0" />
+      <LineId Id="173" Count="2" />
+      <LineId Id="172" Count="0" />
+      <LineId Id="170" Count="0" />
+      <LineId Id="160" Count="2" />
       <LineId Id="31" Count="2" />
       <LineId Id="50" Count="0" />
       <LineId Id="35" Count="0" />

@@ -5,6 +5,9 @@
 VAR_INPUT
 	max_speed				: INT;
 	acceleration			: UINT;
+	min_position			: INT;
+	max_position			: INT;	
+	max_position_diff		: INT;
 END_VAR
 VAR_OUTPUT
 END_VAR
@@ -26,13 +29,17 @@ END_VAR
 
 // call motors
 FOR i := 1 TO 2 DO
-	motors[i](max_speed := max_speed, acceleration := acceleration);
+	motors[i](
+		max_speed := max_speed, 
+		acceleration := acceleration, 
+		min_position := min_position, 
+		max_position := max_position
+	);
 END_FOR
 
 // consistency check
-direction_error := motors[1].direction_open <> motors[2].direction_open;
-direction_error := motors[1].direction_close <> motors[2].direction_close;
-sync_error := ABS(motors[1].position - motors[2].position) >= 5;
+direction_error := motors[1].moving AND motors[2].moving AND (motors[1].real_speed * motors[2].real_speed < 0);
+sync_error := ABS(motors[1].position - motors[2].position) >= max_position_diff;
 
 // stop on error
 IF direction_error OR sync_error THEN
@@ -43,9 +50,9 @@ END_IF
 IF direction_error OR sync_error THEN
 	state := E_RoofState.error;
 ELSIF motors[1].moving OR motors[2].moving THEN
-	IF motors[1].direction_open THEN
+	IF motors[1].direction_open OR motors[2].direction_open THEN
 		state := E_RoofState.opening;
-	ELSIF motors[1].direction_close THEN
+	ELSIF motors[1].direction_close OR motors[2].direction_close THEN
 		state := E_RoofState.closing;
 	ELSE
 		; // error
@@ -141,7 +148,10 @@ END_FOR;]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="FB_Roof">
-      <LineId Id="123" Count="14" />
+      <LineId Id="123" Count="4" />
+      <LineId Id="181" Count="4" />
+      <LineId Id="128" Count="3" />
+      <LineId Id="133" Count="4" />
       <LineId Id="139" Count="20" />
       <LineId Id="32" Count="0" />
     </LineIds>
