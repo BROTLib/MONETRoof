@@ -75,7 +75,7 @@ IF open_roof THEN
 ELSIF close_roof THEN
 	Close();
 ELSIF stop_roof THEN
-	Stop();
+	SoftStop();
 END_IF]]></ST>
       </Implementation>
     </Method>
@@ -86,7 +86,7 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[FOR i := 1 TO 2 DO
-	motors[i].close();
+	motors[i].Close();
 END_FOR;]]></ST>
       </Implementation>
     </Method>
@@ -114,7 +114,7 @@ VAR
 END_VAR]]></Declaration>
       <Implementation>
         <ST><![CDATA[FOR i := 1 TO 2 DO
-	motors[i].open();
+	motors[i].Open();
 END_FOR;]]></ST>
       </Implementation>
     </Method>
@@ -136,7 +136,7 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[FOR i := 1 TO 2 DO
-	motors[i].stop();
+	motors[i].Stop();
 END_FOR;]]></ST>
       </Implementation>
     </Method>
