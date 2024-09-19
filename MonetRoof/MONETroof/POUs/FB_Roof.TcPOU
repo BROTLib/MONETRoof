@@ -3,6 +3,8 @@
   <POU Name="FB_Roof" Id="{522d8680-feaf-4d00-ac9f-47554bf0503b}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_Roof
 VAR_INPUT
+	max_speed				: INT;
+	acceleration			: UINT;
 END_VAR
 VAR_OUTPUT
 END_VAR
@@ -24,7 +26,7 @@ END_VAR
 
 // call motors
 FOR i := 1 TO 2 DO
-	motors[i]();
+	motors[i](max_speed := max_speed, acceleration := acceleration);
 END_FOR
 
 // consistency check
@@ -123,7 +125,7 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[FOR i := 1 TO 2 DO
-	motors[i].soft_stop();
+	motors[i].SoftStop();
 END_FOR;]]></ST>
       </Implementation>
     </Method>
@@ -163,7 +165,7 @@ END_FOR;]]></ST>
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_Roof.SoftStop">
-      <LineId Id="6" Count="1" />
+      <LineId Id="11" Count="1" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_Roof.Stop">

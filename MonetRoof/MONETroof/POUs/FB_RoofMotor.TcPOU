@@ -3,6 +3,8 @@
   <POU Name="FB_RoofMotor" Id="{47cefcf1-8ba0-4c06-bdcd-b7d169ce9c61}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_RoofMotor
 VAR_INPUT
+	max_speed				: INT;
+	acceleration			: UINT;	
 END_VAR
 VAR_OUTPUT
 END_VAR
@@ -34,19 +36,13 @@ VAR
 	speed			AT%Q*	: INT;
 	real_speed				: INT;
 	target_speed			: INT;		
-END_VAR
-VAR CONSTANT
-	// max speed
-	MAX_SPEED				: INT := 30000;
-	// acceleration
-	ACCELERATION			: UINT := 100;	
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// ramp for roof velocity
 vel_ramp(
 	start		:= real_speed,
 	target		:= target_speed,
-	accel		:= ACCELERATION,
+	accel		:= acceleration,
 	value		=> real_speed);
 speed := ABS(real_speed);
 
@@ -66,7 +62,7 @@ END_IF
 	
 // stop on limit switches
 IF (direction_close AND closed) OR (direction_open AND opened) THEN
-	stop();
+	Stop();
 END_IF
 
 // set moving to zero, if no movement
@@ -76,45 +72,34 @@ moving := real_speed <> 0;
 IF NOT moving THEN
 	speed := 0;
 	target_speed := 0;
-END_IF
-
-// DEBUG
-//IF moving THEN
-//	IF direction_open THEN
-//		position := position + speed;
-//	ELSE
-//		position := position - speed;
-//	END_IF
-//END_IF
-//closed := position <= 0;
-//opened := position >= 1000;]]></ST>
+END_IF]]></ST>
     </Implementation>
-    <Method Name="close" Id="{40cd4081-a8ac-4d75-aaee-c72d59685ab9}">
-      <Declaration><![CDATA[METHOD close : BOOL
+    <Method Name="Close" Id="{40cd4081-a8ac-4d75-aaee-c72d59685ab9}">
+      <Declaration><![CDATA[METHOD Close : BOOL
 VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[IF NOT closed THEN
 	moving := TRUE;
-	target_speed := -MAX_SPEED;
+	target_speed := -max_speed;
 END_IF]]></ST>
       </Implementation>
     </Method>
-    <Method Name="open" Id="{e1a1847d-b8ba-48c6-8250-57df9d3b1f67}">
-      <Declaration><![CDATA[METHOD open : BOOL
+    <Method Name="Open" Id="{e1a1847d-b8ba-48c6-8250-57df9d3b1f67}">
+      <Declaration><![CDATA[METHOD Open : BOOL
 VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[IF NOT opened THEN
 	moving := TRUE;
-	target_speed := MAX_SPEED;
+	target_speed := max_speed;
 END_IF]]></ST>
       </Implementation>
     </Method>
-    <Method Name="soft_stop" Id="{a2916879-d03b-4d3c-a270-5ed857d57bc6}">
-      <Declaration><![CDATA[METHOD soft_stop : BOOL
+    <Method Name="SoftStop" Id="{a2916879-d03b-4d3c-a270-5ed857d57bc6}">
+      <Declaration><![CDATA[METHOD SoftStop : BOOL
 VAR_INPUT
 END_VAR
 ]]></Declaration>
@@ -122,8 +107,8 @@ END_VAR
         <ST><![CDATA[target_speed 	:= 0;]]></ST>
       </Implementation>
     </Method>
-    <Method Name="stop" Id="{ecb23643-511b-4e32-9b6a-78443c9c1a37}">
-      <Declaration><![CDATA[METHOD stop : BOOL
+    <Method Name="Stop" Id="{ecb23643-511b-4e32-9b6a-78443c9c1a37}">
+      <Declaration><![CDATA[METHOD Stop : BOOL
 VAR_INPUT
 END_VAR
 ]]></Declaration>
@@ -160,30 +145,22 @@ target_speed 	:= 0;]]></ST>
       <LineId Id="53" Count="1" />
       <LineId Id="56" Count="0" />
       <LineId Id="55" Count="0" />
-      <LineId Id="40" Count="0" />
-      <LineId Id="37" Count="0" />
-      <LineId Id="48" Count="0" />
-      <LineId Id="42" Count="3" />
-      <LineId Id="41" Count="0" />
-      <LineId Id="49" Count="0" />
-      <LineId Id="47" Count="0" />
-      <LineId Id="46" Count="0" />
     </LineIds>
-    <LineIds Name="FB_RoofMotor.close">
+    <LineIds Name="FB_RoofMotor.Close">
       <LineId Id="13" Count="1" />
       <LineId Id="16" Count="0" />
       <LineId Id="9" Count="0" />
     </LineIds>
-    <LineIds Name="FB_RoofMotor.open">
+    <LineIds Name="FB_RoofMotor.Open">
       <LineId Id="8" Count="0" />
       <LineId Id="6" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="9" Count="0" />
     </LineIds>
-    <LineIds Name="FB_RoofMotor.soft_stop">
+    <LineIds Name="FB_RoofMotor.SoftStop">
       <LineId Id="5" Count="0" />
     </LineIds>
-    <LineIds Name="FB_RoofMotor.stop">
+    <LineIds Name="FB_RoofMotor.Stop">
       <LineId Id="7" Count="0" />
       <LineId Id="10" Count="1" />
     </LineIds>

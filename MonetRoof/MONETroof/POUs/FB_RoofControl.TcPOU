@@ -3,6 +3,12 @@
   <POU Name="FB_RoofControl" Id="{d87693f7-b561-4571-8c76-2cffdf8ef5fe}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_RoofControl IMPLEMENTS I_Roof
 VAR_INPUT
+	max_speed				: INT;
+	acceleration			: UINT;
+END_VAR
+VAR_OUTPUT
+END_VAR
+VAR
 	// commands for automatic roof controls
 	open_roofs				: BOOL;
 	close_roofs				: BOOL;
@@ -16,18 +22,15 @@ VAR_INPUT
 	
 	// UPS failure
 	ups_fail		AT%I*	: BOOL;
-END_VAR
-VAR_OUTPUT
-END_VAR
-VAR
+	
 	// roofs
-	roofs			: ARRAY[1..2] OF FB_Roof;
+	roofs					: ARRAY[1..2] OF FB_Roof;
 	
 	// state
-	roof_state		: E_RoofState;
+	roof_state				: E_RoofState;
 	
 	// loop variable	
-	i, j			: INT;
+	i, j					: INT;
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// call roofs
@@ -40,7 +43,7 @@ FOR i := 1 TO 2 DO
 	END_IF
 
 	// run 
-	roofs[i]();
+	roofs[i](max_speed := max_speed, acceleration := acceleration);
 END_FOR
 
 // set state

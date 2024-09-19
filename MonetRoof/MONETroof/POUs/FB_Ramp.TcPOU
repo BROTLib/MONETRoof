@@ -11,8 +11,6 @@ VAR_OUTPUT
 	value	: INT;
 END_VAR
 VAR
-	diff	: LREAL;
-	trig	: R_TRIG;
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[value := start;
