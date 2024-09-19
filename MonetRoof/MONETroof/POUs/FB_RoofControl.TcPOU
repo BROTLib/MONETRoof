@@ -30,10 +30,7 @@ VAR
 	i, j			: INT;
 END_VAR]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// open/close commands
-
-
-// call roofs
+      <ST><![CDATA[// call roofs
 FOR i := 1 TO 2 DO
 	// automatic or manual mode
 	IF automatic THEN
@@ -116,9 +113,7 @@ stop_roof[2] := TRUE;]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="FB_RoofControl">
-      <LineId Id="10" Count="0" />
-      <LineId Id="193" Count="0" />
-      <LineId Id="54" Count="2" />
+      <LineId Id="55" Count="1" />
       <LineId Id="208" Count="0" />
       <LineId Id="202" Count="3" />
       <LineId Id="201" Count="0" />

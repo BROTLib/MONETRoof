@@ -2,15 +2,6 @@
 <TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.40">
 	<DataTypes>
 		<DataType>
-			<Name GUID="{3D778266-9CB6-A2BC-B908-FC747FC8D738}" IecBaseType="true" AutoDeleteType="true">ARRAY [1..2] OF BOOL</Name>
-			<BitSize>16</BitSize>
-			<BaseType GUID="{18071995-0000-0000-0000-000000000030}">BOOL</BaseType>
-			<ArrayInfo>
-				<LBound>1</LBound>
-				<Elements>2</Elements>
-			</ArrayInfo>
-		</DataType>
-		<DataType>
 			<Name GUID="{18071995-0000-0000-0000-002000000010}" IecBaseType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..1] OF BYTE</Name>
 			<BitSize>16</BitSize>
 			<BaseType GUID="{18071995-0000-0000-0000-000000000001}">BYTE</BaseType>
@@ -65,20 +56,11 @@
 		</System>
 		<Plc>
 			<Project GUID="{69EF3A5D-605B-4F5C-8B9F-420938A0CACB}" Name="MONETroof" PrjFilePath="MONETroof\MONETroof.plcproj" TmcFilePath="MONETroof\MONETroof.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MONETroof.tmc" TmcHash="{8D1E1E8F-50DE-FE24-444C-E351468DAFE2}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MONETroof.tmc" TmcHash="{AB131BED-C5AC-8630-31AC-D21F029384D2}">
 					<Name>MONETroof Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
 						<Name>PlcTask Inputs</Name>
-						<Var>
-							<Name>MAIN.RoofControl.open_roof</Name>
-							<Comment><![CDATA[ commands for roofs]]></Comment>
-							<Type GUID="{3D778266-9CB6-A2BC-B908-FC747FC8D738}">ARRAY [1..2] OF BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.close_roof</Name>
-							<Type GUID="{3D778266-9CB6-A2BC-B908-FC747FC8D738}">ARRAY [1..2] OF BOOL</Type>
-						</Var>
 						<Var>
 							<Name>MAIN.RoofControl.automatic</Name>
 							<Comment><![CDATA[ automatic mode]]></Comment>
@@ -87,6 +69,15 @@
 						<Var>
 							<Name>MAIN.RoofControl.ups_fail</Name>
 							<Comment><![CDATA[ UPS failure]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[1].open_roof</Name>
+							<Comment><![CDATA[ commands for roofs]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[1].close_roof</Name>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -125,6 +116,15 @@
 						<Var>
 							<Name>MAIN.RoofControl.roofs[1].motors[2].counter</Name>
 							<Comment><![CDATA[ hall sensor for counting rotation]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[2].open_roof</Name>
+							<Comment><![CDATA[ commands for roofs]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[2].close_roof</Name>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -246,6 +246,18 @@
 								<Link VarA="MAIN.RoofControl.close_roof1" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 1^MAIN.RoofControl.close_roof1" Size="1" RestoreInfo="ANotFound"/>
 								<Link VarA="MAIN.RoofControl.close_roof2" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 5^MAIN.RoofControl.close_roof2" Size="1" RestoreInfo="ANotFound"/>
 								<Link VarA="MAIN.RoofControl.open_roof2" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 3^MAIN.RoofControl.open_roof2" Size="1" RestoreInfo="ANotFound"/>
+							</OwnerB>
+						</OwnerA>
+					</UnrestoredVarLinks>
+					<UnrestoredVarLinks ImportTime="2024-09-19T13:25:14">
+						<OwnerA Name="InputDst" Prefix="TIPC^MONETroof^MONETroof Instance" Type="1">
+							<OwnerB Name="TIID^Device 4 (EtherCAT)^Term 4 (EK1100)^Term 7 (EL1008)">
+								<Link VarA="MAIN.RoofControl.open_roof[1]" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 8^MAIN.RoofControl.open_roof[1]" Size="1" RestoreInfo="ANotFound"/>
+							</OwnerB>
+							<OwnerB Name="TIID^Device 4 (EtherCAT)^Term 4 (EK1100)^Term 8 (EL1008)">
+								<Link VarA="MAIN.RoofControl.close_roof[1]" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 1^MAIN.RoofControl.close_roof[1]" Size="1" RestoreInfo="ANotFound"/>
+								<Link VarA="MAIN.RoofControl.close_roof[2]" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 5^MAIN.RoofControl.close_roof2" Size="1" RestoreInfo="ANotFound"/>
+								<Link VarA="MAIN.RoofControl.open_roof[2]" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 3^MAIN.RoofControl.open_roof[2]" Size="1" RestoreInfo="ANotFound"/>
 							</OwnerB>
 						</OwnerA>
 					</UnrestoredVarLinks>
@@ -569,8 +581,9 @@
 								</Entry>
 							</Pdo>
 							<Pdo Name="Channel 8" Index="#x1a07" Flags="#x0011" SyncMan="0">
-								<Entry Name="MAIN.RoofControl.open_roof[1]" Index="#x6070" Sub="#x01">
+								<Entry Name="MAIN.RoofControl.roofs[1].open_roof" Index="#x6070" Sub="#x01">
 									<Type>BIT</Type>
+									<Comment><![CDATA[ commands for roofs]]></Comment>
 								</Entry>
 							</Pdo>
 						</EtherCAT>
@@ -582,7 +595,7 @@
 							<SyncMan>001001000000010004000000000000000100001000010000</SyncMan>
 							<Fmmu>0000000000000000001000010100000002000000000000000000000000000000</Fmmu>
 							<Pdo Name="Channel 1" Index="#x1a00" Flags="#x0011" SyncMan="0">
-								<Entry Name="MAIN.RoofControl.close_roof[1]" Index="#x6000" Sub="#x01">
+								<Entry Name="MAIN.RoofControl.roofs[1].close_roof" Index="#x6000" Sub="#x01">
 									<Type>BIT</Type>
 								</Entry>
 							</Pdo>
@@ -593,8 +606,9 @@
 								</Entry>
 							</Pdo>
 							<Pdo Name="Channel 3" Index="#x1a02" Flags="#x0011" SyncMan="0">
-								<Entry Name="MAIN.RoofControl.open_roof[2]" Index="#x6020" Sub="#x01">
+								<Entry Name="MAIN.RoofControl.roofs[2].open_roof" Index="#x6020" Sub="#x01">
 									<Type>BIT</Type>
+									<Comment><![CDATA[ commands for roofs]]></Comment>
 								</Entry>
 							</Pdo>
 							<Pdo Name="Channel 4" Index="#x1a03" Flags="#x0011" SyncMan="0">
@@ -604,7 +618,7 @@
 								</Entry>
 							</Pdo>
 							<Pdo Name="Channel 5" Index="#x1a04" Flags="#x0011" SyncMan="0">
-								<Entry Name="MAIN.RoofControl.close_roof2" Index="#x6040" Sub="#x01">
+								<Entry Name="MAIN.RoofControl.roofs[2].close_roof" Index="#x6040" Sub="#x01">
 									<Type>BIT</Type>
 								</Entry>
 							</Pdo>
@@ -849,23 +863,23 @@
 			</OwnerB>
 			<OwnerB Name="TIID^Device 4 (EtherCAT)^Term 4 (EK1100)^Term 7 (EL1008)">
 				<Link VarA="PlcTask Inputs^MAIN.RoofControl.automatic" VarB="Channel 6^MAIN.RoofControl.automatic"/>
-				<Link VarA="PlcTask Inputs^MAIN.RoofControl.open_roof[1]" VarB="Channel 8^MAIN.RoofControl.open_roof[1]"/>
 				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[1].motors[1].counter" VarB="Channel 7^MAIN.RoofControl.roofs[1].motors[1].counter"/>
 				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[1].motors[1].error" VarB="Channel 2^MAIN.RoofControl.roofs[1].motors[1].error"/>
 				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[1].motors[2].counter" VarB="Channel 1^MAIN.RoofControl.roofs[1].motors[2].counter"/>
 				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[1].motors[2].error" VarB="Channel 4^MAIN.RoofControl.roofs[1].motors[2].error"/>
+				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[1].open_roof" VarB="Channel 8^MAIN.RoofControl.roofs[1].open_roof"/>
 				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[2].motors[1].counter" VarB="Channel 5^MAIN.RoofControl.roofs[2].motors[1].counter"/>
 				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[2].motors[2].counter" VarB="Channel 3^MAIN.RoofControl.roofs[2].motors[2].counter"/>
 			</OwnerB>
 			<OwnerB Name="TIID^Device 4 (EtherCAT)^Term 4 (EK1100)^Term 8 (EL1008)">
-				<Link VarA="PlcTask Inputs^MAIN.RoofControl.close_roof[1]" VarB="Channel 1^MAIN.RoofControl.close_roof[1]"/>
-				<Link VarA="PlcTask Inputs^MAIN.RoofControl.close_roof[2]" VarB="Channel 5^MAIN.RoofControl.close_roof2"/>
-				<Link VarA="PlcTask Inputs^MAIN.RoofControl.open_roof[2]" VarB="Channel 3^MAIN.RoofControl.open_roof[2]"/>
+				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[1].close_roof" VarB="Channel 1^MAIN.RoofControl.roofs[1].close_roof"/>
 				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[1].motors[1].closed" VarB="Channel 6^MAIN.RoofControl.roofs[1].motors[1].closed"/>
 				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[1].motors[1].opened" VarB="Channel 4^MAIN.RoofControl.roofs[1].motors[1].opened"/>
+				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[2].close_roof" VarB="Channel 5^MAIN.RoofControl.roofs[2].close_roof"/>
 				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[2].motors[1].error" VarB="Channel 7^MAIN.RoofControl.roofs[2].motors[1].error"/>
 				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[2].motors[1].opened" VarB="Channel 8^MAIN.RoofControl.roofs[2].motors[1].opened"/>
 				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[2].motors[2].error" VarB="Channel 2^MAIN.RoofControl.roofs[2].motors[2].error"/>
+				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[2].open_roof" VarB="Channel 3^MAIN.RoofControl.roofs[2].open_roof"/>
 			</OwnerB>
 			<OwnerB Name="TIID^Device 4 (EtherCAT)^Term 4 (EK1100)^Term 9 (EL1008)">
 				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[1].motors[2].closed" VarB="Channel 2^MAIN.RoofControl.roofs[1].motors[2].closed"/>
