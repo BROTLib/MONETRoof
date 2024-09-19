@@ -10,6 +10,9 @@ VAR_INPUT
 	max_position_diff		: INT;
 END_VAR
 VAR_OUTPUT
+	sync_error				: BOOL;
+	direction_error			: BOOL;
+	state					: E_RoofState;	
 END_VAR
 VAR
 	// commands for roofs
@@ -18,10 +21,7 @@ VAR
 	stop_roof				: BOOL;	
 	
 	motors			: ARRAY[1..2] OF FB_RoofMotor;
-	sync_error		: BOOL;
-	direction_error	: BOOL;
 	i				: INT;
-	state			: E_RoofState;
 END_VAR
 ]]></Declaration>
     <Implementation>

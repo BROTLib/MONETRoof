@@ -56,7 +56,7 @@
 		</System>
 		<Plc>
 			<Project GUID="{69EF3A5D-605B-4F5C-8B9F-420938A0CACB}" Name="MONETroof" PrjFilePath="MONETroof\MONETroof.plcproj" TmcFilePath="MONETroof\MONETroof.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MONETroof.tmc" TmcHash="{4404B3AD-B472-95D4-CD0C-EBFD3DFE57C8}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MONETroof.tmc" TmcHash="{270F2F2E-53E2-9C5E-C155-07A5DA371BA7}">
 					<Name>MONETroof Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">

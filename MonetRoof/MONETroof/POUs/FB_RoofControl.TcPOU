@@ -8,6 +8,7 @@ VAR_INPUT
 	min_position			: INT;
 	max_position			: INT;		
 	max_position_diff		: INT;
+	comm					: I_Comm;		
 END_VAR
 VAR_OUTPUT
 END_VAR
@@ -34,6 +35,9 @@ VAR
 	
 	// loop variable	
 	i, j					: INT;
+	
+	// Comm
+	CommTimer 				: TON := (PT:=T#5S);
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// call roofs
@@ -71,6 +75,14 @@ ELSIF (roofs[1].state = E_RoofState.stopped OR roofs[1].state = E_RoofState.open
 	roof_state := E_RoofState.stopped;
 ELSE
 	roof_state := E_RoofState.error;	
+END_IF
+
+IF comm <> 0 THEN
+	CommTimer(IN:=TRUE);
+	IF CommTimer.Q THEN // publish new payload every second
+		CommTimer(IN:=FALSE);
+		comm.Publish('roof', 'roof', 'Test', '11');
+	END_IF
 END_IF
 ]]></ST>
     </Implementation>
@@ -138,7 +150,10 @@ stop_roof[2] := TRUE;]]></ST>
       <LineId Id="260" Count="0" />
       <LineId Id="258" Count="0" />
       <LineId Id="58" Count="18" />
+      <LineId Id="270" Count="0" />
+      <LineId Id="262" Count="3" />
       <LineId Id="9" Count="0" />
+      <LineId Id="271" Count="2" />
     </LineIds>
     <LineIds Name="FB_RoofControl.Close">
       <LineId Id="6" Count="0" />
