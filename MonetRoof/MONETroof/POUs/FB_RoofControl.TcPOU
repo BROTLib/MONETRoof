@@ -44,6 +44,11 @@ END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// call roofs
 FOR i := 1 TO 2 DO
+	// reset
+	IF reset_roofs OR reset_roof[i] THEN
+		roofs[i].Reset();
+	END_IF	
+
 	// automatic or manual mode
 	IF automatic THEN
 		roofs[i].Automatic(open_roof := open_roofs OR open_roof[i], close_roof := close_roofs OR close_roof[i], stop_roof := stop_roofs OR stop_roof[i]);
@@ -142,6 +147,9 @@ stop_roof[2] := TRUE;]]></ST>
     </Method>
     <LineIds Name="FB_RoofControl">
       <LineId Id="55" Count="1" />
+      <LineId Id="316" Count="0" />
+      <LineId Id="318" Count="2" />
+      <LineId Id="317" Count="0" />
       <LineId Id="208" Count="0" />
       <LineId Id="202" Count="3" />
       <LineId Id="201" Count="0" />

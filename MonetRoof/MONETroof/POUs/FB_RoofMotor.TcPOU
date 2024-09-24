@@ -40,7 +40,8 @@ VAR
 	counter_trig			: R_TRIG;
 	
 	// reset command to drive
-	reset			AT%Q*	: BOOL;
+	reset_drive			AT%Q*	: BOOL;
+	reset_trigger				: BOOL;
 	
 	// moving
 	direction_open	AT%Q*	: BOOL;
@@ -52,7 +53,14 @@ VAR
 	target_speed			: INT;		
 END_VAR]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// ramp for roof velocity
+      <ST><![CDATA[// reset?
+reset_drive := FALSE;
+IF reset_trigger THEN
+	reset_drive := TRUE;
+	reset_trigger := FALSE;
+END_IF
+
+// ramp for roof velocity
 vel_ramp(
 	start		:= real_speed,
 	target		:= target_speed,
@@ -126,6 +134,15 @@ END_VAR
 END_IF]]></ST>
       </Implementation>
     </Method>
+    <Method Name="Reset" Id="{aa634c66-2ca0-4bfc-8efe-d1b3d9d3132b}">
+      <Declaration><![CDATA[METHOD Reset : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[reset_trigger := TRUE;]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="SoftStop" Id="{a2916879-d03b-4d3c-a270-5ed857d57bc6}">
       <Declaration><![CDATA[METHOD SoftStop : BOOL
 VAR_INPUT
@@ -148,6 +165,13 @@ target_speed 	:= 0;]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="FB_RoofMotor">
+      <LineId Id="297" Count="0" />
+      <LineId Id="300" Count="0" />
+      <LineId Id="299" Count="0" />
+      <LineId Id="301" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="302" Count="0" />
+      <LineId Id="298" Count="0" />
       <LineId Id="30" Count="0" />
       <LineId Id="25" Count="0" />
       <LineId Id="27" Count="2" />
@@ -194,6 +218,9 @@ target_speed 	:= 0;]]></ST>
       <LineId Id="6" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="9" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_RoofMotor.Reset">
+      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofMotor.SoftStop">
       <LineId Id="5" Count="0" />

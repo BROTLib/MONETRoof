@@ -9,6 +9,7 @@ VAR_INPUT
 	max_position			: INT;	
 	max_position_diff		: INT;
 	comm					: I_Comm;
+	reset_roof				: BOOL;
 END_VAR
 VAR_OUTPUT
 	sync_error				: BOOL;
@@ -60,23 +61,31 @@ END_IF
 // set state
 IF direction_error OR sync_error OR drive_error THEN
 	state := E_RoofState.error;
-ELSIF motors[1].moving OR motors[2].moving THEN
-	IF motors[1].direction_open OR motors[2].direction_open THEN
-		state := E_RoofState.opening;
-	ELSIF motors[1].direction_close OR motors[2].direction_close THEN
-		state := E_RoofState.closing;
-	ELSE
-		; // error
-	END_IF
-ELSIF motors[1].opened AND motors[2].opened THEN
-	state := E_RoofState.opened;
-ELSIF motors[1].closed AND motors[2].closed THEN
-	state := E_RoofState.closed;
-ELSIF NOT motors[1].moving AND NOT motors[2].moving THEN
-	state := E_RoofState.stopped;
 ELSE
-	state := E_RoofState.error;	
-END_IF]]></ST>
+	// no current error, but if we're still in error state, only proceed, if reset_roof is set
+	IF state <> E_RoofState.error OR reset_roof THEN
+		reset_roof := FALSE; 	
+
+		// check other states
+		IF motors[1].moving OR motors[2].moving THEN
+			IF motors[1].direction_open OR motors[2].direction_open THEN
+				state := E_RoofState.opening;
+			ELSIF motors[1].direction_close OR motors[2].direction_close THEN
+				state := E_RoofState.closing;
+			ELSE
+				; // error
+			END_IF
+		ELSIF motors[1].opened AND motors[2].opened THEN
+			state := E_RoofState.opened;
+		ELSIF motors[1].closed AND motors[2].closed THEN
+			state := E_RoofState.closed;
+		ELSIF NOT motors[1].moving AND NOT motors[2].moving THEN
+			state := E_RoofState.stopped;
+		ELSE
+			state := E_RoofState.error;	
+		END_IF
+	END_IF
+END_IF	]]></ST>
     </Implementation>
     <Method Name="Automatic" Id="{dacfaaa5-2d6d-4b81-9dd2-47909b36b0e8}">
       <Declaration><![CDATA[METHOD Automatic : BOOL
@@ -136,6 +145,18 @@ END_VAR]]></Declaration>
 END_FOR;]]></ST>
       </Implementation>
     </Method>
+    <Method Name="Reset" Id="{ceb23464-50f6-4143-8996-d8b438d9b575}">
+      <Declaration><![CDATA[METHOD Reset : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[reset_roof := TRUE;
+FOR i := 1 TO 2 DO
+	motors[i].Reset();
+END_FOR;]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="SoftStop" Id="{ae8d7a4a-b701-4693-902f-f1904e5a7ece}">
       <Declaration><![CDATA[METHOD SoftStop : BOOL
 VAR_INPUT
@@ -172,8 +193,17 @@ END_FOR;]]></ST>
       <LineId Id="219" Count="2" />
       <LineId Id="128" Count="3" />
       <LineId Id="133" Count="4" />
-      <LineId Id="139" Count="20" />
+      <LineId Id="139" Count="4" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="231" Count="0" />
+      <LineId Id="230" Count="0" />
+      <LineId Id="232" Count="0" />
+      <LineId Id="228" Count="0" />
+      <LineId Id="224" Count="0" />
+      <LineId Id="144" Count="15" />
       <LineId Id="32" Count="0" />
+      <LineId Id="233" Count="0" />
+      <LineId Id="226" Count="0" />
     </LineIds>
     <LineIds Name="FB_Roof.Automatic">
       <LineId Id="9" Count="4" />
@@ -192,6 +222,11 @@ END_FOR;]]></ST>
     <LineIds Name="FB_Roof.Open">
       <LineId Id="6" Count="0" />
       <LineId Id="9" Count="0" />
+      <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Roof.Reset">
+      <LineId Id="8" Count="0" />
+      <LineId Id="6" Count="1" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_Roof.SoftStop">
