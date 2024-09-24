@@ -54,7 +54,7 @@ direction_error := motors[1].moving AND motors[2].moving AND (motors[1].real_spe
 sync_error := ABS(motors[1].position - motors[2].position) >= max_position_diff;
 
 // stop on error
-IF direction_error OR sync_error OR drive_error THEN
+IF direction_error OR sync_error OR drive_error OR state = E_RoofState.error THEN
 	Stop();
 END_IF
 
