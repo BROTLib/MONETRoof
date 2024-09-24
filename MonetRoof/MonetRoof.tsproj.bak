@@ -56,7 +56,7 @@
 		</System>
 		<Plc>
 			<Project GUID="{69EF3A5D-605B-4F5C-8B9F-420938A0CACB}" Name="MONETroof" PrjFilePath="MONETroof\MONETroof.plcproj" TmcFilePath="MONETroof\MONETroof.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MONETroof.tmc" TmcHash="{270F2F2E-53E2-9C5E-C155-07A5DA371BA7}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MONETroof.tmc" TmcHash="{A7B5B2D9-64A6-FC2D-9D7A-2818609F22DF}">
 					<Name>MONETroof Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -81,6 +81,11 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
+							<Name>MAIN.RoofControl.roofs[1].motors[1].error</Name>
+							<Comment><![CDATA[ error ]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
 							<Name>MAIN.RoofControl.roofs[1].motors[1].opened</Name>
 							<Comment><![CDATA[ signals from limit switches]]></Comment>
 							<Type>BOOL</Type>
@@ -90,13 +95,13 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[1].error</Name>
-							<Comment><![CDATA[ error]]></Comment>
+							<Name>MAIN.RoofControl.roofs[1].motors[1].counter</Name>
+							<Comment><![CDATA[ hall sensor for counting rotation]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[1].counter</Name>
-							<Comment><![CDATA[ hall sensor for counting rotation]]></Comment>
+							<Name>MAIN.RoofControl.roofs[1].motors[2].error</Name>
+							<Comment><![CDATA[ error ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -106,11 +111,6 @@
 						</Var>
 						<Var>
 							<Name>MAIN.RoofControl.roofs[1].motors[2].closed</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[2].error</Name>
-							<Comment><![CDATA[ error]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -128,6 +128,11 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
+							<Name>MAIN.RoofControl.roofs[2].motors[1].error</Name>
+							<Comment><![CDATA[ error ]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
 							<Name>MAIN.RoofControl.roofs[2].motors[1].opened</Name>
 							<Comment><![CDATA[ signals from limit switches]]></Comment>
 							<Type>BOOL</Type>
@@ -137,13 +142,13 @@
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[1].error</Name>
-							<Comment><![CDATA[ error]]></Comment>
+							<Name>MAIN.RoofControl.roofs[2].motors[1].counter</Name>
+							<Comment><![CDATA[ hall sensor for counting rotation]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[1].counter</Name>
-							<Comment><![CDATA[ hall sensor for counting rotation]]></Comment>
+							<Name>MAIN.RoofControl.roofs[2].motors[2].error</Name>
+							<Comment><![CDATA[ error ]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -153,11 +158,6 @@
 						</Var>
 						<Var>
 							<Name>MAIN.RoofControl.roofs[2].motors[2].closed</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[2].error</Name>
-							<Comment><![CDATA[ error]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>

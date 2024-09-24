@@ -8,11 +8,14 @@ VAR_INPUT
 	min_position			: INT;
 	max_position			: INT;	
 	max_position_diff		: INT;
+	comm					: I_Comm;
 END_VAR
 VAR_OUTPUT
 	sync_error				: BOOL;
 	direction_error			: BOOL;
+	drive_error				: BOOL;
 	state					: E_RoofState;	
+	percent_open			: REAL;	
 END_VAR
 VAR
 	// commands for roofs
@@ -25,16 +28,24 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[
-
-// call motors
+      <ST><![CDATA[// call motors
+drive_error := FALSE;
+percent_open := 1.0;
 FOR i := 1 TO 2 DO
 	motors[i](
 		max_speed := max_speed, 
 		acceleration := acceleration, 
 		min_position := min_position, 
-		max_position := max_position
-	);
+		max_position := max_position,
+		comm := comm);
+		
+	// check errors
+	IF motors[i].error THEN
+		drive_error := TRUE;
+	END_IF
+	
+	// open percentage
+	percent_open := percent_open * motors[i].percent_open / 100.0;
 END_FOR
 
 // consistency check
@@ -42,12 +53,12 @@ direction_error := motors[1].moving AND motors[2].moving AND (motors[1].real_spe
 sync_error := ABS(motors[1].position - motors[2].position) >= max_position_diff;
 
 // stop on error
-IF direction_error OR sync_error THEN
+IF direction_error OR sync_error OR drive_error THEN
 	Stop();
 END_IF
 
 // set state
-IF direction_error OR sync_error THEN
+IF direction_error OR sync_error OR drive_error THEN
 	state := E_RoofState.error;
 ELSIF motors[1].moving OR motors[2].moving THEN
 	IF motors[1].direction_open OR motors[2].direction_open THEN
@@ -148,8 +159,17 @@ END_FOR;]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="FB_Roof">
-      <LineId Id="123" Count="4" />
-      <LineId Id="181" Count="4" />
+      <LineId Id="125" Count="0" />
+      <LineId Id="211" Count="0" />
+      <LineId Id="216" Count="0" />
+      <LineId Id="126" Count="1" />
+      <LineId Id="181" Count="3" />
+      <LineId Id="209" Count="0" />
+      <LineId Id="217" Count="1" />
+      <LineId Id="214" Count="0" />
+      <LineId Id="213" Count="0" />
+      <LineId Id="212" Count="0" />
+      <LineId Id="219" Count="2" />
       <LineId Id="128" Count="3" />
       <LineId Id="133" Count="4" />
       <LineId Id="139" Count="20" />

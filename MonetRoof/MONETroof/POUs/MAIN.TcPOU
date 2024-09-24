@@ -34,12 +34,12 @@ RoofControl(
 
 
 // state
-closed := RoofControl.State = E_RoofState.closed;
-opened := RoofControl.State = E_RoofState.opened;
+closed 	:= RoofControl.State = E_RoofState.closed;
+opened 	:= RoofControl.State = E_RoofState.opened;
 stopped := RoofControl.State = E_RoofState.stopped;
 opening := RoofControl.State = E_RoofState.opening;
 closing := RoofControl.State = E_RoofState.closing;
-error := RoofControl.State = E_RoofState.error;]]></ST>
+error 	:= RoofControl.State = E_RoofState.error;]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
       <LineId Id="395" Count="5" />

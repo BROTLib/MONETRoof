@@ -7,16 +7,21 @@ VAR_INPUT
 	acceleration			: UINT;	
 	min_position			: INT;
 	max_position			: INT;
+	comm					: I_Comm;
 END_VAR
 VAR_OUTPUT
 	// position
 	position				: INT;
+	percent_open			: REAL;
 	
 	// moving
 	moving					: BOOL;
 	
 	// real speed
 	real_speed				: INT;	
+	
+	// error 
+	error			AT%I*	: BOOL;
 END_VAR
 VAR
 	// signals from limit switches
@@ -28,7 +33,7 @@ VAR
 	closed_trigger			: R_TRIG;
 	
 	// error
-	error			AT%I*	: BOOL;
+	DriveErrorEvent			: FB_EventLog;
 
 	// hall sensor for counting rotation
 	counter			AT%I*	: BOOL;
@@ -78,6 +83,9 @@ opened_trigger(CLK := opened);
 IF opened_trigger.Q THEN
 	position := max_position;
 END_IF
+
+// relative position
+percent_open := 1.0 * (position - min_position) / (max_position - min_position) * 100.0;
 	
 // stop on limit switches
 IF (direction_close AND closed) OR (direction_open AND opened) THEN
@@ -85,7 +93,14 @@ IF (direction_close AND closed) OR (direction_open AND opened) THEN
 END_IF
 
 // set moving to zero, if no movement
-moving := real_speed <> 0;]]></ST>
+moving := real_speed <> 0;
+
+// error
+DriveErrorEvent(	
+	Comm			:= comm,
+	Trigger 		:= error, 
+	Level 			:= ADSLOG_MSGTYPE_ERROR,
+	FormatString 	:= 'Drive error.');]]></ST>
     </Implementation>
     <Method Name="Close" Id="{40cd4081-a8ac-4d75-aaee-c72d59685ab9}">
       <Declaration><![CDATA[METHOD Close : BOOL
@@ -154,12 +169,20 @@ target_speed 	:= 0;]]></ST>
       <LineId Id="172" Count="0" />
       <LineId Id="170" Count="0" />
       <LineId Id="160" Count="2" />
+      <LineId Id="245" Count="0" />
+      <LineId Id="244" Count="0" />
+      <LineId Id="246" Count="0" />
       <LineId Id="31" Count="2" />
       <LineId Id="50" Count="0" />
       <LineId Id="35" Count="0" />
       <LineId Id="103" Count="0" />
       <LineId Id="102" Count="0" />
       <LineId Id="104" Count="0" />
+      <LineId Id="221" Count="0" />
+      <LineId Id="220" Count="0" />
+      <LineId Id="223" Count="0" />
+      <LineId Id="229" Count="0" />
+      <LineId Id="224" Count="2" />
     </LineIds>
     <LineIds Name="FB_RoofMotor.Close">
       <LineId Id="13" Count="1" />

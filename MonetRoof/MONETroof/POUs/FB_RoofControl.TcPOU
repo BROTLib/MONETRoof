@@ -16,10 +16,12 @@ VAR
 	// commands for automatic roof controls
 	open_roofs				: BOOL;
 	close_roofs				: BOOL;
-	stop_roofs				: BOOL;	
+	stop_roofs				: BOOL;
+	reset_roofs				: BOOL;	
 	open_roof				: ARRAY[1..2] OF BOOL;
 	close_roof				: ARRAY[1..2] OF BOOL;
 	stop_roof				: ARRAY[1..2] OF BOOL;
+	reset_roof				: ARRAY[1..2] OF BOOL;
 	
 	// automatic mode
 	automatic		AT%I*	: BOOL;
@@ -51,11 +53,12 @@ FOR i := 1 TO 2 DO
 
 	// run 
 	roofs[i](		
-		max_speed := max_speed, 
-		acceleration := acceleration, 
-		min_position := min_position, 
-		max_position := max_position,
-		max_position_diff := max_position_diff
+		max_speed 			:= max_speed, 
+		acceleration 		:= acceleration, 
+		min_position 		:= min_position, 
+		max_position 		:= max_position,
+		max_position_diff 	:= max_position_diff,
+		comm 				:= comm
 	);
 END_FOR
 
@@ -112,7 +115,8 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[]]></ST>
+        <ST><![CDATA[reset_roof[1] := TRUE;
+reset_roof[2] := TRUE;]]></ST>
       </Implementation>
     </Method>
     <Property Name="State" Id="{7611ff11-7d75-4e77-a763-7a45ea36a762}">
@@ -148,6 +152,7 @@ stop_roof[2] := TRUE;]]></ST>
       <LineId Id="255" Count="1" />
       <LineId Id="57" Count="0" />
       <LineId Id="260" Count="0" />
+      <LineId Id="311" Count="0" />
       <LineId Id="258" Count="0" />
       <LineId Id="58" Count="18" />
       <LineId Id="270" Count="0" />
@@ -164,6 +169,7 @@ stop_roof[2] := TRUE;]]></ST>
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.Reset">
+      <LineId Id="9" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.State.Get">

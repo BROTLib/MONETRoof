@@ -118,7 +118,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <LibraryReference Include="BROTLib,0.1.0,BROT">
+    <LibraryReference Include="BROTLib,newest,BROT">
       <Namespace>BROTLib</Namespace>
     </LibraryReference>
     <LibraryReference Include="VisuSymbols,3.5.10.0,System">
