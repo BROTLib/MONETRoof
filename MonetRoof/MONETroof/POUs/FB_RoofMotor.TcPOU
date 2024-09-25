@@ -3,6 +3,8 @@
   <POU Name="FB_RoofMotor" Id="{47cefcf1-8ba0-4c06-bdcd-b7d169ce9c61}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_RoofMotor
 VAR_INPUT
+	roof_number				: UINT;
+	drive_number			: UINT;
 	max_speed				: INT;
 	acceleration			: UINT;	
 	min_position			: INT;
@@ -33,7 +35,7 @@ VAR
 	closed_trigger			: R_TRIG;
 	
 	// error
-	DriveErrorEvent			: FB_EventLog;
+	drive_error_event		: FB_EventLog;
 
 	// hall sensor for counting rotation
 	counter			AT%I*	: BOOL;
@@ -104,11 +106,13 @@ END_IF
 moving := real_speed <> 0;
 
 // error
-DriveErrorEvent(	
-	Comm			:= comm,
+drive_error_event(	
 	Trigger 		:= error, 
 	Level 			:= ADSLOG_MSGTYPE_ERROR,
-	FormatString 	:= 'Drive error.');]]></ST>
+	FormatString 	:= 'Drive %s in error state.', 
+	OnMessage 		:= CONCAT(CONCAT(CONCAT('#', UINT_TO_STRING(drive_number)), ' of roof #'), UINT_TO_STRING(roof_number)),
+	Comm			:= comm);
+	]]></ST>
     </Implementation>
     <Method Name="Close" Id="{40cd4081-a8ac-4d75-aaee-c72d59685ab9}">
       <Declaration><![CDATA[METHOD Close : BOOL
@@ -204,9 +208,10 @@ target_speed 	:= 0;]]></ST>
       <LineId Id="104" Count="0" />
       <LineId Id="221" Count="0" />
       <LineId Id="220" Count="0" />
-      <LineId Id="223" Count="0" />
-      <LineId Id="229" Count="0" />
-      <LineId Id="224" Count="2" />
+      <LineId Id="223" Count="2" />
+      <LineId Id="366" Count="1" />
+      <LineId Id="365" Count="0" />
+      <LineId Id="358" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofMotor.Close">
       <LineId Id="13" Count="1" />

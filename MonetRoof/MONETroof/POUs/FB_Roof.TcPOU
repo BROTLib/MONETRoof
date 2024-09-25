@@ -3,6 +3,7 @@
   <POU Name="FB_Roof" Id="{522d8680-feaf-4d00-ac9f-47554bf0503b}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_Roof
 VAR_INPUT
+	roof_number				: UINT;
 	max_speed				: INT;
 	acceleration			: UINT;
 	min_position			: INT;
@@ -10,6 +11,9 @@ VAR_INPUT
 	max_position_diff		: INT;
 	comm					: I_Comm;
 	reset_roof				: BOOL;
+	
+	is_open					: BOOL;			// fully open
+	is_closed				: BOOL;			// fully closed
 END_VAR
 VAR_OUTPUT
 	sync_error				: BOOL;
@@ -25,7 +29,12 @@ VAR
 	stop_roof				: BOOL;	
 	
 	motors			: ARRAY[1..2] OF FB_RoofMotor;
-	i				: INT;
+	i				: UINT;
+	
+	opened_event			: FB_EventLog;	// event for opened roof half
+	closed_event			: FB_EventLog;	// event for closed roof half
+	sync_error_event		: FB_EventLog;	// event for sync error
+	direction_error_event	: FB_EventLog;	// event for direction error
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -34,11 +43,13 @@ drive_error := FALSE;
 percent_open := 1.0;
 FOR i := 1 TO 2 DO
 	motors[i](
-		max_speed := max_speed, 
-		acceleration := acceleration, 
-		min_position := min_position, 
-		max_position := max_position,
-		comm := comm);
+		roof_number 	:= roof_number,
+		drive_number 	:= i,
+		max_speed 		:= max_speed, 
+		acceleration 	:= acceleration, 
+		min_position 	:= min_position, 
+		max_position 	:= max_position,
+		comm 			:= comm);
 		
 	// check errors
 	IF motors[i].error THEN
@@ -48,6 +59,11 @@ FOR i := 1 TO 2 DO
 	// open percentage
 	percent_open := percent_open * motors[i].percent_open / 100.0;
 END_FOR
+percent_open := (motors[1].percent_open + motors[2].percent_open) / 2.0;
+
+// fully open/closed
+is_open 	:= percent_open = 100.0;
+is_closed 	:= percent_open = 0.0;
 
 // consistency check
 direction_error := motors[1].moving AND motors[2].moving AND (motors[1].real_speed * motors[2].real_speed < 0);
@@ -85,7 +101,35 @@ ELSE
 			state := E_RoofState.error;	
 		END_IF
 	END_IF
-END_IF	]]></ST>
+END_IF
+
+// events
+opened_event(
+	Trigger := is_open, 
+	Level := ADSLOG_MSGTYPE_HINT, 
+	FormatString := 'Roof #%s is fully open.', 
+	OnMessage := UINT_TO_STRING(roof_number),
+	Comm := comm);
+closed_event(
+	Trigger := is_closed, 
+	Level := ADSLOG_MSGTYPE_HINT, 
+	FormatString := 'Roof #%s is fully closed.', 
+	OnMessage := UINT_TO_STRING(roof_number),
+	Comm := comm); 
+
+// errors
+sync_error_event(
+	Trigger := sync_error, 
+	Level := ADSLOG_MSGTYPE_ERROR, 
+	FormatString := 'Drives for roof #%s out of sync.', 
+	OnMessage := UINT_TO_STRING(roof_number),
+	Comm := comm); 
+direction_error_event(
+	Trigger := direction_error, 
+	Level := ADSLOG_MSGTYPE_ERROR, 
+	FormatString := 'Drives for roof #%s moving in opposite directions.', 
+	OnMessage := UINT_TO_STRING(roof_number),
+	Comm := comm); ]]></ST>
     </Implementation>
     <Method Name="Automatic" Id="{dacfaaa5-2d6d-4b81-9dd2-47909b36b0e8}">
       <Declaration><![CDATA[METHOD Automatic : BOOL
@@ -184,6 +228,7 @@ END_FOR;]]></ST>
       <LineId Id="211" Count="0" />
       <LineId Id="216" Count="0" />
       <LineId Id="126" Count="1" />
+      <LineId Id="324" Count="1" />
       <LineId Id="181" Count="3" />
       <LineId Id="209" Count="0" />
       <LineId Id="217" Count="1" />
@@ -191,7 +236,13 @@ END_FOR;]]></ST>
       <LineId Id="213" Count="0" />
       <LineId Id="212" Count="0" />
       <LineId Id="219" Count="2" />
-      <LineId Id="128" Count="3" />
+      <LineId Id="128" Count="0" />
+      <LineId Id="303" Count="0" />
+      <LineId Id="267" Count="0" />
+      <LineId Id="266" Count="0" />
+      <LineId Id="268" Count="1" />
+      <LineId Id="271" Count="0" />
+      <LineId Id="130" Count="1" />
       <LineId Id="133" Count="4" />
       <LineId Id="139" Count="4" />
       <LineId Id="229" Count="0" />
@@ -204,6 +255,20 @@ END_FOR;]]></ST>
       <LineId Id="32" Count="0" />
       <LineId Id="233" Count="0" />
       <LineId Id="226" Count="0" />
+      <LineId Id="273" Count="0" />
+      <LineId Id="272" Count="0" />
+      <LineId Id="285" Count="0" />
+      <LineId Id="291" Count="3" />
+      <LineId Id="304" Count="0" />
+      <LineId Id="297" Count="3" />
+      <LineId Id="295" Count="0" />
+      <LineId Id="305" Count="1" />
+      <LineId Id="280" Count="0" />
+      <LineId Id="319" Count="4" />
+      <LineId Id="318" Count="0" />
+      <LineId Id="311" Count="2" />
+      <LineId Id="316" Count="1" />
+      <LineId Id="307" Count="0" />
     </LineIds>
     <LineIds Name="FB_Roof.Automatic">
       <LineId Id="9" Count="4" />

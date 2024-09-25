@@ -36,7 +36,7 @@ VAR
 	roof_state				: E_RoofState;
 	
 	// loop variable	
-	i, j					: INT;
+	i, j					: UINT;
 	
 	// Comm
 	CommTimer 				: TON := (PT:=T#5S);
@@ -58,6 +58,7 @@ FOR i := 1 TO 2 DO
 
 	// run 
 	roofs[i](		
+		roof_number			:= i,
 		max_speed 			:= max_speed, 
 		acceleration 		:= acceleration, 
 		min_position 		:= min_position, 
@@ -85,13 +86,13 @@ ELSE
 	roof_state := E_RoofState.error;	
 END_IF
 
-IF comm <> 0 THEN
-	CommTimer(IN:=TRUE);
-	IF CommTimer.Q THEN // publish new payload every second
-		CommTimer(IN:=FALSE);
-		comm.Publish('roof', 'roof', 'Test', '11');
-	END_IF
-END_IF
+//IF comm <> 0 THEN
+//	CommTimer(IN:=TRUE);
+//	IF CommTimer.Q THEN // publish new payload every second
+//		CommTimer(IN:=FALSE);
+//		comm.Publish('roof', 'roof', 'Test', '11');
+//	END_IF
+//END_IF
 ]]></ST>
     </Implementation>
     <Method Name="Close" Id="{09e5ef83-053e-434a-9daf-0f46715c9ca8}">
@@ -156,6 +157,7 @@ stop_roof[2] := TRUE;]]></ST>
       <LineId Id="207" Count="0" />
       <LineId Id="206" Count="0" />
       <LineId Id="254" Count="0" />
+      <LineId Id="360" Count="0" />
       <LineId Id="257" Count="0" />
       <LineId Id="255" Count="1" />
       <LineId Id="57" Count="0" />

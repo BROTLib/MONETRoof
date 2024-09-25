@@ -17,10 +17,12 @@ END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[comm(	
-	sHostName	:= '10.129.129.76',
-    nHostPort   := 1883,
-    nKeepAlive  := 60,
-	sTopicSub   := 'MONETN'
+	sHostName		:= '10.129.129.76',
+    nHostPort   	:= 1883,
+    nKeepAlive  	:= 60,
+	sTopicSub   	:= 'MONETN',
+	sTopicLog		:= 'MONETN/Log',
+	sTopicPublish	:= 'MONETN/Telemetry'
 );
 
 RoofControl(
@@ -42,7 +44,9 @@ closing := RoofControl.State = E_RoofState.closing;
 error 	:= RoofControl.State = E_RoofState.error;]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
-      <LineId Id="395" Count="5" />
+      <LineId Id="395" Count="4" />
+      <LineId Id="415" Count="1" />
+      <LineId Id="400" Count="0" />
       <LineId Id="394" Count="0" />
       <LineId Id="363" Count="0" />
       <LineId Id="380" Count="3" />
