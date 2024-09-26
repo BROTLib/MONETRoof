@@ -3,17 +3,19 @@
   <POU Name="FB_Roof" Id="{522d8680-feaf-4d00-ac9f-47554bf0503b}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_Roof
 VAR_INPUT
-	roof_number				: UINT;
-	max_speed				: INT;
-	acceleration			: UINT;
-	min_position			: INT;
-	max_position			: INT;	
-	max_position_diff		: INT;
+	roof_number				: UINT;		// number of roof
+	min_speed				: UINT;		// minimum speed to drive
+	max_speed				: UINT;		// maximum speed to drive
+	acceleration			: UINT;		// acceleration [speed/call]
+	min_position			: INT;		// minimum position of roof
+	max_position			: INT;		// maximum position of roof
+	max_position_diff		: INT;		// maximum allowed position difference between two drives of roof
+	limit_slowdown			: REAL := 5;	// linear slowdown when moving towards limits starting at <x% and >(100-x)%
 	comm					: I_Comm;
 	reset_roof				: BOOL;
 	
-	is_open					: BOOL;			// fully open
-	is_closed				: BOOL;			// fully closed
+	is_open					: BOOL;		// fully open
+	is_closed				: BOOL;		// fully closed
 END_VAR
 VAR_OUTPUT
 	sync_error				: BOOL;
@@ -45,10 +47,12 @@ FOR i := 1 TO 2 DO
 	motors[i](
 		roof_number 	:= roof_number,
 		drive_number 	:= i,
+		min_speed		:= min_speed,
 		max_speed 		:= max_speed, 
 		acceleration 	:= acceleration, 
 		min_position 	:= min_position, 
 		max_position 	:= max_position,
+		limit_slowdown	:= limit_slowdown,
 		comm 			:= comm);
 		
 	// check errors
@@ -229,7 +233,9 @@ END_FOR;]]></ST>
       <LineId Id="216" Count="0" />
       <LineId Id="126" Count="1" />
       <LineId Id="324" Count="1" />
+      <LineId Id="327" Count="0" />
       <LineId Id="181" Count="3" />
+      <LineId Id="335" Count="0" />
       <LineId Id="209" Count="0" />
       <LineId Id="217" Count="1" />
       <LineId Id="214" Count="0" />

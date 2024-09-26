@@ -93,7 +93,7 @@
 		</System>
 		<Plc>
 			<Project GUID="{69EF3A5D-605B-4F5C-8B9F-420938A0CACB}" Name="MONETroof" PrjFilePath="MONETroof\MONETroof.plcproj" TmcFilePath="MONETroof\MONETroof.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MONETroof.tmc" TmcHash="{C1CEFFA8-47FF-EBF4-6D99-D9CD4AA60F99}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MONETroof.tmc" TmcHash="{A92B9939-C53E-7436-B354-AF2EAA7A458E}">
 					<Name>MONETroof Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -206,6 +206,19 @@
 					<Vars VarGrpType="2" AreaNo="1">
 						<Name>PlcTask Outputs</Name>
 						<Var>
+							<Name>MAIN.running</Name>
+							<Comment><![CDATA[ safety]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.restart</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.errack</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
 							<Name>MAIN.RoofControl.roofs[1].motors[1].reset_drive</Name>
 							<Comment><![CDATA[ reset command to drive]]></Comment>
 							<Type>BOOL</Type>
@@ -276,19 +289,6 @@
 						<Var>
 							<Name>MAIN.RoofControl.roofs[2].motors[2].speed</Name>
 							<Type>INT</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.running</Name>
-							<Comment><![CDATA[ safety]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.restart</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.errack</Name>
-							<Type>BOOL</Type>
 						</Var>
 					</Vars>
 					<UnrestoredVarLinks ImportTime="2024-09-18T15:58:40">

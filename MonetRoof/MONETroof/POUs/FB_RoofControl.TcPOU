@@ -3,11 +3,13 @@
   <POU Name="FB_RoofControl" Id="{d87693f7-b561-4571-8c76-2cffdf8ef5fe}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_RoofControl IMPLEMENTS I_Roof
 VAR_INPUT
-	max_speed				: INT;
-	acceleration			: UINT;
-	min_position			: INT;
-	max_position			: INT;		
-	max_position_diff		: INT;
+	min_speed				: UINT;			// minimum speed to drive
+	max_speed				: UINT;			// maximum speed to drive
+	acceleration			: UINT;			// acceleration [speed/call]
+	min_position			: INT;			// minimum position of roof
+	max_position			: INT;			// maximum position of roof
+	max_position_diff		: INT;			// maximum allowed position difference between two drives of roof
+	limit_slowdown			: REAL := 5;	// linear slowdown when moving towards limits starting at <x% and >(100-x)%
 	comm					: I_Comm;		
 END_VAR
 VAR_OUTPUT
@@ -59,11 +61,13 @@ FOR i := 1 TO 2 DO
 	// run 
 	roofs[i](		
 		roof_number			:= i,
+		min_speed			:= min_speed,
 		max_speed 			:= max_speed, 
 		acceleration 		:= acceleration, 
 		min_position 		:= min_position, 
 		max_position 		:= max_position,
 		max_position_diff 	:= max_position_diff,
+		limit_slowdown		:= limit_slowdown,
 		comm 				:= comm
 	);
 END_FOR
@@ -158,10 +162,12 @@ stop_roof[2] := TRUE;]]></ST>
       <LineId Id="206" Count="0" />
       <LineId Id="254" Count="0" />
       <LineId Id="360" Count="0" />
+      <LineId Id="364" Count="0" />
       <LineId Id="257" Count="0" />
       <LineId Id="255" Count="1" />
       <LineId Id="57" Count="0" />
       <LineId Id="260" Count="0" />
+      <LineId Id="363" Count="0" />
       <LineId Id="311" Count="0" />
       <LineId Id="258" Count="0" />
       <LineId Id="58" Count="18" />

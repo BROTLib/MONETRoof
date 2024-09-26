@@ -3,12 +3,14 @@
   <POU Name="FB_RoofMotor" Id="{47cefcf1-8ba0-4c06-bdcd-b7d169ce9c61}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_RoofMotor
 VAR_INPUT
-	roof_number				: UINT;
-	drive_number			: UINT;
-	max_speed				: INT;
-	acceleration			: UINT;	
-	min_position			: INT;
-	max_position			: INT;
+	roof_number				: UINT;		// number of roof
+	drive_number			: UINT;		// number of drive
+	min_speed				: UINT;		// minimum speed to drive
+	max_speed				: UINT;		// maximum speed to drive
+	acceleration			: UINT;		// acceleration [speed/call]
+	min_position			: INT;		// minimum position of roof
+	max_position			: INT;		// maximum position of roof
+	limit_slowdown			: REAL := 5;	// linear slowdown when moving towards limits starting at <x% and >(100-x)%
 	comm					: I_Comm;
 END_VAR
 VAR_OUTPUT
@@ -53,6 +55,7 @@ VAR
 	vel_ramp				: FB_Ramp;
 	speed			AT%Q*	: INT;
 	target_speed			: INT;		
+	limit_speed				: REAL;
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// reset?
@@ -68,12 +71,11 @@ vel_ramp(
 	target		:= target_speed,
 	accel		:= acceleration,
 	value		=> real_speed);
-speed := ABS(real_speed);
 
 // get direction
 direction_open := real_speed > 0;
 direction_close := real_speed < 0;
-
+	
 // counter for position
 counter_trig(CLK := counter);
 IF counter_trig.Q THEN
@@ -96,11 +98,38 @@ END_IF
 
 // relative position
 percent_open := 1.0 * (position - min_position) / (max_position - min_position) * 100.0;
+
+// slowdown near limits
+IF direction_close AND percent_open < limit_slowdown THEN
+	// closing near limit
+	IF percent_open <= 0 THEN
+		limit_speed := -min_speed;
+	ELSE
+		limit_speed := -((percent_open / limit_slowdown) * (max_speed - min_speed) + min_speed);
+	END_IF
+	IF limit_speed > real_speed THEN
+		real_speed :=  REAL_TO_INT(MAX(limit_speed, -max_speed));
+	END_IF	
+END_IF
+IF direction_open AND 100.0 - percent_open < limit_slowdown THEN
+	// opening near limit
+	IF percent_open >= 100 THEN
+		limit_speed := min_speed;
+	ELSE
+		limit_speed := ((100.0 - percent_open) / limit_slowdown) * (max_speed - min_speed) + min_speed;
+	END_IF
+	IF limit_speed < real_speed THEN
+		real_speed := REAL_TO_INT(MIN(limit_speed, max_speed));
+	END_IF	
+END_IF
 	
 // stop on limit switches
 IF (direction_close AND closed) OR (direction_open AND opened) THEN
 	Stop();
 END_IF
+
+// absolute speed
+speed := ABS(real_speed);
 
 // set moving to zero, if no movement
 moving := real_speed <> 0;
@@ -175,16 +204,14 @@ target_speed 	:= 0;]]></ST>
       <LineId Id="301" Count="0" />
       <LineId Id="303" Count="0" />
       <LineId Id="302" Count="0" />
-      <LineId Id="298" Count="0" />
+      <LineId Id="399" Count="0" />
       <LineId Id="30" Count="0" />
       <LineId Id="25" Count="0" />
       <LineId Id="27" Count="2" />
       <LineId Id="9" Count="0" />
-      <LineId Id="95" Count="0" />
-      <LineId Id="99" Count="0" />
-      <LineId Id="98" Count="0" />
-      <LineId Id="100" Count="1" />
-      <LineId Id="145" Count="0" />
+      <LineId Id="404" Count="0" />
+      <LineId Id="384" Count="2" />
+      <LineId Id="398" Count="0" />
       <LineId Id="144" Count="0" />
       <LineId Id="146" Count="2" />
       <LineId Id="150" Count="0" />
@@ -200,10 +227,24 @@ target_speed 	:= 0;]]></ST>
       <LineId Id="245" Count="0" />
       <LineId Id="244" Count="0" />
       <LineId Id="246" Count="0" />
-      <LineId Id="31" Count="2" />
+      <LineId Id="433" Count="3" />
+      <LineId Id="454" Count="1" />
+      <LineId Id="457" Count="1" />
+      <LineId Id="456" Count="0" />
+      <LineId Id="438" Count="5" />
+      <LineId Id="449" Count="1" />
+      <LineId Id="452" Count="1" />
+      <LineId Id="451" Count="0" />
+      <LineId Id="445" Count="2" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="448" Count="0" />
+      <LineId Id="32" Count="1" />
       <LineId Id="50" Count="0" />
       <LineId Id="35" Count="0" />
-      <LineId Id="103" Count="0" />
+      <LineId Id="408" Count="0" />
+      <LineId Id="425" Count="0" />
+      <LineId Id="420" Count="0" />
+      <LineId Id="426" Count="0" />
       <LineId Id="102" Count="0" />
       <LineId Id="104" Count="0" />
       <LineId Id="221" Count="0" />

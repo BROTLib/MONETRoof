@@ -25,11 +25,13 @@ END_VAR
 running := TRUE;
 
 RoofControl(
+	min_speed			:= 1000,
 	max_speed 			:= 30000, 
 	acceleration 		:= 500,
 	min_position 		:= 0,
-	max_position 		:= 10,
+	max_position 		:= 50,
 	max_position_diff	:= 5,
+	limit_slowdown		:= 20,
 	comm				:= comm
 );
 
@@ -56,8 +58,10 @@ error 	:= RoofControl.State = E_RoofState.error;]]></ST>
       <LineId Id="448" Count="0" />
       <LineId Id="447" Count="0" />
       <LineId Id="363" Count="0" />
+      <LineId Id="450" Count="0" />
       <LineId Id="380" Count="3" />
       <LineId Id="385" Count="0" />
+      <LineId Id="451" Count="0" />
       <LineId Id="401" Count="0" />
       <LineId Id="384" Count="0" />
       <LineId Id="418" Count="7" />
