@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Crc="2877953193" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+<Project Crc="1610489741" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <SchemaVersion>2.0</SchemaVersion>
@@ -16,7 +16,7 @@
     <IntProjName>TwinSAFE</IntProjName>
     <IsNewCreated>false</IsNewCreated>
     <SPlcProjVersion>1.8.0.0</SPlcProjVersion>
-    <NextSdsId>4</NextSdsId>
+    <NextSdsId>6</NextSdsId>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <DebugSymbols>false</DebugSymbols>
@@ -25,6 +25,8 @@
     <CodeAnalysisRuleSet>AllRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
+    <None Include="TwinSafeGroup1\Alias Devices\Restart.sds" />
+    <None Include="TwinSafeGroup1\Alias Devices\Run.sds" />
     <None Include="TwinSafeGroup1\Alias Devices\Term 2 %28EL2904%29 - Module 1 %28FSOES%29.sds" />
     <None Include="TwinSafeGroup1\Alias Devices\Term 3 %28EL1904%29 - Module 1 %28FSOES%29.sds" />
     <None Include="TwinSafeGroup1\TwinSafeGroup1.sal" />

@@ -13,10 +13,18 @@ VAR
 	opening			: BOOL;
 	closing			: BOOL;
 	error			: BOOL;	
+	
+	// safety
+	running		AT%Q*	: BOOL;
+	restart		AT%Q*	: BOOL;
+	errack		AT%Q*	: BOOL;
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[RoofControl(
+      <ST><![CDATA[// safety
+running := TRUE;
+
+RoofControl(
 	max_speed 			:= 30000, 
 	acceleration 		:= 500,
 	min_position 		:= 0,
@@ -44,6 +52,9 @@ closing := RoofControl.State = E_RoofState.closing;
 error 	:= RoofControl.State = E_RoofState.error;]]></ST>
     </Implementation>
     <LineIds Name="MAIN">
+      <LineId Id="446" Count="0" />
+      <LineId Id="448" Count="0" />
+      <LineId Id="447" Count="0" />
       <LineId Id="363" Count="0" />
       <LineId Id="380" Count="3" />
       <LineId Id="385" Count="0" />
