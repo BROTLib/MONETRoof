@@ -141,6 +141,16 @@
               <l n="LanguageTexts" t="ArrayList" />
             </o>
             <o>
+              <v n="TextID">"138"</v>
+              <v n="TextDefault">"Slow close"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
+              <v n="TextID">"996"</v>
+              <v n="TextDefault">"Slow open"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
+            <o>
               <v n="TextID">"49"</v>
               <v n="TextDefault">"Speed"</v>
               <l n="LanguageTexts" t="ArrayList" />

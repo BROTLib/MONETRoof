@@ -92,8 +92,8 @@
 			</Tasks>
 		</System>
 		<Plc>
-			<Project GUID="{69EF3A5D-605B-4F5C-8B9F-420938A0CACB}" Name="MONETroof" PrjFilePath="MONETRoof\MONETRoof.plcproj" TmcFilePath="MONETRoof\MONETRoof.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETRoof\MONETRoof.tmc" TmcHash="{0D4217F3-84A0-1960-1FA5-EA825E78AC83}">
+			<Project GUID="{69EF3A5D-605B-4F5C-8B9F-420938A0CACB}" Name="MONETRoof" PrjFilePath="MONETRoof\MONETRoof.plcproj" TmcFilePath="MONETRoof\MONETRoof.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETRoof\MONETRoof.tmc" TmcHash="{B1F4C624-A369-0886-5850-DFB2B4AC0640}">
 					<Name>MONETRoof Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -206,19 +206,6 @@
 					<Vars VarGrpType="2" AreaNo="1">
 						<Name>PlcTask Outputs</Name>
 						<Var>
-							<Name>MAIN.running</Name>
-							<Comment><![CDATA[ safety]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.restart</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.errack</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>MAIN.RoofControl.roofs[1].motors[1].reset_drive</Name>
 							<Comment><![CDATA[ reset command to drive]]></Comment>
 							<Type>BOOL</Type>
@@ -290,6 +277,19 @@
 							<Name>MAIN.RoofControl.roofs[2].motors[2].speed</Name>
 							<Type>INT</Type>
 						</Var>
+						<Var>
+							<Name>MAIN.running</Name>
+							<Comment><![CDATA[ safety]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.restart</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.errack</Name>
+							<Type>BOOL</Type>
+						</Var>
 					</Vars>
 					<UnrestoredVarLinks ImportTime="2024-09-18T15:58:40">
 						<OwnerA Name="InputDst" Prefix="TIPC^MONETroof^MONETroof Instance" Type="1">
@@ -333,7 +333,7 @@
 			</Project>
 		</Plc>
 		<Safety>
-			<Project Name="TwinSAFE" GeneralArchiveSettings="#x000f" TargetArchiveSettings="#x0007" FileArchiveSettings="#x000e">
+			<Project GUID="{A4D0707C-B260-4383-B2F0-A8DFEF9B3ADA}" Name="TwinSAFE" PrjFilePath="TwinSAFE\TwinSAFE.splcproj" TmcFilePath="TwinSAFE\TwinSAFE.tmc" GeneralArchiveSettings="#x000f" TargetArchiveSettings="#x0007" FileArchiveSettings="#x000e">
 				<Instance Id="#x01010010" KeepUnrestoredLinks="2">
 					<Name>TwinSAFE Instance</Name>
 					<TmcDesc GUID="{72A6D5B8-E98C-4604-8B90-09D1F8AB38A9}">
@@ -955,7 +955,7 @@
 				<Link VarA="Term 4 (EK1100)^Term 5 (EL2904)^Module 1 (FSOES)^RxPDO^FSOE" VarB="ConnectionInputs^Message_2 TxPDO"/>
 			</OwnerB>
 		</OwnerA>
-		<OwnerA Name="TIPC^MONETRoof^MONETRoof Instance">
+		<OwnerA Name="TIPC^MONETroof^MONETRoof Instance">
 			<OwnerB Name="TIID^Device 1 (EtherCAT)^Term 1 (EK1200)^Term 2 (EL6910)">
 				<Link VarA="PlcTask Outputs^MAIN.errack" VarB="StandardOutputs^Standard In Var 1"/>
 				<Link VarA="PlcTask Outputs^MAIN.restart" VarB="StandardOutputs^Standard In Var 4"/>

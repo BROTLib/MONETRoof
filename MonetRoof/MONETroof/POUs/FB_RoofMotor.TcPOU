@@ -56,6 +56,9 @@ VAR
 	speed			AT%Q*	: INT;
 	target_speed			: INT;		
 	limit_speed				: REAL;
+	
+	slow_open				: BOOL := FALSE;	// if true, drive open at min_speed, ignoring all errors and other commands
+	slow_close				: BOOL := FALSE;	// if true, drive closes at min_speed, ignoring all errors and other commands
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// reset?
@@ -66,11 +69,17 @@ IF reset_trigger THEN
 END_IF
 
 // ramp for roof velocity
-vel_ramp(
-	start		:= real_speed,
-	target		:= target_speed,
-	accel		:= acceleration,
-	value		=> real_speed);
+IF slow_open THEN
+	real_speed := min_speed;
+ELSIF slow_close THEN
+	real_speed := -min_speed;
+ELSE
+	vel_ramp(
+		start		:= real_speed,
+		target		:= target_speed,
+		accel		:= acceleration,
+		value		=> real_speed);
+END_IF
 
 // get direction
 direction_open := real_speed > 0;
@@ -149,9 +158,11 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT closed THEN
-	moving := TRUE;
-	target_speed := -max_speed;
+        <ST><![CDATA[IF NOT slow_open AND NOT slow_close THEN
+	IF NOT closed THEN
+		moving := TRUE;
+		target_speed := -max_speed;
+	END_IF
 END_IF]]></ST>
       </Implementation>
     </Method>
@@ -161,9 +172,11 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[IF NOT opened THEN
-	moving := TRUE;
-	target_speed := max_speed;
+        <ST><![CDATA[IF NOT slow_open AND NOT slow_close THEN
+	IF NOT opened THEN
+		moving := TRUE;
+		target_speed := max_speed;
+	END_IF
 END_IF]]></ST>
       </Implementation>
     </Method>
@@ -182,7 +195,9 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[target_speed 	:= 0;]]></ST>
+        <ST><![CDATA[IF NOT slow_open AND NOT slow_close THEN
+	target_speed 	:= 0;
+END_IF]]></ST>
       </Implementation>
     </Method>
     <Method Name="Stop" Id="{ecb23643-511b-4e32-9b6a-78443c9c1a37}">
@@ -191,10 +206,12 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[moving 			:= FALSE;
-speed  			:= 0;
-real_speed		:= 0;
-target_speed 	:= 0;]]></ST>
+        <ST><![CDATA[IF NOT slow_open AND NOT slow_close THEN
+	moving 			:= FALSE;
+	speed  			:= 0;
+	real_speed		:= 0;
+	target_speed 	:= 0;
+END_IF]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="FB_RoofMotor">
@@ -206,10 +223,14 @@ target_speed 	:= 0;]]></ST>
       <LineId Id="302" Count="0" />
       <LineId Id="399" Count="0" />
       <LineId Id="30" Count="0" />
+      <LineId Id="518" Count="1" />
+      <LineId Id="521" Count="1" />
+      <LineId Id="520" Count="0" />
       <LineId Id="25" Count="0" />
       <LineId Id="27" Count="2" />
       <LineId Id="9" Count="0" />
       <LineId Id="404" Count="0" />
+      <LineId Id="523" Count="0" />
       <LineId Id="384" Count="2" />
       <LineId Id="398" Count="0" />
       <LineId Id="144" Count="0" />
@@ -255,27 +276,35 @@ target_speed 	:= 0;]]></ST>
       <LineId Id="358" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofMotor.Close">
+      <LineId Id="20" Count="0" />
       <LineId Id="13" Count="1" />
       <LineId Id="16" Count="0" />
       <LineId Id="9" Count="0" />
+      <LineId Id="21" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofMotor.Open">
+      <LineId Id="13" Count="0" />
       <LineId Id="8" Count="0" />
       <LineId Id="6" Count="0" />
       <LineId Id="5" Count="0" />
       <LineId Id="9" Count="0" />
+      <LineId Id="14" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofMotor.Reset">
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofMotor.SoftStop">
+      <LineId Id="9" Count="0" />
       <LineId Id="5" Count="0" />
+      <LineId Id="10" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofMotor.Stop">
+      <LineId Id="19" Count="0" />
       <LineId Id="7" Count="0" />
       <LineId Id="10" Count="0" />
       <LineId Id="15" Count="0" />
       <LineId Id="11" Count="0" />
+      <LineId Id="20" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>
