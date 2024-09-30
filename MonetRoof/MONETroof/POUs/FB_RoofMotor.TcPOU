@@ -86,7 +86,7 @@ IF counter_trig.Q THEN
 	END_IF
 END_IF
 
-// if in limits, reset position, but only of moving in that direction
+// if in limits, reset position, but only if moving in that direction
 closed_trigger(CLK := closed);
 IF direction_close AND closed_trigger.Q THEN
 	position := min_position;
