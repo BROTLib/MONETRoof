@@ -1,10 +1,11 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.13">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
   <VisuManager Name="Visualization Manager" Id="{e0198da8-a0be-4366-b384-b8e65613f17a}">
     <XmlArchive>
       <Data>
         <o xml:space="preserve" t="VisualManagerObject">
           <v n="UseUnicodeStrings" t="UnicodeSupport">Undefined</v>
+          <v n="UseOverlay" t="OverlaySupport">Undefined</v>
           <o n="ViewSettings" t="VisualManagerViewSettings">
             <n n="StartVisu" />
             <v n="StartVisu33">"Visualization"</v>
@@ -27,6 +28,7 @@
             <v n="InputWithLimitsDialog">"VisuDialogs.TextinputWithLimits"</v>
             <v n="UseInputWithLimits">false</v>
             <v n="TouchHandlingActive">false</v>
+            <v n="TouchScrollbarsActive">false</v>
             <v n="SemiTransparentDrawingActive">true</v>
             <v n="UpdateColorvariablesAfterActivationDone">true</v>
             <v n="TransferSvgAndConvertedImages">false</v>
@@ -37,9 +39,22 @@
             <v n="GuidShowChangeConfigDialogFunction">{00000000-0000-0000-0000-000000000000}</v>
             <v n="UseStandardKeyboardHandling">true</v>
             <v n="PaintDeactiveElementsGrayedOut">true</v>
-            <n n="GlobalOpenNumpadKeypadSettings" />
+            <o n="GlobalOpenNumpadKeypadSettings" t="VisualManagerGlobalOpenNumpadKeypadSettings">
+              <v n="GlobalOpenNumpadKeypadType" t="GlobalOpenNumpadKeypadType">OpenCentered</v>
+              <n n="PositionX" />
+              <n n="PositionY" />
+            </o>
+            <v n="UseBackgroundForModalDialog">true</v>
+            <v n="AnimationDuration">200</v>
             <v n="ConvertImages">false</v>
             <v n="ConversionType">""</v>
+            <v n="BackImage">""</v>
+            <v n="BackImageTop">0</v>
+            <v n="BackImageLeft">0</v>
+            <v n="BackImageBot">0</v>
+            <v n="BackImageRight">0</v>
+            <v n="BackImageWarning">true</v>
+            <v n="BackImageLimit">true</v>
           </o>
           <o n="RegisterDesc" t="GenericFbDescription">
             <d n="FbMethods" t="CaseInsensitiveHashtable" ckt="String" cvt="Guid">
@@ -50,6 +65,7 @@
               <v>FB_Reinit</v>
               <v>5cce709f-ab90-45f6-9dd5-c301a60a1356</v>
             </d>
+            <d n="FbProperties" t="CaseInsensitiveHashtable" />
             <v n="FbName">"NotImportant"</v>
             <v n="FbGuid">{03416d22-7ed3-4578-a3d3-cdb6fa0ee818}</v>
           </o>
@@ -58,7 +74,7 @@
               <v n="Modifiers">7</v>
               <v n="DevType">4096</v>
               <v n="DevId">"1002 0004"</v>
-              <v n="DevVersion">"1.0.0.6"</v>
+              <v n="DevVersion">"1.0.0.7"</v>
               <v n="BaseProvider">{cb73a13e-6ccc-4bc6-8859-f5aa98bb116b}</v>
               <l n="Keys" t="ArrayList" cet="DeviceBasedHotkeyItem">
                 <o>
@@ -501,6 +517,7 @@
               <v>Initialize</v>
               <v>eb545062-8cca-460f-bb63-d2f2b22724dc</v>
             </d>
+            <d n="FbProperties" t="CaseInsensitiveHashtable" />
             <v n="FbName">"NotImportant"</v>
             <v n="FbGuid">{fe22140c-fbea-4982-863d-55c36780fad3}</v>
           </o>
@@ -554,14 +571,17 @@
         <Type n="DeviceBasedHotkeyItem">{11a86981-4b02-4f98-b432-96e385cb41b7}</Type>
         <Type n="DeviceBasedHotkeysProvider">{c91fc5aa-1e38-43b2-9a05-c52cc5d7f5b6}</Type>
         <Type n="GenericFbDescription">{40d6dd8d-dfd0-493a-8e29-c9a35e1e6539}</Type>
+        <Type n="GlobalOpenNumpadKeypadType">{550f8ee0-c42e-42f0-b253-4fadf0c12bdf}</Type>
         <Type n="Guid">System.Guid</Type>
         <Type n="HotkeyConfiguration">{6b108d46-58af-4e41-a3f4-174d8f160cc4}</Type>
         <Type n="Int32">System.Int32</Type>
         <Type n="Int64">System.Int64</Type>
+        <Type n="OverlaySupport">{05125339-dc8c-4673-b403-e21bec548370}</Type>
         <Type n="String">System.String</Type>
         <Type n="UnicodeSupport">{19611221-ebd3-4607-86d2-9822fbe84c30}</Type>
         <Type n="VisualClientSizeMode">{c37fe731-4f69-4d98-82fe-4f9aefbe200d}</Type>
         <Type n="VisualizationTargetProperties">{997fedbb-1888-4256-b61c-2933d8056bfd}</Type>
+        <Type n="VisualManagerGlobalOpenNumpadKeypadSettings">{422ed780-41e9-4352-8132-b322b16154c1}</Type>
         <Type n="VisualManagerObject">{4d3fdb8f-ab50-4c35-9d3a-d4bb9bb9a628}</Type>
         <Type n="VisualManagerViewSettings">{ec9b2ec6-92a2-4856-be72-7866fb274c64}</Type>
       </TypeList>

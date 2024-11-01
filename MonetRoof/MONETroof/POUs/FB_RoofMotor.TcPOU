@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
   <POU Name="FB_RoofMotor" Id="{47cefcf1-8ba0-4c06-bdcd-b7d169ce9c61}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_RoofMotor
 VAR_INPUT
@@ -44,8 +44,9 @@ VAR
 	counter_trig			: R_TRIG;
 	
 	// reset command to drive
-	reset_drive			AT%Q*	: BOOL;
-	reset_trigger				: BOOL;
+	reset_command			: BOOL;
+	reset_timer				: TON;
+	reset_drive		AT%Q*	: BOOL;
 	
 	// moving
 	direction_open	AT%Q*	: BOOL;
@@ -62,10 +63,17 @@ VAR
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// reset?
-reset_drive := FALSE;
-IF reset_trigger THEN
+//reset_timer();
+IF reset_command THEN
+	// set signal and start timer
 	reset_drive := TRUE;
-	reset_trigger := FALSE;
+	reset_timer(IN := TRUE, PT := T#200MS);
+END_IF
+IF reset_timer.Q THEN
+	// reset everything
+	reset_drive := FALSE;
+	reset_command := FALSE;
+	reset_timer(IN := FALSE);
 END_IF
 
 // ramp for roof velocity
@@ -186,7 +194,7 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[reset_trigger := TRUE;]]></ST>
+        <ST><![CDATA[reset_command := TRUE;]]></ST>
       </Implementation>
     </Method>
     <Method Name="SoftStop" Id="{a2916879-d03b-4d3c-a270-5ed857d57bc6}">
@@ -216,11 +224,16 @@ END_IF]]></ST>
     </Method>
     <LineIds Name="FB_RoofMotor">
       <LineId Id="297" Count="0" />
-      <LineId Id="300" Count="0" />
-      <LineId Id="299" Count="0" />
-      <LineId Id="301" Count="0" />
-      <LineId Id="303" Count="0" />
-      <LineId Id="302" Count="0" />
+      <LineId Id="541" Count="0" />
+      <LineId Id="526" Count="1" />
+      <LineId Id="535" Count="0" />
+      <LineId Id="529" Count="0" />
+      <LineId Id="528" Count="0" />
+      <LineId Id="532" Count="1" />
+      <LineId Id="536" Count="0" />
+      <LineId Id="538" Count="0" />
+      <LineId Id="537" Count="0" />
+      <LineId Id="534" Count="0" />
       <LineId Id="399" Count="0" />
       <LineId Id="30" Count="0" />
       <LineId Id="518" Count="1" />
