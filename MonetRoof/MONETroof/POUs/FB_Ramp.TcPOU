@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
   <POU Name="FB_Ramp" Id="{4c8732d7-c459-4056-a387-72e8aeca0bce}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_Ramp
 VAR_INPUT
@@ -17,12 +17,12 @@ END_VAR]]></Declaration>
 
 // step
 IF target - value > 0 THEN	
-	value := value + accel;
+	value := value + TO_INT(accel);
 	IF value >= target THEN
 		value := target;
 	END_IF
 ELSE
-	value := value - accel;
+	value := value - TO_INT(accel);
 	IF value <= target THEN
 		value := target;
 	END_IF

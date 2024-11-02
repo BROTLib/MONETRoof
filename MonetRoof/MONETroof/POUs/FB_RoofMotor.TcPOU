@@ -11,12 +11,18 @@ VAR_INPUT
 	min_position			: INT;		// minimum position of roof
 	max_position			: INT;		// maximum position of roof
 	limit_slowdown			: REAL := 5;	// linear slowdown when moving towards limits starting at <x% and >(100-x)%
+	roof_limit_open			: BOOL;		// whether any open limit switch for this roof is triggered
+	roof_limit_closed		: BOOL;		// whether any close limit switch for this roof is triggered
+	slow_open				: BOOL := FALSE;	// open at min_speed, ignoring all errors and other commands, only call from FB_Roof!
+	slow_close				: BOOL := FALSE;	// close at min_speed, ignoring all errors and other commands, only call from FB_Roof!
+	zero_counter			: BOOL := FALSE;	// reset position counter to zero
 	comm					: I_Comm;
 END_VAR
+VAR_OUTPUT PERSISTENT
+	position				: INT;	// position
+END_VAR
 VAR_OUTPUT
-	// position
-	position				: INT;
-	percent_open			: REAL;
+	percent_open			: REAL;	// percentage open
 	
 	// moving
 	moving					: BOOL;
@@ -25,13 +31,14 @@ VAR_OUTPUT
 	real_speed				: INT;	
 	
 	// error 
-	error			AT%I*	: BOOL;
-END_VAR
-VAR
+	motor_error		AT%I*	: BOOL;
+	error					: BOOL;
+	
 	// signals from limit switches
 	opened			AT%I*	: BOOL;
 	closed			AT%I*	: BOOL;
-	
+END_VAR
+VAR
 	// triggers for opened/closed
 	opened_trigger			: R_TRIG;
 	closed_trigger			: R_TRIG;
@@ -57,12 +64,12 @@ VAR
 	speed			AT%Q*	: INT;
 	target_speed			: INT;		
 	limit_speed				: REAL;
-	
-	slow_open				: BOOL := FALSE;	// if true, drive open at min_speed, ignoring all errors and other commands
-	slow_close				: BOOL := FALSE;	// if true, drive closes at min_speed, ignoring all errors and other commands
 END_VAR]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// reset?
+      <ST><![CDATA[// signals
+error := NOT motor_error;
+
+// reset?
 //reset_timer();
 IF reset_command THEN
 	// set signal and start timer
@@ -78,9 +85,9 @@ END_IF
 
 // ramp for roof velocity
 IF slow_open THEN
-	real_speed := min_speed;
+	real_speed := TO_INT(min_speed);
 ELSIF slow_close THEN
-	real_speed := -min_speed;
+	real_speed := -TO_INT(min_speed);
 ELSE
 	vel_ramp(
 		start		:= real_speed,
@@ -103,7 +110,13 @@ IF counter_trig.Q THEN
 	END_IF
 END_IF
 
+// zero?
+IF zero_counter THEN
+	position := 0;
+END_IF
+
 // if in limits, reset position, but only if moving in that direction
+(*
 closed_trigger(CLK := closed);
 IF direction_close AND closed_trigger.Q THEN
 	position := min_position;
@@ -112,6 +125,7 @@ opened_trigger(CLK := opened);
 IF direction_open AND opened_trigger.Q THEN
 	position := max_position;
 END_IF
+*)
 
 // relative position
 percent_open := 1.0 * (position - min_position) / (max_position - min_position) * 100.0;
@@ -120,12 +134,12 @@ percent_open := 1.0 * (position - min_position) / (max_position - min_position) 
 IF direction_close AND percent_open < limit_slowdown THEN
 	// closing near limit
 	IF percent_open <= 0 THEN
-		limit_speed := -min_speed;
+		limit_speed := -TO_INT(min_speed);
 	ELSE
 		limit_speed := -((percent_open / limit_slowdown) * (max_speed - min_speed) + min_speed);
 	END_IF
 	IF limit_speed > real_speed THEN
-		real_speed :=  REAL_TO_INT(MAX(limit_speed, -max_speed));
+		real_speed :=  REAL_TO_INT(MAX(limit_speed, -TO_INT(max_speed)));
 	END_IF	
 END_IF
 IF direction_open AND 100.0 - percent_open < limit_slowdown THEN
@@ -141,7 +155,7 @@ IF direction_open AND 100.0 - percent_open < limit_slowdown THEN
 END_IF
 	
 // stop on limit switches
-IF (direction_close AND closed) OR (direction_open AND opened) THEN
+IF (direction_close AND roof_limit_closed) OR (direction_open AND roof_limit_open) THEN
 	Stop();
 END_IF
 
@@ -169,7 +183,7 @@ END_VAR
         <ST><![CDATA[IF NOT slow_open AND NOT slow_close THEN
 	IF NOT closed THEN
 		moving := TRUE;
-		target_speed := -max_speed;
+		target_speed := -TO_INT(max_speed);
 	END_IF
 END_IF]]></ST>
       </Implementation>
@@ -183,7 +197,7 @@ END_VAR
         <ST><![CDATA[IF NOT slow_open AND NOT slow_close THEN
 	IF NOT opened THEN
 		moving := TRUE;
-		target_speed := max_speed;
+		target_speed := TO_INT(max_speed);
 	END_IF
 END_IF]]></ST>
       </Implementation>
@@ -223,6 +237,9 @@ END_IF]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="FB_RoofMotor">
+      <LineId Id="544" Count="0" />
+      <LineId Id="546" Count="0" />
+      <LineId Id="545" Count="0" />
       <LineId Id="297" Count="0" />
       <LineId Id="541" Count="0" />
       <LineId Id="526" Count="1" />
@@ -234,7 +251,7 @@ END_IF]]></ST>
       <LineId Id="538" Count="0" />
       <LineId Id="537" Count="0" />
       <LineId Id="534" Count="0" />
-      <LineId Id="399" Count="0" />
+      <LineId Id="543" Count="0" />
       <LineId Id="30" Count="0" />
       <LineId Id="518" Count="1" />
       <LineId Id="521" Count="1" />
@@ -252,12 +269,17 @@ END_IF]]></ST>
       <LineId Id="152" Count="1" />
       <LineId Id="151" Count="0" />
       <LineId Id="149" Count="0" />
+      <LineId Id="550" Count="0" />
+      <LineId Id="549" Count="0" />
+      <LineId Id="551" Count="2" />
       <LineId Id="159" Count="0" />
       <LineId Id="158" Count="0" />
+      <LineId Id="547" Count="0" />
       <LineId Id="173" Count="2" />
       <LineId Id="172" Count="0" />
       <LineId Id="170" Count="0" />
       <LineId Id="160" Count="2" />
+      <LineId Id="548" Count="0" />
       <LineId Id="245" Count="0" />
       <LineId Id="244" Count="0" />
       <LineId Id="246" Count="0" />

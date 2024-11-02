@@ -185,6 +185,11 @@
               <v n="TextDefault">"Sync error"</v>
               <l n="LanguageTexts" t="ArrayList" />
             </o>
+            <o>
+              <v n="TextID">"609"</v>
+              <v n="TextDefault">"Zero counter"</v>
+              <l n="LanguageTexts" t="ArrayList" />
+            </o>
           </l>
           <l n="Languages" t="ArrayList" />
           <v n="GuidInit">{b22670a7-fe4c-4895-bf92-58181320b8d9}</v>

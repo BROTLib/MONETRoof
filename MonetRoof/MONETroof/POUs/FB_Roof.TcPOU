@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
   <POU Name="FB_Roof" Id="{522d8680-feaf-4d00-ac9f-47554bf0503b}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_Roof
 VAR_INPUT
@@ -16,6 +16,11 @@ VAR_INPUT
 	
 	is_open					: BOOL;		// fully open
 	is_closed				: BOOL;		// fully closed
+	
+	slow_open				: BOOL := FALSE;	// open at min_speed, ignoring all errors and other commands
+	slow_close				: BOOL := FALSE;	// close at min_speed, ignoring all errors and other commands
+	
+	zero_counter			: BOOL := FALSE;	// reset position counter of both motors to zero
 END_VAR
 VAR_OUTPUT
 	sync_error				: BOOL;
@@ -33,6 +38,9 @@ VAR
 	motors			: ARRAY[1..2] OF FB_RoofMotor;
 	i				: UINT;
 	
+	roof_limit_open			: BOOL;		// whether any open limit switch for this roof is triggered
+	roof_limit_closed		: BOOL;		// whether any close limit switch for this roof is triggered
+	
 	opened_event			: FB_EventLog;	// event for opened roof half
 	closed_event			: FB_EventLog;	// event for closed roof half
 	sync_error_event		: FB_EventLog;	// event for sync error
@@ -40,20 +48,30 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// call motors
+      <ST><![CDATA[// any limit switches for this roof?
+roof_limit_open   := motors[1].opened OR motors[2].opened;
+roof_limit_closed := motors[1].closed OR motors[2].closed;
+
+// call motors
 drive_error := FALSE;
 percent_open := 1.0;
 FOR i := 1 TO 2 DO
+	// call individual motors
 	motors[i](
-		roof_number 	:= roof_number,
-		drive_number 	:= i,
-		min_speed		:= min_speed,
-		max_speed 		:= max_speed, 
-		acceleration 	:= acceleration, 
-		min_position 	:= min_position, 
-		max_position 	:= max_position,
-		limit_slowdown	:= limit_slowdown,
-		comm 			:= comm);
+		roof_number 		:= roof_number,
+		drive_number 		:= i,
+		min_speed			:= min_speed,
+		max_speed 			:= max_speed, 
+		acceleration 		:= acceleration, 
+		min_position 		:= min_position, 
+		max_position 		:= max_position,
+		limit_slowdown		:= limit_slowdown,
+		roof_limit_open		:= roof_limit_open,
+		roof_limit_closed	:= roof_limit_closed,
+		slow_open			:= slow_open,
+		slow_close			:= slow_close,
+		zero_counter		:= zero_counter,
+		comm 				:= comm);
 		
 	// check errors
 	IF motors[i].error THEN
@@ -228,14 +246,19 @@ END_FOR;]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="FB_Roof">
+      <LineId Id="343" Count="2" />
+      <LineId Id="342" Count="0" />
       <LineId Id="125" Count="0" />
       <LineId Id="211" Count="0" />
       <LineId Id="216" Count="0" />
-      <LineId Id="126" Count="1" />
+      <LineId Id="126" Count="0" />
+      <LineId Id="337" Count="0" />
+      <LineId Id="127" Count="0" />
       <LineId Id="324" Count="1" />
       <LineId Id="327" Count="0" />
       <LineId Id="181" Count="3" />
       <LineId Id="335" Count="0" />
+      <LineId Id="346" Count="4" />
       <LineId Id="209" Count="0" />
       <LineId Id="217" Count="1" />
       <LineId Id="214" Count="0" />

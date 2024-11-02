@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
   <POU Name="MAIN" Id="{c6ad4756-c196-4e89-b031-015370ff4b7e}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAIN
 VAR
@@ -29,9 +29,9 @@ RoofControl(
 	max_speed 			:= 30000, 
 	acceleration 		:= 500,
 	min_position 		:= 0,
-	max_position 		:= 50,
-	max_position_diff	:= 5,
-	limit_slowdown		:= 20,
+	max_position 		:= 200,
+	max_position_diff	:= 1,
+	limit_slowdown		:= 5,
 	comm				:= comm
 );
 
