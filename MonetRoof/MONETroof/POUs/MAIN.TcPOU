@@ -3,8 +3,8 @@
   <POU Name="MAIN" Id="{c6ad4756-c196-4e89-b031-015370ff4b7e}" SpecialFunc="None">
     <Declaration><![CDATA[PROGRAM MAIN
 VAR
-	RoofControl		: FB_RoofControl;
 	comm			: FB_Comm_MQTT_Influx;
+	RoofControl		: FB_RoofControl(comm := comm);
 	
 	// state
 	closed			: BOOL;
@@ -31,8 +31,7 @@ RoofControl(
 	min_position 		:= 0,
 	max_position 		:= 200,
 	max_position_diff	:= 2,
-	limit_slowdown		:= 5,
-	comm				:= comm
+	limit_slowdown		:= 5
 );
 
 comm(	
@@ -62,7 +61,6 @@ error 	:= RoofControl.State = E_RoofState.error;]]></ST>
       <LineId Id="380" Count="3" />
       <LineId Id="385" Count="0" />
       <LineId Id="451" Count="0" />
-      <LineId Id="401" Count="0" />
       <LineId Id="384" Count="0" />
       <LineId Id="418" Count="7" />
       <LineId Id="417" Count="0" />

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.12">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
   <POU Name="FB_RoofControl" Id="{d87693f7-b561-4571-8c76-2cffdf8ef5fe}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_RoofControl IMPLEMENTS I_Roof
 VAR_INPUT
@@ -109,6 +109,21 @@ END_VAR
 close_roof[2] := TRUE;]]></ST>
       </Implementation>
     </Method>
+    <Method Name="FB_Init" Id="{dd850902-58ca-498a-b6a3-06589bee5a0c}">
+      <Declaration><![CDATA[//FB_Init is always available implicitly and it is used primarily for initialization.
+//The return value is not evaluated. For a specific influence, you can also declare the
+//methods explicitly and provide additional code there with the standard initialization
+//code. You can evaluate the return value.
+METHOD FB_Init: BOOL
+VAR_INPUT
+    bInitRetains	: BOOL; // TRUE: the retain variables are initialized (reset warm / reset cold)
+    bInCopyCode		: BOOL;  // TRUE: the instance will be copied to the copy code afterward (online change)
+	comm			: I_Comm;   
+END_VAR]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[THIS^.comm := comm;]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="Open" Id="{158f37cb-bd12-4fa4-ba18-0d91b517278d}">
       <Declaration><![CDATA[METHOD Open : BOOL
 VAR_INPUT
@@ -179,6 +194,9 @@ stop_roof[2] := TRUE;]]></ST>
     <LineIds Name="FB_RoofControl.Close">
       <LineId Id="6" Count="0" />
       <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_RoofControl.FB_Init">
+      <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.Open">
       <LineId Id="6" Count="0" />
