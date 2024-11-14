@@ -3065,7 +3065,7 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{69EF3A5D-605B-4F5C-8B9F-420938A0CACB}" Name="MonetRoof" PrjFilePath="MONETroof\MonetRoof.plcproj" TmcFilePath="MONETroof\MONETRoof.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{5C6A5629-BA50-99B5-7D80-EA94DD3F2502}" TmcPath="MONETroof\MONETRoof.tmc">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{D16D9F03-5758-114D-CE69-BCB413A1376B}" TmcPath="MONETroof\MONETRoof.tmc">
 					<Name>MONETRoof Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="2" AreaNo="1">
@@ -4581,22 +4581,22 @@ External Setpoint Generation:
 							<DcMode>53796e6368726f6e0000000000000000534d2d53796e6368726f6e000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000</DcMode>
 							<DcMode>4443000000000000000000000000000044432d53796e6368726f6e0000000000000000000000000000000000000000000000000000000000a0860100000000070100000000000000000000000000000000000000000000000000000000000000</DcMode>
 							<Pdo Name="AO Outputs Channel 1" Index="#x1600" InOut="1" Flags="#x0011" SyncMan="2">
-								<Entry Name="Analog output" Index="#x7000" Sub="#x11" Flags="#x00020000">
+								<Entry Name="MAIN.RoofControl.roofs[1].motors[1].speed" Index="#x7000" Sub="#x11" Flags="#x00020000">
 									<Type>INT</Type>
 								</Entry>
 							</Pdo>
 							<Pdo Name="AO Outputs Channel 2" Index="#x1601" InOut="1" Flags="#x0011" SyncMan="2">
-								<Entry Name="Analog output" Index="#x7010" Sub="#x11" Flags="#x00020000">
+								<Entry Name="MAIN.RoofControl.roofs[2].motors[1].speed" Index="#x7010" Sub="#x11" Flags="#x00020000">
 									<Type>INT</Type>
 								</Entry>
 							</Pdo>
 							<Pdo Name="AO Outputs Channel 3" Index="#x1602" InOut="1" Flags="#x0011" SyncMan="2">
-								<Entry Name="Analog output" Index="#x7020" Sub="#x11" Flags="#x00020000">
+								<Entry Name="MAIN.RoofControl.roofs[2].motors[2].speed" Index="#x7020" Sub="#x11" Flags="#x00020000">
 									<Type>INT</Type>
 								</Entry>
 							</Pdo>
 							<Pdo Name="AO Outputs Channel 4" Index="#x1603" InOut="1" Flags="#x0011" SyncMan="2">
-								<Entry Name="Analog output" Index="#x7030" Sub="#x11" Flags="#x00020000">
+								<Entry Name="MAIN.RoofControl.roofs[1].motors[2].speed" Index="#x7030" Sub="#x11" Flags="#x00020000">
 									<Type>INT</Type>
 								</Entry>
 							</Pdo>
@@ -6942,6 +6942,12 @@ Bit1: Value smaller than Limit2]]></Comment>
 				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[2].motors[1].closed" VarB="Channel 1^MAIN.RoofControl.roofs[2].motors[1].closed"/>
 				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[2].motors[2].closed" VarB="Channel 5^MAIN.RoofControl.roofs[2].motors[2].closed"/>
 				<Link VarA="PlcTask Inputs^MAIN.RoofControl.roofs[2].motors[2].opened" VarB="Channel 3^MAIN.RoofControl.roofs[2].motors[2].opened"/>
+			</OwnerB>
+			<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 42 (EK1100)^Term 50 (EL4004)">
+				<Link VarA="PlcTask Outputs^MAIN.RoofControl.roofs[1].motors[1].speed" VarB="AO Outputs Channel 1^MAIN.RoofControl.roofs[1].motors[1].speed"/>
+				<Link VarA="PlcTask Outputs^MAIN.RoofControl.roofs[1].motors[2].speed" VarB="AO Outputs Channel 4^MAIN.RoofControl.roofs[1].motors[2].speed"/>
+				<Link VarA="PlcTask Outputs^MAIN.RoofControl.roofs[2].motors[1].speed" VarB="AO Outputs Channel 2^MAIN.RoofControl.roofs[2].motors[1].speed"/>
+				<Link VarA="PlcTask Outputs^MAIN.RoofControl.roofs[2].motors[2].speed" VarB="AO Outputs Channel 3^MAIN.RoofControl.roofs[2].motors[2].speed"/>
 			</OwnerB>
 		</OwnerA>
 	</Mappings>

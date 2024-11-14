@@ -25,12 +25,12 @@ END_VAR
 running := TRUE;
 
 RoofControl(
-	min_speed			:= 1000,
+	min_speed			:= 10000,
 	max_speed 			:= 30000, 
-	acceleration 		:= 500,
+	acceleration 		:= 150,
 	min_position 		:= 0,
 	max_position 		:= 200,
-	max_position_diff	:= 1,
+	max_position_diff	:= 2,
 	limit_slowdown		:= 5,
 	comm				:= comm
 );
