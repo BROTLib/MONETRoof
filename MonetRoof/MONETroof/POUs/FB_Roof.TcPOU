@@ -113,9 +113,9 @@ ELSE
 			ELSE
 				; // error
 			END_IF
-		ELSIF motors[1].opened AND motors[2].opened THEN
+		ELSIF motors[1].opened OR motors[2].opened THEN
 			state := E_RoofState.opened;
-		ELSIF motors[1].closed AND motors[2].closed THEN
+		ELSIF motors[1].closed OR motors[2].closed THEN
 			state := E_RoofState.closed;
 		ELSIF NOT motors[1].moving AND NOT motors[2].moving THEN
 			state := E_RoofState.stopped;
