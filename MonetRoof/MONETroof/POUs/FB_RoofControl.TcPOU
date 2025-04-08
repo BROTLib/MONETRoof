@@ -40,6 +40,10 @@ VAR
 	// loop variable	
 	i, j					: UINT;
 	
+	// open and close delays
+	tonOpen2Delay			: TON;
+	tonClose1Delay			: TON;
+	
 	// Comm
 	CommTimer 				: TON := (PT:=T#5S);
 END_VAR]]></Declaration>
