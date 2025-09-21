@@ -26,6 +26,9 @@ VAR_INPUT
 	
 	// UPS failure
 	ups_fail		AT%I*	: BOOL;
+	
+	// telemetry interval
+	fTelemetryInterval		: TIME := T#5S;
 END_VAR
 VAR_OUTPUT
 	// state
@@ -44,7 +47,7 @@ VAR
 	
 	// Comm
 	fbComm					: I_Comm;	
-	tonComm 				: TON := (PT:=T#5S);
+	tonComm 				: TON := (PT:=fTelemetryInterval);
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// call roofs
