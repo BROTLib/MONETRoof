@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="FB_RoofControl" Id="{d87693f7-b561-4571-8c76-2cffdf8ef5fe}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_RoofControl IMPLEMENTS I_Roof
 VAR_INPUT
@@ -10,7 +10,7 @@ VAR_INPUT
 	max_position			: INT;			// maximum position of roof
 	max_position_diff		: INT;			// maximum allowed position difference between two drives of roof
 	limit_slowdown			: REAL := 5;	// linear slowdown when moving towards limits starting at <x% and >(100-x)%
-	comm					: I_Comm;		
+	
 END_VAR
 VAR_OUTPUT
 END_VAR
@@ -45,7 +45,8 @@ VAR
 	tonClose1Delay			: TON;
 	
 	// Comm
-	CommTimer 				: TON := (PT:=T#5S);
+	fbComm					: I_Comm;	
+	tonComm 				: TON := (PT:=T#5S);
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// call roofs
@@ -72,7 +73,7 @@ FOR i := 1 TO 2 DO
 		max_position 		:= max_position,
 		max_position_diff 	:= max_position_diff,
 		limit_slowdown		:= limit_slowdown,
-		comm 				:= comm
+		comm 				:= fbComm
 	);
 END_FOR
 
@@ -94,15 +95,56 @@ ELSE
 	roof_state := E_RoofState.error;	
 END_IF
 
-//IF comm <> 0 THEN
-//	CommTimer(IN:=TRUE);
-//	IF CommTimer.Q THEN // publish new payload every second
-//		CommTimer(IN:=FALSE);
-//		comm.Publish('roof', 'roof', 'Test', '11');
-//	END_IF
-//END_IF
+// send telemetry
+tonComm(IN:=TRUE);
+IF tonComm.Q THEN // publish new payload every 5 seconds
+	tonComm(IN:=FALSE);
+	THIS^._SendTelemetry();	
+END_IF
 ]]></ST>
     </Implementation>
+    <Method Name="_SendTelemetry" Id="{35843360-1e80-4635-b873-96034fb47b44}">
+      <Declaration><![CDATA[METHOD _SendTelemetry : BOOL
+VAR_INPUT
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[IF roof_state = E_RoofState.opened THEN
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '1.0');
+ELSIF roof_state = E_RoofState.closing OR roof_state = E_RoofState.opening OR roof_state = E_RoofState.unknown THEN
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '0.5');
+ELSIF roof_state = E_RoofState.closed THEN
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '0.0');
+ELSE
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '-1.0');
+END_IF
+
+IF roof_state = E_RoofState.opened OR roof_state = E_RoofState.opening THEN
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.TARGETPOS', '1.0');
+ELSE
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.TARGETPOS', '0.0');
+END_IF
+
+IF roof_state = E_RoofState.error THEN
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.ERROR_STATE', '1');
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.READY_STATE', '-1.0');
+ELSE
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.ERROR_STATE', '0');
+	IF roof_state = E_RoofState.closed THEN
+		fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.READY_STATE', '0.0');
+	ELSE
+		fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.READY_STATE', '1.0');
+	END_IF
+END_IF
+
+IF state = E_RoofState.opening OR state = E_RoofState.closing THEN
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.MOTION_STATE', '1.0');
+ELSE
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.MOTION_STATE', '0.0');
+END_IF
+]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="Close" Id="{09e5ef83-053e-434a-9daf-0f46715c9ca8}">
       <Declaration><![CDATA[METHOD Close : BOOL
 VAR_INPUT
@@ -125,7 +167,7 @@ VAR_INPUT
 	comm			: I_Comm;   
 END_VAR]]></Declaration>
       <Implementation>
-        <ST><![CDATA[THIS^.comm := comm;]]></ST>
+        <ST><![CDATA[THIS^.fbComm := comm;]]></ST>
       </Implementation>
     </Method>
     <Method Name="Open" Id="{158f37cb-bd12-4fa4-ba18-0d91b517278d}">
@@ -191,9 +233,34 @@ stop_roof[2] := TRUE;]]></ST>
       <LineId Id="258" Count="0" />
       <LineId Id="58" Count="18" />
       <LineId Id="270" Count="0" />
-      <LineId Id="262" Count="3" />
-      <LineId Id="9" Count="0" />
-      <LineId Id="271" Count="2" />
+      <LineId Id="411" Count="4" />
+      <LineId Id="272" Count="1" />
+    </LineIds>
+    <LineIds Name="FB_RoofControl._SendTelemetry">
+      <LineId Id="12" Count="0" />
+      <LineId Id="15" Count="0" />
+      <LineId Id="17" Count="5" />
+      <LineId Id="16" Count="0" />
+      <LineId Id="24" Count="0" />
+      <LineId Id="23" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="27" Count="1" />
+      <LineId Id="26" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="13" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="32" Count="1" />
+      <LineId Id="36" Count="1" />
+      <LineId Id="42" Count="1" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="44" Count="0" />
+      <LineId Id="41" Count="0" />
+      <LineId Id="45" Count="0" />
+      <LineId Id="47" Count="1" />
+      <LineId Id="46" Count="0" />
+      <LineId Id="11" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.Close">
       <LineId Id="6" Count="0" />
