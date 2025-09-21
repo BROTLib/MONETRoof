@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4026.8">
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="FB_Roof" Id="{522d8680-feaf-4d00-ac9f-47554bf0503b}" SpecialFunc="None">
     <Declaration><![CDATA[FUNCTION_BLOCK FB_Roof
 VAR_INPUT
@@ -314,8 +314,7 @@ END_FOR;]]></ST>
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_Roof.Open">
-      <LineId Id="6" Count="0" />
-      <LineId Id="9" Count="0" />
+      <LineId Id="14" Count="1" />
       <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_Roof.Reset">

@@ -10,11 +10,7 @@ VAR_INPUT
 	max_position			: INT;			// maximum position of roof
 	max_position_diff		: INT;			// maximum allowed position difference between two drives of roof
 	limit_slowdown			: REAL := 5;	// linear slowdown when moving towards limits starting at <x% and >(100-x)%
-	
-END_VAR
-VAR_OUTPUT
-END_VAR
-VAR
+
 	// commands for automatic roof controls
 	open_roofs				: BOOL;
 	close_roofs				: BOOL;
@@ -30,12 +26,14 @@ VAR
 	
 	// UPS failure
 	ups_fail		AT%I*	: BOOL;
-	
-	// roofs
-	roofs					: ARRAY[1..2] OF FB_Roof;
-	
+END_VAR
+VAR_OUTPUT
 	// state
 	roof_state				: E_RoofState;
+END_VAR
+VAR
+	// roofs
+	roofs					: ARRAY[1..2] OF FB_Roof;
 	
 	// loop variable	
 	i, j					: UINT;
@@ -151,8 +149,9 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[close_roof[1] := TRUE;
-close_roof[2] := TRUE;]]></ST>
+        <ST><![CDATA[FOR i := 1 TO 2 DO
+	roofs[i].Close();
+END_FOR;]]></ST>
       </Implementation>
     </Method>
     <Method Name="FB_Init" Id="{dd850902-58ca-498a-b6a3-06589bee5a0c}">
@@ -176,8 +175,9 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[open_roof[1] := TRUE;
-open_roof[2] := TRUE;]]></ST>
+        <ST><![CDATA[FOR i := 1 TO 2 DO
+	roofs[i].Open();
+END_FOR;]]></ST>
       </Implementation>
     </Method>
     <Method Name="Reset" Id="{e643a7f5-953f-43e5-b293-e4f6fb37cbd6}">
@@ -186,8 +186,9 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[reset_roof[1] := TRUE;
-reset_roof[2] := TRUE;]]></ST>
+        <ST><![CDATA[FOR i := 1 TO 2 DO
+	roofs[i].Reset();
+END_FOR;]]></ST>
       </Implementation>
     </Method>
     <Property Name="State" Id="{7611ff11-7d75-4e77-a763-7a45ea36a762}">
@@ -207,8 +208,9 @@ VAR_INPUT
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[stop_roof[1] := TRUE;
-stop_roof[2] := TRUE;]]></ST>
+        <ST><![CDATA[FOR i := 1 TO 2 DO
+	roofs[i].Stop();
+END_FOR;]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="FB_RoofControl">
@@ -263,26 +265,26 @@ stop_roof[2] := TRUE;]]></ST>
       <LineId Id="11" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.Close">
+      <LineId Id="10" Count="1" />
       <LineId Id="6" Count="0" />
-      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.FB_Init">
       <LineId Id="1" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.Open">
-      <LineId Id="6" Count="0" />
-      <LineId Id="5" Count="0" />
+      <LineId Id="11" Count="1" />
+      <LineId Id="10" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.Reset">
+      <LineId Id="13" Count="1" />
       <LineId Id="9" Count="0" />
-      <LineId Id="5" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.State.Get">
       <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.Stop">
+      <LineId Id="10" Count="1" />
       <LineId Id="6" Count="0" />
-      <LineId Id="5" Count="0" />
     </LineIds>
   </POU>
 </TcPlcObject>
