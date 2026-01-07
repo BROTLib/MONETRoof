@@ -120,8 +120,10 @@ ELSIF roof_state = E_RoofState.stopped THEN
 	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '0.5');
 ELSIF roof_state = E_RoofState.closed THEN
 	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '0.0');
-ELSE
+ELSIF roof_state = E_RoofState.error THEN
 	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '-1.0');
+ELSE
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '-0.5');
 END_IF
 
 IF roof_state = E_RoofState.opened OR roof_state = E_RoofState.opening THEN
@@ -253,7 +255,9 @@ END_FOR;]]></ST>
       <LineId Id="52" Count="0" />
       <LineId Id="55" Count="0" />
       <LineId Id="53" Count="0" />
-      <LineId Id="18" Count="4" />
+      <LineId Id="18" Count="2" />
+      <LineId Id="57" Count="1" />
+      <LineId Id="21" Count="1" />
       <LineId Id="16" Count="0" />
       <LineId Id="24" Count="0" />
       <LineId Id="23" Count="0" />
