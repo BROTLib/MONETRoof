@@ -112,7 +112,11 @@ END_VAR
       <Implementation>
         <ST><![CDATA[IF roof_state = E_RoofState.opened THEN
 	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '1.0');
-ELSIF roof_state = E_RoofState.closing OR roof_state = E_RoofState.opening OR roof_state = E_RoofState.unknown THEN
+ELSIF roof_state = E_RoofState.closing THEN
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '0.3');
+ELSIF roof_state = E_RoofState.opening THEN
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '0.7');
+ELSIF roof_state = E_RoofState.stopped THEN
 	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '0.5');
 ELSIF roof_state = E_RoofState.closed THEN
 	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '0.0');
@@ -244,7 +248,12 @@ END_FOR;]]></ST>
     <LineIds Name="FB_RoofControl._SendTelemetry">
       <LineId Id="12" Count="0" />
       <LineId Id="15" Count="0" />
-      <LineId Id="17" Count="5" />
+      <LineId Id="17" Count="0" />
+      <LineId Id="54" Count="0" />
+      <LineId Id="52" Count="0" />
+      <LineId Id="55" Count="0" />
+      <LineId Id="53" Count="0" />
+      <LineId Id="18" Count="4" />
       <LineId Id="16" Count="0" />
       <LineId Id="24" Count="0" />
       <LineId Id="23" Count="0" />
