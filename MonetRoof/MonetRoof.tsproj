@@ -3065,7 +3065,7 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{69EF3A5D-605B-4F5C-8B9F-420938A0CACB}" Name="MonetRoof" PrjFilePath="MONETroof\MonetRoof.plcproj" TmcFilePath="MONETroof\MonetRoof.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MonetRoof.tmc" TmcHash="{FE2522CA-67C3-F917-7F36-DDECA37DF74C}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MonetRoof.tmc" TmcHash="{1E03D8C2-EA75-EF92-ADE7-D863F0E38204}">
 					<Name>MONETRoof Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -3183,6 +3183,14 @@ External Setpoint Generation:
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
+							<Name>MAIN.restart</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.errack</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
 							<Name>MAIN.RoofControl.roofs[1].motors[1].reset_drive</Name>
 							<Type>BOOL</Type>
 						</Var>
@@ -3252,14 +3260,6 @@ External Setpoint Generation:
 						</Var>
 						<Var>
 							<Name>MAIN.RoofControl.roofs[2].motors[2].direction_close</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.restart</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.errack</Name>
 							<Type>BOOL</Type>
 						</Var>
 					</Vars>

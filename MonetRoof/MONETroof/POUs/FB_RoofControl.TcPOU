@@ -6,10 +6,12 @@ VAR_INPUT
 	min_speed				: UINT;			// minimum speed to drive
 	max_speed				: UINT;			// maximum speed to drive
 	acceleration			: UINT;			// acceleration [speed/call]
-	min_position			: INT;			// minimum position of roof
-	max_position			: INT;			// maximum position of roof
 	max_position_diff		: INT;			// maximum allowed position difference between two drives of roof
 	limit_slowdown			: REAL := 5;	// linear slowdown when moving towards limits starting at <x% and >(100-x)%
+	min_position_1			: INT := 0;		// minimum position of roof
+	max_position_1			: INT := 200;		// maximum position of roof
+	min_position_2			: INT := 0;		// minimum position of roof
+	max_position_2			: INT := 200;		// maximum position of roof
 
 	// commands for automatic roof controls
 	open_roofs				: BOOL;
@@ -48,9 +50,18 @@ VAR
 	// Comm
 	fbComm					: I_Comm;	
 	tonComm 				: TON := (PT:=fTelemetryInterval);
+	
+	min_positions			: ARRAY[1..2] OF INT;		// minimum position of roof
+	max_positions			: ARRAY[1..2] OF INT;		// maximum position of roof
 END_VAR]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// call roofs
+      <ST><![CDATA[// min_max
+min_positions[1] := min_position_1;
+max_positions[1] := max_position_1;
+min_positions[2] := min_position_2;
+max_positions[2] := max_position_2;
+
+// call roofs
 FOR i := 1 TO 2 DO
 	// reset
 	IF reset_roofs OR reset_roof[i] THEN
@@ -70,8 +81,8 @@ FOR i := 1 TO 2 DO
 		min_speed			:= min_speed,
 		max_speed 			:= max_speed, 
 		acceleration 		:= acceleration, 
-		min_position 		:= min_position, 
-		max_position 		:= max_position,
+		min_position 		:= min_positions[i], 
+		max_position 		:= max_positions[i],
 		max_position_diff 	:= max_position_diff,
 		limit_slowdown		:= limit_slowdown,
 		comm 				:= fbComm
@@ -223,6 +234,10 @@ END_FOR;]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="FB_RoofControl">
+      <LineId Id="473" Count="0" />
+      <LineId Id="475" Count="2" />
+      <LineId Id="474" Count="0" />
+      <LineId Id="478" Count="0" />
       <LineId Id="55" Count="1" />
       <LineId Id="316" Count="0" />
       <LineId Id="318" Count="2" />

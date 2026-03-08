@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4026.11">
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.66">
 	<DataTypes>
 		<DataType>
 			<Name GUID="{18071995-0000-0000-0000-000000000035}" TcBaseType="true" HideType="true">UINTARR2</Name>
@@ -1006,13 +1006,13 @@ Drive Status 4 (manually linked):
 			<Name GUID="{F7B9FC50-054E-4547-B468-83A9E72D8064}" Namespace="MC" TcBaseType="true" HideType="true">NCTOPLC_AXIS_REF_STATE3_FLAGS</Name>
 			<BitSize>32</BitSize>
 			<SubItem>
-				<Name>TouchProbe1InputState</Name>
+				<Name>TouchProbe1InputState </Name>
 				<Type GUID="{18071995-0000-0000-0000-000000000010}">BIT</Type>
 				<BitSize>1</BitSize>
 				<BitOffs>0</BitOffs>
 			</SubItem>
 			<SubItem>
-				<Name>TouchProbe2InputState</Name>
+				<Name>TouchProbe2InputState </Name>
 				<Type GUID="{18071995-0000-0000-0000-000000000010}">BIT</Type>
 				<BitSize>1</BitSize>
 				<BitOffs>1</BitOffs>
@@ -1460,7 +1460,7 @@ External Setpoint Generation:
 			</ArrayInfo>
 		</DataType>
 		<DataType>
-			<Name GUID="{18071995-0000-0000-0000-002000000007}" IecBaseType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..6] OF BIT</Name>
+			<Name GUID="{18071995-0000-0000-0000-002000000007}" IecBaseType="true" BitType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..6] OF BIT</Name>
 			<BitSize>7</BitSize>
 			<BaseType GUID="{18071995-0000-0000-0000-000000000010}">BIT</BaseType>
 			<ArrayInfo>
@@ -1478,7 +1478,7 @@ External Setpoint Generation:
 			</ArrayInfo>
 		</DataType>
 		<DataType>
-			<Name GUID="{18071995-0000-0000-0000-002000000002}" IecBaseType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..1] OF BIT</Name>
+			<Name GUID="{18071995-0000-0000-0000-002000000002}" IecBaseType="true" BitType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..1] OF BIT</Name>
 			<BitSize>2</BitSize>
 			<BaseType GUID="{18071995-0000-0000-0000-000000000010}">BIT</BaseType>
 			<ArrayInfo>
@@ -1505,7 +1505,7 @@ External Setpoint Generation:
 			</ArrayInfo>
 		</DataType>
 		<DataType>
-			<Name GUID="{18071995-0000-0000-0000-002000000005}" IecBaseType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..4] OF BIT</Name>
+			<Name GUID="{18071995-0000-0000-0000-002000000005}" IecBaseType="true" BitType="true" AutoDeleteType="true" HideSubItems="true">ARRAY [0..4] OF BIT</Name>
 			<BitSize>5</BitSize>
 			<BaseType GUID="{18071995-0000-0000-0000-000000000010}">BIT</BaseType>
 			<ArrayInfo>
@@ -1538,7 +1538,7 @@ External Setpoint Generation:
 		<ImageData Id="1011">424dd6020000000000003600000028000000100000000e0000000100180000000000a002000000000000000000000000000000000000ff00ffff00ffff00ffff00ffff00ffff00ff808080808080808080808080808080ff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0000000c0c0c0000000808080ff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffc0c0c000ffffc0c0c000ffff808080ff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0c0c0c0c0c0c0c0c0c0808080ff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0000000c0c0c0000000808080ff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0ff0000c0c0c0ff0000808080ff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0c0c0c0c0c0c0c0c0c0808080ff00ffff00ffff00ffff00ffff00ff00ff0000ff0000ff0000ff0000ff0000ff00c0c0c0000000c0c0c0000000808080ff00ffff00ffff00ffff00ffff00ff00ff0000ff0000ff0000ff0000ff0000ff00c0c0c00000ffc0c0c00000ff808080ff00ffff00ffff00ffff00ffff00ff00ff0000ff0000ff0000ff0000ff0000ff00c0c0c0c0c0c0c0c0c0c0c0c0808080ff00ffff00ffff00ffff00ffff00ff00ff0000ff0000ff0000ff0000ff0000ff00c0c0c0000000c0c0c0000000808080ff00ffff00ffff00ffff00ffff00ff00ff0000ff0000ff0000ff0000ff0000ff00c0c0c0c0c0c0c0c0c0c0c0c0808080ff00ffff00ffff00ffff00ffff00ff00ff0000ff0000ff0000ff0000ff0000ff00c0c0c0008000c0c0c0008000808080ff00ffff00ffff00ffff00ffff00ff00ff0000ff0000ff0000ff0000ff0000ff00c0c0c0c0c0c0c0c0c0c0c0c0808080ff00ffff00ffff00ffff00ffff00ff</ImageData>
 		<ImageData Id="1012">424dd6020000000000003600000028000000100000000e0000000100180000000000a0020000c40e0000c40e00000000000000000000ff00ffff00ffff00ffff00ffff00ffff00ff808080808080808080808080808080ff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0000000c0c0c0000000808080ff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffc0c0c000ffffc0c0c000ffff808080ff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0c0c0c0c0c0c0c0c0c0808080ff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0000000c0c0c0000000808080ff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0ff0000c0c0c0ff0000808080ff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffff00ffc0c0c0c0c0c0c0c0c0c0c0c0808080ff00ffff00ffff00ffff00ffff00ff007fff007fff007fff007fff007fff007fffc0c0c0000000c0c0c0000000808080ff00ffff00ffff00ffff00ffff00ff007fff007fff007fff007fff007fff007fffc0c0c00000ffc0c0c00000ff808080ff00ffff00ffff00ffff00ffff00ff007fff007fff007fff007fff007fff007fffc0c0c0c0c0c0c0c0c0c0c0c0808080ff00ffff00ffff00ffff00ffff00ff007fff007fff007fff007fff007fff007fffc0c0c0000000c0c0c0000000808080ff00ffff00ffff00ffff00ffff00ff007fff007fff007fff007fff007fff007fffc0c0c0c0c0c0c0c0c0c0c0c0808080ff00ffff00ffff00ffff00ffff00ff007fff007fff007fff007fff007fff007fffc0c0c0008000c0c0c0008000808080ff00ffff00ffff00ffff00ffff00ff007fff007fff007fff007fff007fff007fffc0c0c0c0c0c0c0c0c0c0c0c0808080ff00ffff00ffff00ffff00ffff00ff</ImageData>
 	</ImageDatas>
-	<Project ProjectGUID="{886225E6-AF24-4259-BDB7-C131B3BFB76D}" TargetNetId="5.131.251.159.1.1" Target64Bit="true" ShowHideConfigurations="#x106">
+	<Project ProjectGUID="{886225E6-AF24-4259-BDB7-C131B3BFB76D}" TargetNetId="5.131.251.159.1.1" ShowHideConfigurations="#x106">
 		<System>
 			<Tasks>
 				<Task Id="3" Priority="20" CycleTime="100000" AmsPort="350" AdtTasks="true">
@@ -1548,7 +1548,7 @@ External Setpoint Generation:
 		</System>
 		<Motion>
 			<NC>
-				<SafTask Priority="4" CycleTime="20000" AmsPort="501" IoAtBegin="true" SafTaskInfo="256" HighPrioAds="true">
+				<SafTask Priority="4" CycleTime="20000" AmsPort="501" IoAtBegin="true" SafTaskInfo="256">
 					<Name>NC-Task 1 SAF</Name>
 					<Vars VarGrpType="1" InsertType="1">
 						<Name>Inputs</Name>
@@ -3064,94 +3064,10 @@ External Setpoint Generation:
 			</NC>
 		</Motion>
 		<Plc>
-			<Project GUID="{69EF3A5D-605B-4F5C-8B9F-420938A0CACB}" Name="MonetRoof" PrjFilePath="MONETroof\MonetRoof.plcproj" TmcFilePath="MONETroof\MONETRoof.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcHash="{5C6A5629-BA50-99B5-7D80-EA94DD3F2502}" TmcPath="MONETroof\MONETRoof.tmc">
+			<Project GUID="{69EF3A5D-605B-4F5C-8B9F-420938A0CACB}" Name="MonetRoof" PrjFilePath="MONETroof\MonetRoof.plcproj" TmcFilePath="MONETroof\MonetRoof.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MonetRoof.tmc" TmcHash="{44CED4A4-3A5B-0509-D844-8CE36C4811BC}">
 					<Name>MONETRoof Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
-					<Vars VarGrpType="2" AreaNo="1">
-						<Name>PlcTask Outputs</Name>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[1].reset_drive</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[1].direction_open</Name>
-							<Comment><![CDATA[ moving]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[1].direction_close</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[1].speed</Name>
-							<Type>INT</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[2].reset_drive</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[2].direction_open</Name>
-							<Comment><![CDATA[ moving]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[2].direction_close</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[2].speed</Name>
-							<Type>INT</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[1].reset_drive</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[1].direction_open</Name>
-							<Comment><![CDATA[ moving]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[1].direction_close</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[1].speed</Name>
-							<Type>INT</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[2].reset_drive</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[2].direction_open</Name>
-							<Comment><![CDATA[ moving]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[2].direction_close</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[2].speed</Name>
-							<Type>INT</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.running</Name>
-							<Comment><![CDATA[ safety]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.restart</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.errack</Name>
-							<Type>BOOL</Type>
-						</Var>
-					</Vars>
 					<Vars VarGrpType="1">
 						<Name>PlcTask Inputs</Name>
 						<Var>
@@ -3256,6 +3172,94 @@ External Setpoint Generation:
 						<Var>
 							<Name>MAIN.RoofControl.roofs[2].motors[2].counter</Name>
 							<Comment><![CDATA[ hall sensor for counting rotation]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+					</Vars>
+					<Vars VarGrpType="2" AreaNo="1">
+						<Name>PlcTask Outputs</Name>
+						<Var>
+							<Name>MAIN.running</Name>
+							<Comment><![CDATA[ safety]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.restart</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.errack</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[1].motors[1].reset_drive</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[1].motors[1].speed</Name>
+							<Comment><![CDATA[ move speed]]></Comment>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[1].motors[1].direction_open</Name>
+							<Comment><![CDATA[ move direction]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[1].motors[1].direction_close</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[1].motors[2].reset_drive</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[1].motors[2].speed</Name>
+							<Comment><![CDATA[ move speed]]></Comment>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[1].motors[2].direction_open</Name>
+							<Comment><![CDATA[ move direction]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[1].motors[2].direction_close</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[2].motors[1].reset_drive</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[2].motors[1].speed</Name>
+							<Comment><![CDATA[ move speed]]></Comment>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[2].motors[1].direction_open</Name>
+							<Comment><![CDATA[ move direction]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[2].motors[1].direction_close</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[2].motors[2].reset_drive</Name>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[2].motors[2].speed</Name>
+							<Comment><![CDATA[ move speed]]></Comment>
+							<Type>INT</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[2].motors[2].direction_open</Name>
+							<Comment><![CDATA[ move direction]]></Comment>
+							<Type>BOOL</Type>
+						</Var>
+						<Var>
+							<Name>MAIN.RoofControl.roofs[2].motors[2].direction_close</Name>
 							<Type>BOOL</Type>
 						</Var>
 					</Vars>
@@ -6058,12 +6062,12 @@ External Setpoint Generation:
 									<Type>UINT</Type>
 								</Entry>
 							</Pdo>
-							<CoeProfile ProfileNo="33493897" DisplayName="Ch 1 - DC motor interface"/>
-							<CoeProfile ProfileNo="33493897" DisplayName="Ch 2 - DC motor interface"/>
-							<CoeProfile ProfileNo="48042889" DisplayName="Ch 1 - DC motor interface"/>
-							<CoeProfile ProfileNo="48042889" DisplayName="Ch 2 - DC motor interface"/>
-							<CoeProfile ProfileNo="46142345" DisplayName="Ch 1 - Positioning interface"/>
-							<CoeProfile ProfileNo="46142345" DisplayName="Ch 2 - Positioning interface"/>
+							<CoeProfile ProfileNo="33493897" DisplayName="Ch 1 - DC motor inte"/>
+							<CoeProfile ProfileNo="33493897" DisplayName="Ch 2 - DC motor inte"/>
+							<CoeProfile ProfileNo="48042889" DisplayName="Ch 1 - DC motor inte"/>
+							<CoeProfile ProfileNo="48042889" DisplayName="Ch 2 - DC motor inte"/>
+							<CoeProfile ProfileNo="46142345" DisplayName="Ch 1 - Positioning i"/>
+							<CoeProfile ProfileNo="46142345" DisplayName="Ch 2 - Positioning i"/>
 						</EtherCAT>
 					</Box>
 					<Box Id="13" BoxType="9099" BoxFlags="#x00000020">
@@ -6431,9 +6435,9 @@ Bit1: Value smaller than Limit2]]></Comment>
 									<Type GUID="{18071995-0000-0000-0000-00200000008E}">ARRAY [0..141] OF BIT</Type>
 								</Entry>
 							</Pdo>
-							<CoeProfile ProfileNo="22352777" DisplayName="Power Measuring Extended"/>
-							<CoeProfile ProfileNo="22352777" DisplayName="Power Measuring Extended"/>
-							<CoeProfile ProfileNo="22352777" DisplayName="Power Measuring Extended"/>
+							<CoeProfile ProfileNo="22352777" DisplayName="Power Measuring Exte"/>
+							<CoeProfile ProfileNo="22352777" DisplayName="Power Measuring Exte"/>
+							<CoeProfile ProfileNo="22352777" DisplayName="Power Measuring Exte"/>
 						</EtherCAT>
 					</Box>
 					<Box Id="15" BoxType="9099">

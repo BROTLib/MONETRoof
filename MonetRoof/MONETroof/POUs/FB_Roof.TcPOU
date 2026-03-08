@@ -25,6 +25,7 @@ END_VAR
 VAR_OUTPUT
 	sync_error				: BOOL;
 	direction_error			: BOOL;
+	limit_error				: BOOL;
 	drive_error				: BOOL;
 	state					: E_RoofState;	
 	percent_open			: REAL;	
@@ -45,6 +46,7 @@ VAR
 	closed_event			: FB_EventLog;	// event for closed roof half
 	sync_error_event		: FB_EventLog;	// event for sync error
 	direction_error_event	: FB_EventLog;	// event for direction error
+	limit_error_event		: FB_EventLog;	// event for limit error
 	
 	// speed
 	vel_ramp				: FB_Ramp;
@@ -58,16 +60,16 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// any limit switches for this roof?
-roof_limit_open   := motors[1].opened OR motors[2].opened;
-roof_limit_closed := motors[1].closed OR motors[2].closed;
+      <ST><![CDATA[// limit switches for this roof?
+roof_limit_open   := motors[1].opened AND motors[2].opened;
+roof_limit_closed := motors[1].closed AND motors[2].closed;
 
 // percent open
 percent_open := (motors[1].percent_open + motors[2].percent_open) / 2.0;
 
 // ramp for roof velocity
 IF slow_open THEN
-	speed := TO_INT(min_speed);
+	speed := TO_INT(min_speed); 
 ELSIF slow_close THEN
 	speed := -TO_INT(min_speed);
 ELSE
@@ -132,20 +134,26 @@ END_FOR
 percent_open := (motors[1].percent_open + motors[2].percent_open) / 2.0;
 
 // fully open/closed
-is_open 	:= percent_open = 100.0;
-is_closed 	:= percent_open = 0.0;
+//is_open 	:= percent_open = 100.0;
+//is_closed 	:= percent_open = 0.0;
+is_open := roof_limit_open;
+is_closed := roof_limit_closed;
 
 // consistency check
 direction_error := motors[1].moving AND motors[2].moving AND (motors[1].real_speed * motors[2].real_speed < 0);
 sync_error := ABS(motors[1].position - motors[2].position) >= max_position_diff;
+limit_error := (is_opening AND motors[1].MovedSinceOpen >= max_position_diff) OR 
+			   (is_closing AND motors[1].MovedSinceClosed >= max_position_diff) OR
+			   (is_opening AND motors[2].MovedSinceOpen >= max_position_diff) OR 
+			   (is_closing AND motors[2].MovedSinceClosed >= max_position_diff);
 
 // stop on error
-IF direction_error OR sync_error OR drive_error OR state = E_RoofState.error THEN
+IF direction_error OR sync_error OR drive_error OR limit_error OR state = E_RoofState.error THEN
 	Stop();
 END_IF
 
 // set state
-IF direction_error OR sync_error OR drive_error THEN
+IF direction_error OR sync_error OR drive_error OR limit_error THEN
 	state := E_RoofState.error;
 ELSE
 	// no current error, but if we're still in error state, only proceed, if reset_roof is set
@@ -199,7 +207,13 @@ direction_error_event(
 	Level := ADSLOG_MSGTYPE_ERROR, 
 	FormatString := 'Drives for roof #%s moving in opposite directions.', 
 	OnMessage := UINT_TO_STRING(roof_number),
-	Comm := comm); ]]></ST>
+	Comm := comm); 
+limit_error_event(
+	Trigger := limit_error, 
+	Level := ADSLOG_MSGTYPE_ERROR, 
+	FormatString := 'Could not find 2nd limit switch for roof #%s.', 
+	OnMessage := UINT_TO_STRING(roof_number),
+	Comm := comm); 	]]></ST>
     </Implementation>
     <Method Name="Automatic" Id="{dacfaaa5-2d6d-4b81-9dd2-47909b36b0e8}">
       <Declaration><![CDATA[METHOD Automatic : BOOL
@@ -302,8 +316,16 @@ target_speed := 0;
     <LineIds Name="FB_Roof">
       <LineId Id="736" Count="54" />
       <LineId Id="792" Count="14" />
-      <LineId Id="810" Count="70" />
+      <LineId Id="810" Count="5" />
+      <LineId Id="936" Count="1" />
+      <LineId Id="816" Count="3" />
+      <LineId Id="940" Count="0" />
+      <LineId Id="946" Count="2" />
+      <LineId Id="820" Count="55" />
+      <LineId Id="950" Count="4" />
       <LineId Id="307" Count="0" />
+      <LineId Id="956" Count="4" />
+      <LineId Id="955" Count="0" />
     </LineIds>
     <LineIds Name="FB_Roof.Automatic">
       <LineId Id="9" Count="4" />

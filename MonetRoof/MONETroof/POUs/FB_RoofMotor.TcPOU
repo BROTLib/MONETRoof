@@ -27,6 +27,10 @@ VAR_OUTPUT
 	// signals from limit switches
 	opened			AT%I*	: BOOL;
 	closed			AT%I*	: BOOL;
+	
+	// position on limit switch
+	position_open			: INT := -1000;
+	position_close			: INT := -1000;
 END_VAR
 VAR
 	// triggers for opened/closed
@@ -49,6 +53,12 @@ VAR
 	speed			AT%Q*	: INT;		// move speed
 	direction_open	AT%Q*	: BOOL;		// move direction
 	direction_close	AT%Q*	: BOOL;
+	
+	// position on limit switch
+	position_open_on_trig	: R_TRIG;
+	position_open_off_trig	: F_TRIG;
+	position_close_on_trig	: R_TRIG;
+	position_close_off_trig	: F_TRIG;
 END_VAR]]></Declaration>
     <Implementation>
       <ST><![CDATA[// signals
@@ -90,6 +100,24 @@ IF zero_counter THEN
 	position := 0;
 END_IF
 
+// remember position when entering/leaving limit switches
+position_open_on_trig(CLK := opened);
+IF position_open_on_trig.Q THEN
+	position_open := position;
+END_IF
+position_open_off_trig(CLK := opened);
+IF position_open_off_trig.Q THEN
+	position_open := -1000;
+END_IF
+position_close_on_trig(CLK := closed);
+IF position_close_on_trig.Q THEN
+	position_close := position;
+END_IF
+position_close_off_trig(CLK := closed);
+IF position_close_off_trig.Q THEN
+	position_close := -1000;
+END_IF
+
 // if in limits, reset position, but only if moving in that direction
 (*
 closed_trigger(CLK := closed);
@@ -117,6 +145,36 @@ drive_error_event(
 	Comm			:= comm);
 	]]></ST>
     </Implementation>
+    <Property Name="MovedSinceClosed" Id="{2719aae1-546e-4298-912e-02b6d87518f5}">
+      <Declaration><![CDATA[PROPERTY MovedSinceClosed : INT]]></Declaration>
+      <Get Name="Get" Id="{96f83e28-e8ad-4fde-910b-1a5f42c9fcc0}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IF position_close = -1000 THEN
+	MovedSinceClosed := 0;
+ELSE
+	MovedSinceClosed := ABS(position - position_close);
+END_IF]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
+    <Property Name="MovedSinceOpen" Id="{bae22f4e-cf0f-4b68-8c2a-92262cee694d}">
+      <Declaration><![CDATA[PROPERTY MovedSinceOpen : INT]]></Declaration>
+      <Get Name="Get" Id="{86e36bdf-b1ad-4e46-b5a9-f1d0514460ed}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IF position_open = -1000 THEN
+	MovedSinceOpen := 0;
+ELSE
+	MovedSinceOpen := ABS(position - position_open);
+END_IF]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Method Name="Reset" Id="{aa634c66-2ca0-4bfc-8efe-d1b3d9d3132b}">
       <Declaration><![CDATA[METHOD Reset : BOOL
 VAR_INPUT
@@ -155,7 +213,16 @@ END_VAR
       <LineId Id="550" Count="0" />
       <LineId Id="549" Count="0" />
       <LineId Id="551" Count="2" />
+      <LineId Id="683" Count="0" />
+      <LineId Id="682" Count="0" />
+      <LineId Id="684" Count="0" />
       <LineId Id="159" Count="0" />
+      <LineId Id="685" Count="1" />
+      <LineId Id="689" Count="2" />
+      <LineId Id="688" Count="0" />
+      <LineId Id="692" Count="6" />
+      <LineId Id="687" Count="0" />
+      <LineId Id="699" Count="0" />
       <LineId Id="158" Count="0" />
       <LineId Id="547" Count="0" />
       <LineId Id="173" Count="2" />
@@ -169,12 +236,24 @@ END_VAR
       <LineId Id="426" Count="0" />
       <LineId Id="102" Count="0" />
       <LineId Id="104" Count="0" />
-      <LineId Id="221" Count="0" />
+      <LineId Id="726" Count="0" />
       <LineId Id="220" Count="0" />
       <LineId Id="223" Count="2" />
       <LineId Id="366" Count="1" />
       <LineId Id="365" Count="0" />
       <LineId Id="358" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_RoofMotor.MovedSinceClosed.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="1" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_RoofMotor.MovedSinceOpen.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="1" />
+      <LineId Id="6" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofMotor.Reset">
       <LineId Id="5" Count="0" />
