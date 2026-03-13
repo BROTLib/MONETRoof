@@ -162,6 +162,7 @@ ELSE
 END_IF
 
 // MONET specific
+fbComm.Publish('telescope', 'dome', 'MONET.ROOF.STATE', Status);
 fbComm.Publish('telescope', 'dome', 'MONET.ROOF.POS1', LREAL_TO_STRING(roofs[1].percent_open));
 fbComm.Publish('telescope', 'dome', 'MONET.ROOF.STATE1', roofs[1].Status);
 fbComm.Publish('telescope', 'dome', 'MONET.ROOF.ERROR1', roofs[1].Error);
@@ -327,6 +328,7 @@ END_FOR;]]></ST>
       <LineId Id="46" Count="0" />
       <LineId Id="63" Count="0" />
       <LineId Id="62" Count="0" />
+      <LineId Id="70" Count="0" />
       <LineId Id="64" Count="0" />
       <LineId Id="66" Count="0" />
       <LineId Id="69" Count="0" />
