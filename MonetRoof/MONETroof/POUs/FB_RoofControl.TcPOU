@@ -229,6 +229,31 @@ END_VAR
         </Implementation>
       </Get>
     </Property>
+    <Property Name="Status" Id="{24fa5504-7504-4f2c-a2dc-6d5a61db8e4f}">
+      <Declaration><![CDATA[PROPERTY Status : STRING]]></Declaration>
+      <Get Name="Get" Id="{36e05c01-1ffa-42f8-87b2-d50fcb2efd5a}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IF state = E_RoofState.closed THEN
+	Status := 'CLOSED';
+ELSIF state = E_RoofState.opened THEN
+	Status := 'OPENED';
+ELSIF state = E_RoofState.opening THEN
+	Status := 'OPENING';
+ELSIF state = E_RoofState.closing THEN
+	Status := 'CLOSING';
+ELSIF state = E_RoofState.stopped THEN
+	Status := 'STOPPED';
+ELSIF state = E_RoofState.error THEN
+	Status := 'ERROR';
+ELSIF state = E_RoofState.unknown THEN
+	Status := 'UNKNOWN';	
+END_IF]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Method Name="Stop" Id="{b18a1fc2-196a-46c9-9a0b-0d399c89b25a}">
       <Declaration><![CDATA[METHOD Stop : BOOL
 VAR_INPUT
@@ -325,6 +350,10 @@ END_FOR;]]></ST>
       <LineId Id="9" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.State.Get">
+      <LineId Id="2" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_RoofControl.Status.Get">
+      <LineId Id="5" Count="13" />
       <LineId Id="2" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.Stop">
