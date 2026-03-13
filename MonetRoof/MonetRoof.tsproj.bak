@@ -3065,7 +3065,7 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{69EF3A5D-605B-4F5C-8B9F-420938A0CACB}" Name="MonetRoof" PrjFilePath="MONETroof\MonetRoof.plcproj" TmcFilePath="MONETroof\MonetRoof.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MonetRoof.tmc" TmcHash="{44CED4A4-3A5B-0509-D844-8CE36C4811BC}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MonetRoof.tmc" TmcHash="{1E03D8C2-EA75-EF92-ADE7-D863F0E38204}">
 					<Name>MONETRoof Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">

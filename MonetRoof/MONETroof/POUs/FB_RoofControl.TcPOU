@@ -160,7 +160,14 @@ IF state = E_RoofState.opening OR state = E_RoofState.closing THEN
 ELSE
 	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.MOTION_STATE', '0.0');
 END_IF
-]]></ST>
+
+// MONET specific
+fbComm.Publish('telescope', 'dome', 'MONET.ROOF.POS1', LREAL_TO_STRING(roofs[1].percent_open));
+fbComm.Publish('telescope', 'dome', 'MONET.ROOF.STATE1', roofs[1].Status);
+fbComm.Publish('telescope', 'dome', 'MONET.ROOF.ERROR1', roofs[1].Error);
+fbComm.Publish('telescope', 'dome', 'MONET.ROOF.POS2', LREAL_TO_STRING(roofs[2].percent_open));
+fbComm.Publish('telescope', 'dome', 'MONET.ROOF.STATE2', roofs[2].Status);
+fbComm.Publish('telescope', 'dome', 'MONET.ROOF.ERROR2', roofs[2].Error);]]></ST>
       </Implementation>
     </Method>
     <Method Name="Close" Id="{09e5ef83-053e-434a-9daf-0f46715c9ca8}">
@@ -293,6 +300,13 @@ END_FOR;]]></ST>
       <LineId Id="45" Count="0" />
       <LineId Id="47" Count="1" />
       <LineId Id="46" Count="0" />
+      <LineId Id="63" Count="0" />
+      <LineId Id="62" Count="0" />
+      <LineId Id="64" Count="0" />
+      <LineId Id="66" Count="0" />
+      <LineId Id="69" Count="0" />
+      <LineId Id="65" Count="0" />
+      <LineId Id="67" Count="0" />
       <LineId Id="11" Count="0" />
     </LineIds>
     <LineIds Name="FB_RoofControl.Close">

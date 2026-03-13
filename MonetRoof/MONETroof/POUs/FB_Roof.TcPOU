@@ -249,6 +249,25 @@ END_IF
 ]]></ST>
       </Implementation>
     </Method>
+    <Property Name="Error" Id="{2049fae4-dd42-4e2f-9cdb-cb25af6b6c0f}">
+      <Declaration><![CDATA[PROPERTY Error : STRING]]></Declaration>
+      <Get Name="Get" Id="{e1898dbd-a752-4774-92a7-5ab7716c886f}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IF sync_error THEN
+	Error := 'Sync error';
+ELSIF direction_error THEN
+	Error := 'Direction error';
+ELSIF limit_error THEN
+	Error := 'Limit error';
+ELSE
+	Error := '';
+END_IF]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Method Name="Manual" Id="{8fd29956-6c66-4ec0-a43c-09228543d9c5}">
       <Declaration><![CDATA[METHOD Manual : BOOL
 VAR_INPUT
@@ -302,6 +321,31 @@ END_VAR
         <ST><![CDATA[target_speed := 0;]]></ST>
       </Implementation>
     </Method>
+    <Property Name="Status" Id="{07bca3c5-c94b-4c22-9011-fec7df1eb29e}">
+      <Declaration><![CDATA[PROPERTY Status : STRING]]></Declaration>
+      <Get Name="Get" Id="{1d8c6644-bf1b-4508-9c70-6f96cf58d2ed}">
+        <Declaration><![CDATA[VAR
+END_VAR
+]]></Declaration>
+        <Implementation>
+          <ST><![CDATA[IF state = E_RoofState.closed THEN
+	Status := 'CLOSED';
+ELSIF state = E_RoofState.opened THEN
+	Status := 'OPENED';
+ELSIF state = E_RoofState.opening THEN
+	Status := 'OPENING';
+ELSIF state = E_RoofState.closing THEN
+	Status := 'CLOSING';
+ELSIF state = E_RoofState.stopped THEN
+	Status := 'STOPPED';
+ELSIF state = E_RoofState.error THEN
+	Status := 'ERROR';
+ELSIF state = E_RoofState.unknown THEN
+	Status := 'UNKNOWN';	
+END_IF]]></ST>
+        </Implementation>
+      </Get>
+    </Property>
     <Method Name="Stop" Id="{1f32f30b-7d83-4389-9405-dd9528b72d8a}">
       <Declaration><![CDATA[METHOD Stop : BOOL
 VAR_INPUT
@@ -339,6 +383,12 @@ target_speed := 0;
       <LineId Id="17" Count="0" />
       <LineId Id="5" Count="0" />
     </LineIds>
+    <LineIds Name="FB_Roof.Error.Get">
+      <LineId Id="2" Count="0" />
+      <LineId Id="5" Count="0" />
+      <LineId Id="7" Count="5" />
+      <LineId Id="6" Count="0" />
+    </LineIds>
     <LineIds Name="FB_Roof.Manual">
       <LineId Id="6" Count="4" />
       <LineId Id="14" Count="1" />
@@ -358,6 +408,23 @@ target_speed := 0;
     </LineIds>
     <LineIds Name="FB_Roof.SoftStop">
       <LineId Id="5" Count="0" />
+    </LineIds>
+    <LineIds Name="FB_Roof.Status.Get">
+      <LineId Id="17" Count="0" />
+      <LineId Id="25" Count="0" />
+      <LineId Id="28" Count="0" />
+      <LineId Id="27" Count="0" />
+      <LineId Id="30" Count="0" />
+      <LineId Id="29" Count="0" />
+      <LineId Id="32" Count="0" />
+      <LineId Id="31" Count="0" />
+      <LineId Id="34" Count="0" />
+      <LineId Id="33" Count="0" />
+      <LineId Id="36" Count="0" />
+      <LineId Id="35" Count="0" />
+      <LineId Id="38" Count="0" />
+      <LineId Id="37" Count="0" />
+      <LineId Id="26" Count="0" />
     </LineIds>
     <LineIds Name="FB_Roof.Stop">
       <LineId Id="5" Count="0" />
