@@ -35,6 +35,7 @@ END_VAR
 VAR_OUTPUT
 	// state
 	roof_state				: E_RoofState;
+	percent_open			: REAL;	
 END_VAR
 VAR
 	// roofs
@@ -107,6 +108,9 @@ ELSE
 	roof_state := E_RoofState.error;	
 END_IF
 
+// percent open
+percent_open := (roofs[1].percent_open + roofs[2].percent_open) / 2.0;
+
 // send telemetry
 tonComm(IN:=TRUE);
 IF tonComm.Q THEN // publish new payload every 5 seconds
@@ -123,24 +127,22 @@ END_VAR
       <Implementation>
         <ST><![CDATA[IF roof_state = E_RoofState.opened THEN
 	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '1.0');
-ELSIF roof_state = E_RoofState.closing THEN
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '0.3');
-ELSIF roof_state = E_RoofState.opening THEN
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '0.7');
-ELSIF roof_state = E_RoofState.stopped THEN
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '0.5');
 ELSIF roof_state = E_RoofState.closed THEN
 	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '0.0');
 ELSIF roof_state = E_RoofState.error THEN
 	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '-1.0');
 ELSE
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '-0.5');
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', LREAL_TO_STRING(percent_open / 100.0));
 END_IF
 
 IF roof_state = E_RoofState.opened OR roof_state = E_RoofState.opening THEN
 	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.TARGETPOS', '1.0');
-ELSE
+ELSIF roof_state = E_RoofState.closed OR roof_state = E_RoofState.closing THEN
 	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.TARGETPOS', '0.0');
+ELSIF roof_state = E_RoofState.stopped THEN
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.TARGETPOS', LREAL_TO_STRING(percent_open / 100.0));
+ELSE
+	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.TARGETPOS', '-1.0');
 END_IF
 
 IF roof_state = E_RoofState.error THEN
@@ -291,26 +293,21 @@ END_FOR;]]></ST>
       <LineId Id="311" Count="0" />
       <LineId Id="258" Count="0" />
       <LineId Id="58" Count="18" />
+      <LineId Id="532" Count="1" />
       <LineId Id="270" Count="0" />
+      <LineId Id="534" Count="0" />
       <LineId Id="411" Count="4" />
       <LineId Id="272" Count="1" />
     </LineIds>
     <LineIds Name="FB_RoofControl._SendTelemetry">
       <LineId Id="12" Count="0" />
       <LineId Id="15" Count="0" />
-      <LineId Id="17" Count="0" />
-      <LineId Id="54" Count="0" />
-      <LineId Id="52" Count="0" />
-      <LineId Id="55" Count="0" />
-      <LineId Id="53" Count="0" />
-      <LineId Id="18" Count="2" />
-      <LineId Id="57" Count="1" />
-      <LineId Id="21" Count="1" />
-      <LineId Id="16" Count="0" />
+      <LineId Id="75" Count="6" />
       <LineId Id="24" Count="0" />
       <LineId Id="23" Count="0" />
       <LineId Id="25" Count="0" />
       <LineId Id="27" Count="1" />
+      <LineId Id="85" Count="3" />
       <LineId Id="26" Count="0" />
       <LineId Id="29" Count="0" />
       <LineId Id="13" Count="0" />
