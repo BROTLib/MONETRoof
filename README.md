@@ -121,7 +121,12 @@ Controls one roof half with its two motors.
   linearly over the last `limit_slowdown` % of the travel range down to
   `min_speed`, so the roof approaches the fully open/closed position gently.
 - **Limit switches**: the roof is stopped when the fully open (both motors'
-  open limit switches) or fully closed position is reached.
+  open limit switches) or fully closed position is reached. When both closed
+  (or both opened) switches engage while moving in that direction, both
+  drives' positions are snapped to `min_position` / `max_position` — the
+  symmetric limit re-sync that clears the ±1 phase residue between the
+  mechanically connected drives at every full open/close (a one-shot boot
+  snap does the same on a warm restart with the roof parked at a limit).
 - **Slow mode**: `slow_open` / `slow_close` override normal operation and move
   the roof at `min_speed` (e.g. for maintenance or alignment).
 - **Consistency monitoring** (each roof half):
@@ -145,7 +150,20 @@ Controls one drive of a roof half.
 - **Position counting**: an inductive-sensor pulse train (`counter` input) is
   counted up/down according to the movement direction into a persistent
   `position` counter (survives warm restarts). `zero_counter` resets the
-  counter of both motors.
+  counter of both motors. The counting path is filtered and gated (insurance,
+  sized from measured pulses — see
+  `specs/plans/2026-08-20-position-counter-fix-plan.md`):
+  - `counter_debounce` (default `10 ms`) — the input must be stable high for
+    at least this long before an edge counts (below the narrowest legitimate
+    pulse, 20 ms);
+  - `counter_min_spacing` (default `50 ms`) — minimum time between accepted
+    counts (below the 600 ms rotation period);
+  - **motion gate** — counts only while the drive is commanded to move
+    (`real_speed <> 0`), so wind rattle at standstill cannot add counts;
+  - `raw_counts` (unfiltered, ungated edge count) is exposed for
+    validation/comparison.
+  Counting is deliberately **not** gated on the limit switches: that would
+  blind the sync check to a broken connection or a stalled drive.
 - **Percent open**: derived from the position relative to
   `min_position` / `max_position`.
 - **Limit switches**: the position is captured when the open/closed limit
@@ -300,6 +318,14 @@ The roof control parameters are configured in `MAIN`:
 | `max_position_2` | `200` | Maximum position of roof half 2 |
 | `max_position_diff` | `2` | Maximum allowed position difference between the two drives of a roof half |
 | `limit_slowdown` | `5` | Linear slowdown within the last 5 % of the travel range near the limits |
+
+Counting-filter inputs on `FB_RoofMotor` (function-block defaults; tunable
+per installation, currently not overridden by `MAIN`):
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `counter_debounce` | `10 ms` | Min. stable-high time of a sensor pulse before an edge is counted — keep below the narrowest legitimate pulse (20 ms) |
+| `counter_min_spacing` | `50 ms` | Min. time between accepted counts — keep below the rotation period (600 ms) |
 
 Additional function-block inputs (e.g. `min_position_1/2`,
 `fTelemetryInterval`, `slow_open`, `slow_close`, `zero_counter`, `ups_fail`)
