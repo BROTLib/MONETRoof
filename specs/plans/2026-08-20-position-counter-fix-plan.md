@@ -127,8 +127,9 @@ type spec: "8Ch. Dig. Input 24V, 3ms"). Anything the PLC can count is therefore
   pulse width (`block angular width fraction × T/200`) that the debounce must
   stay below.
 - **Stop positions**: where do the roof halves stop? If a stop leaves the block
-  in the sensing zone (hysteresis band), vibration at standstill produces
-  counts — this would confirm the "only count while moving" gate as essential.
+  in the sensing zone (hysteresis band), vibration at standstill (incl. wind)
+  can produce counts — addressed by the **motion gate** (§5 layer 3), which
+  rejects all pulses while the drive is idle.
 - **Pulse floor**: the sensor's 600 Hz switching frequency caps legitimate
   pulses at ~1.7 ms apart; the EL1008's 3 ms input filter raises the effective
   floor for what the PLC can see. Both are far below any realistic rotation
@@ -373,14 +374,30 @@ Filter layers (insurance):
 
 1. **Level debounce** — count only if the input stays high for a minimum
    time (kills short glitches). Must stay below the narrowest legitimate
-   pulse (20 ms, §3).
+   pulse (20 ms, §3) — **over-debouncing is itself a failure mode**: a
+   debounce that swallows legitimate pulses makes one drive miss counts and
+   *creates* the sync difference the fix is meant to prevent. Default 10 ms
+   (2× margin below 20 ms; covers the 3–10 ms band above the EL1008 filter).
 2. **Rate limit** — ignore an edge that arrives within a minimum spacing
-   after the last *accepted* count (kills the rest of a burst).
+   after the last *accepted* count (kills the rest of a burst). Default
+   50 ms (12× margin below the 600 ms rotation period).
+3. **Motion gate** — count only while the drive is commanded to move
+   (`moving`, i.e. `real_speed <> 0`). **This is the wind-rattle protection**:
+   a parked roof (idle overnight) with a block resting at the sensor
+   threshold can have wind gusts oscillate the block across the threshold,
+   adding spurious counts that accumulate into drift. While the drive is
+   idle, `moving = FALSE` and such pulses are rejected. Legitimate counting
+   is unaffected: during any commanded move (automatic *or* manual
+   push-button) `real_speed <> 0`, including the first and last counts of a
+   move. Edge case: after an abrupt `Stop()` the shaft may coast a fraction
+   of a rotation with `real_speed` already 0, missing one count — the
+   limit re-sync corrects it at the next full cycle.
 
-A "only count while moving" / limit-switch gate is **deliberately not used**:
-during a move to a limit the roof legitimately counts up to the last rotation
-(one drive may count one more as it hits the limit first), so gating on the
-limit switches or on `real_speed` would swallow legitimate counts.
+A limit-switch counting gate is **deliberately not used**: during a move to
+a limit the roof legitimately counts up to the last rotation (one drive may
+count one more as it hits the limit first), so gating on the limit switches
+would swallow legitimate counts. The motion gate is different — it only
+rejects pulses when the drive is idle.
 
 Sketch (replaces the counter block in `FB_RoofMotor`):
 
@@ -395,7 +412,7 @@ tonSpacing  : TON;
 tonDebounce(IN := counter, PT := counter_debounce);   // stable-high filter
 counter_trig(CLK := tonDebounce.Q);                   // edge of the *filtered* signal
 
-IF counter_trig.Q THEN
+IF counter_trig.Q AND moving THEN   // motion gate: no counting while the drive is idle (wind rattle)
     // rate limit: allow a new count only after the spacing timer expired
     IF NOT tonSpacing.Q THEN
         tonSpacing(IN := TRUE, PT := counter_min_spacing);
