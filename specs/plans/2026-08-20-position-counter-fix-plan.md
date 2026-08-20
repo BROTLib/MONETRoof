@@ -415,21 +415,55 @@ defaults above) so they can be tuned per installation without recompiling.
 
 ### Safety net: re-sync at the limit switches
 
-`FB_RoofMotor` already contains a commented-out block that snaps `position` to
-`min_position` / `max_position` when the closed/open limit switch is hit while
-moving in that direction:
+**Design (symmetric, both ends, "both sensors" condition):** when **both**
+closed limit switches are engaged → both motors' `position := min_position`;
+when **both** opened limit switches are engaged → both motors'
+`position := max_position`. Snapping both drives together (rather than
+per-motor on each switch) avoids a transient `|diff| = 1` right at the limit.
+`FB_Roof` already computes roof-level limit states from both motors
+(`roof_limit_closed` / `roof_limit_open`), so the snap belongs there, setting
+both motors' positions:
 
 ```st
-closed_trigger(CLK := closed);
-IF direction_close AND closed_trigger.Q THEN position := min_position; END_IF
-opened_trigger(CLK := opened);
-IF direction_open AND opened_trigger.Q THEN position := max_position; END_IF
+// in FB_Roof (both motors of a half):
+IF direction_close AND roof_limit_closed THEN
+    motors[1].position := motors[1].min_position;
+    motors[2].position := motors[2].min_position;
+END_IF
+IF direction_open AND roof_limit_open THEN
+    motors[1].position := motors[1].max_position;
+    motors[2].position := motors[2].max_position;
+END_IF
 ```
 
-Re-enable it (currently commented out in the POU). The counter then becomes
-**self-correcting**: even if a few spurious counts slip through, the next full
-close/open re-zeros the position. This is the strongest protection against
-counter drift.
+(Equivalently, keep it in `FB_RoofMotor` per motor but driven by the
+roof-level `roof_limit_*` signal instead of the per-motor switch.)
+
+Rationale:
+
+- **Symmetric correction**: the ±1 residue appears on both move directions;
+  correcting only on close leaves drift uncorrected during runs that never
+  fully close (partial moves, repeated opens), so `sync_error` could still
+  trip mid-run.
+- **Correct `percent_open` at full open** (exactly 100, and `0` at closed).
+- **Counters agree at every limit** — `|diff| = 0` at both travel ends.
+
+Caveats:
+
+- Keep the direction gate (`direction_open`/`direction_close`) so a
+  misadjusted or bouncing switch cannot corrupt the counter while the roof is
+  not moving toward that limit.
+- **Boot / warm-restart snap**: the limit may already be engaged at startup
+  (no rising edge). On init, if `roof_limit_closed`/`roof_limit_open` is
+  true, set the positions immediately.
+- **Verify the opened limit repeatability** once: no recording so far reached
+  full open (max 61/200), so the `opened` switches have never engaged in the
+  data — confirm they trigger at a repeatable position before relying on the
+  open snap.
+
+The counter then becomes **self-correcting** at both travel ends: even if
+counts slip through, every full open and every full close re-zeroes both
+positions. This is the fix for the measured failure (§3.3).
 
 ### Rules of thumb for tuning
 
@@ -455,19 +489,24 @@ counter drift.
 - [ ] **Step 1 — Measurement**: done — four recordings (§3, §3.1, §3.2, §3.3)
       give the legitimate pulse width (20–90 ms), cadence (600 ms) at
       `max_speed`, the expected ±1 phase behaviour, and the error mechanism
-      (un-cleared residue + phase oscillation, §3.3). The `PRG_MeasureCounter`
-      fast task (250 µs, priority 10) is optional — no sub-10 ms burst has
-      ever been observed, but it remains the only way to rule that mode out.
+      (un-cleared residue + phase oscillation, §3.3). **The 10 ms PLC cadence
+      is sufficient**: no sub-10 ms burst has ever been observed, the
+      narrowest legitimate pulse (20 ms) is resolved with ≥2 samples, and the
+      EL1008 3 ms input filter caps anything faster regardless of task speed.
+      The `PRG_MeasureCounter` fast task (250 µs, priority 10) is optional —
+      useful only as a one-off pulse-width diagnostic, not part of the fix.
 - [ ] **Step 2 — Decide**: decided — no over-counting; the fix is the re-sync
       (§4, §5).
 - [ ] **Step 3 — Filter (optional insurance)**: implement the
       debounce/spacing layers in `FB_RoofMotor.TcPOU` with `VAR_INPUT` tuning
       parameters; keep the raw counter path available for comparison (e.g. a
       debug output `raw_counts`).
-- [ ] **Step 4 — Re-sync (highest value)**: re-enable the limit-switch
-      position snap in `FB_RoofMotor` — clears any residue at every full
-      open/close, and (given the mechanical connection) guarantees the two
-      counters of a half agree after every full cycle.
+- [ ] **Step 4 — Re-sync (highest value)**: implement the symmetric limit
+      snap in `FB_Roof` (both motors snap to `min_position`/`max_position`
+      when *both* closed / opened switches engage, §5 safety net) — clears any
+      residue at every full open and close, and (given the mechanical
+      connection) guarantees the two counters of a half agree after every full
+      cycle.
 - [ ] **Step 5 — Validate**: on the live system, do N open/stop/close cycles
       (the test that reproduces the failure); verify `position` at the limits
       equals `min_position`/`max_position` exactly, that the two counters of
