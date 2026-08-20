@@ -194,6 +194,18 @@ END_VAR
         <ST><![CDATA[reset_command := TRUE;]]></ST>
       </Implementation>
     </Method>
+    <Method Name="SetPosition" Id="{D579E16E-908F-46C7-A5F1-23B0FAF96397}">
+      <Declaration><![CDATA[METHOD SetPosition : BOOL
+VAR_INPUT
+	position_value		: INT;		// new position value (e.g. min/max_position on limit re-sync)
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// 'position' is a VAR_OUTPUT — read-only from outside the FB, so the
+// FB_Roof-level limit re-sync sets it through this method.
+position := position_value;]]></ST>
+      </Implementation>
+    </Method>
     <LineIds Name="FB_RoofMotor">
       <LineId Id="544" Count="0" />
       <LineId Id="546" Count="0" />
