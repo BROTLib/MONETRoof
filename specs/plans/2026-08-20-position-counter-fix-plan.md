@@ -508,14 +508,18 @@ switches" block; no declaration changes needed — uses existing
 // limit switch is still engaged (measured: first counter edge ~0.5 s before
 // the closed switch releases) — see caveats below.
 IF is_closing AND roof_limit_closed THEN
-    motors[1].position := motors[1].min_position;
-    motors[2].position := motors[2].min_position;
+    motors[1].SetPosition(motors[1].min_position);
+    motors[2].SetPosition(motors[2].min_position);
 END_IF
 IF is_opening AND roof_limit_open THEN
-    motors[1].position := motors[1].max_position;
-    motors[2].position := motors[2].max_position;
+    motors[1].SetPosition(motors[1].max_position);
+    motors[2].SetPosition(motors[2].max_position);
 END_IF
 ```
+
+(`position` is a `VAR_OUTPUT` of `FB_RoofMotor` — read-only from outside the
+FB — so the snap goes through the new `SetPosition` method; see the
+implementation notes.)
 
 Placement notes:
 
@@ -675,6 +679,17 @@ was followed where the draft code contradicted it):
 
 Also: `raw_counts` is reset together with `position` by `zero_counter`, so the
 raw-vs-filtered comparison stays valid after a manual zero.
+
+### Compile fix (2026-08-21, branch `fix/roofmotor-position-write`)
+
+The merged code did **not** compile: `motors[1].position := …` in `FB_Roof`
+failed with *"'position' is no input of 'FB_RoofMotor'"* — `position` is a
+`VAR_OUTPUT` (PERSISTENT) and is read-only from outside the FB; only inputs
+can be assigned at the call site. Fix: new `SetPosition(position_value : INT)`
+method on `FB_RoofMotor` (methods may write the FB's own outputs), and the
+eight snap assignments in `FB_Roof` now call
+`motors[1].SetPosition(motors[1].min_position)` etc. §5 snippet updated to the
+compilable form.
 
 ## 7. Files to touch
 

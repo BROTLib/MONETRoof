@@ -121,11 +121,11 @@ END_IF
 IF NOT bRoofInitialized THEN
 	bRoofInitialized := TRUE;
 	IF roof_limit_closed THEN
-		motors[1].position := motors[1].min_position;
-		motors[2].position := motors[2].min_position;
+		motors[1].SetPosition(motors[1].min_position);
+		motors[2].SetPosition(motors[2].min_position);
 	ELSIF roof_limit_open THEN
-		motors[1].position := motors[1].max_position;
-		motors[2].position := motors[2].max_position;
+		motors[1].SetPosition(motors[1].max_position);
+		motors[2].SetPosition(motors[2].max_position);
 	END_IF
 END_IF
 
@@ -137,12 +137,12 @@ END_IF
 // against a limit the snap holds the position, so stall-jitter counts cannot
 // drive it past the end position.
 IF is_closing AND roof_limit_closed THEN
-	motors[1].position := motors[1].min_position;
-	motors[2].position := motors[2].min_position;
+	motors[1].SetPosition(motors[1].min_position);
+	motors[2].SetPosition(motors[2].min_position);
 END_IF
 IF is_opening AND roof_limit_open THEN
-	motors[1].position := motors[1].max_position;
-	motors[2].position := motors[2].max_position;
+	motors[1].SetPosition(motors[1].max_position);
+	motors[2].SetPosition(motors[2].max_position);
 END_IF
 
 // call motors
