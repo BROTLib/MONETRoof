@@ -1,10 +1,13 @@
 # Plan: Fix the roof position counter (pulse rattling / over-counting)
 
-Status: draft — measurement first, then implement the filter.
+Status: draft — measurement first, then implement the filter. First live
+recording (`Roof.svdx`, Becky) decoded 2026-08-20 — measured values in §3;
+decoding format documented in
+`BROTLib/specs/design/twincat-scopeview-svdx-format.md`.
 
 ## 1. Problem
 
-`FB_RoofMotor` counts hall-sensor pulses with a simple edge counter:
+`FB_RoofMotor` counts inductive-sensor pulses with a simple edge counter:
 
 ```st
 counter_trig(CLK := counter);
@@ -15,7 +18,7 @@ IF counter_trig.Q THEN
 END_IF
 ```
 
-When the roof starts moving, the drive **rattles**: the hall signal bounces
+When the roof starts moving, the drive **rattles**: the sensor signal bounces
 high/low across several PLC cycles, and each real rising edge is counted.
 With `max_position_diff := 2` (synchronisation tolerance), a few spurious
 pulses on one motor of a roof half trip `sync_error` (or `limit_error`) and
@@ -23,6 +26,59 @@ stop the roof.
 
 Observed symptom: roof rattles briefly at start, position counter jumps, roof
 stops with a sync/limit error.
+
+### Physical setup (as built)
+
+The counting target is a **small metal block mounted on a metal shaft**, rotating
+past the sensor once per rotation. The sensor is confirmed as an **inductive
+proximity switch** (Data Sensing AK1/AP-2A, see below); the "hall-sensor"
+wording in the code/README should simply be corrected. This changes the
+analysis:
+
+- **One pulse per shaft rotation.** With `max_position = 200` counts over the
+  full travel, a full open/close is 200 shaft rotations. The rotation rate —
+  and with it the legitimate pulse rate — depends on *which* shaft carries the
+  block (motor-side shaft spins fast, slow output shaft slow); confirm it and
+  measure the full-travel time `T` (§3). Unless the shaft is geared up, the
+  legitimate pulse rate is very low (huge filter headroom, §3).
+- **Pulse width scales with rotation speed.** The sensor output stays high
+  while the block is in front of it:
+  `width ≈ (block angular width / 360°) × rotation period`. Pulses are *wide*
+  at low speed and *narrow* at high speed — the debounce time must stay below
+  the narrowest legitimate pulse (the one at `max_speed`), otherwise real
+  pulses get swallowed.
+- **The rattle is the block edge oscillating across the trigger threshold.**
+  At motor start the drive train vibrates (brushed DC motor, gearbox backlash,
+  torsional compliance), so the block edge crosses the sensor threshold several
+  times in quick succession — every rising edge is counted. A marginal
+  block–sensor gap (mounting distance, wear, temperature drift) makes the
+  flutter worse and can even trigger at standstill.
+- **The sensor carries no direction information.** The PLC infers the direction
+  from the commanded movement, so oscillation pulses accumulate in the
+  commanded direction even if the shaft physically reverses briefly (backlash).
+
+### Sensor: Data Sensing AK1/AP-2A (inductive, M18 unshielded)
+
+| Parameter | Value | Consequence |
+|---|---|---|
+| Output | PNP, NO (active-high) | rising edge = block entering range — matches the `R_TRIG` edge counting |
+| Nominal sensing distance | 8 mm (operating 0–6.48 mm) | only the *derated* distance matters: a small target and the material reduce it |
+| Standard target | 24 × 24 mm FE360 steel | the block is "small" → reachable distance shrinks; stainless steel (e.g. shaft/block) has factor 0.77 |
+| Hysteresis | 1–20 % of Sr | switch-on and switch-off points differ → a block edge dwelling in the band chatters; prime suspect for the rattle |
+| Switching frequency | 600 Hz | legitimate pulses can be no closer than ~1.7 ms at the sensor → huge filter headroom (§3/§5) |
+| Repeat accuracy / thermal drift | < 5 % / < 10 % | a marginal gap is fragile across temperature — leave mounting margin |
+| Availability delay | ≤ 50 ms after power-up | pulses during the first 50 ms after a PLC restart may be missed |
+
+Two practical consequences:
+
+- **Hysteresis dwell at the travel ends**: if a roof stop leaves the block
+  inside the sensing zone (block stopped over the sensor), the output sits
+  between the switch-on/off points — any vibration then makes it flutter.
+  The limit-stop positions should be checked against the sensing zone.
+- **The shaft itself must stay out of range**: the sensor is *unshielded*
+  (8 mm field) — verify the shaft surface alone never enters the sensing
+  range, otherwise the output would be permanently high or marginal at
+  closest approach.
 
 ## 2. Why "just debounce" is not enough
 
@@ -53,11 +109,30 @@ type spec: "8Ch. Dig. Input 24V, 3ms"). Anything the PLC can count is therefore
 - If possible, probe the sensor output directly (oscilloscope / logic
   analyzer) to see the **unfiltered** truth — this settles immediately whether
   the rattle is:
-  - mechanical oscillation of the magnet past the sensor,
-  - a weak magnet / marginal trigger threshold, or
+  - mechanical oscillation of the block edge across the trigger threshold,
+  - a marginal block–sensor gap / trigger threshold, or
   - EMI on the wiring.
 - Whatever we measure through the terminal is already filtered by the 3 ms
   input filter — keep that in mind when sizing the software filter.
+
+### Sensor-specific checks (AK1/AP-2A)
+
+- **Gap margin**: compare the mounted block–sensor gap against the *derated*
+  operating distance — 8 mm nominal only holds for a 24 × 24 mm FE360 target;
+  a smaller block and/or stainless steel (factor 0.77) shrink it. With 10 %
+  thermal drift and 5 % repeat accuracy, a gap near the edge of range is
+  unreliable.
+- **Block geometry**: measure the block's angular width and the time of a full
+  open/close at `max_speed` (`T`). Together they give the narrowest legitimate
+  pulse width (`block angular width fraction × T/200`) that the debounce must
+  stay below.
+- **Stop positions**: where do the roof halves stop? If a stop leaves the block
+  in the sensing zone (hysteresis band), vibration at standstill produces
+  counts — this would confirm the "only count while moving" gate as essential.
+- **Pulse floor**: the sensor's 600 Hz switching frequency caps legitimate
+  pulses at ~1.7 ms apart; the EL1008's 3 ms input filter raises the effective
+  floor for what the PLC can see. Both are far below any realistic rotation
+  period here, so they only matter as the lower bound for the filter.
 
 ### Measurement task (recommended): fast task + timestamps
 
@@ -70,7 +145,7 @@ negligible load on a CX.
 ```st
 // PRG_MeasureCounter — runs in a 250 µs task
 VAR
-    counter       AT %I* : BOOL;        // hall input of the motor in question
+    counter       AT %I* : BOOL;        // sensor input of the motor in question
     rTrig  : R_TRIG;  fTrig : F_TRIG;
     tNow   : LARGE_INTEGER;
     tRise  : LARGE_INTEGER;  tLastRise : LARGE_INTEGER;
@@ -103,7 +178,16 @@ Notes:
   (`MONET.ROOF.*` fields) so they can be watched remotely.
 - Record `real_speed` / direction alongside the pulses, so we can see:
   - whether the rattle bursts happen at standstill or at low speed,
-  - whether rising and falling counts cancel out, or accumulate.
+  - whether rising and falling counts cancel out, or accumulate,
+  - whether bursts are position-correlated (only while the block is at the
+    sensor) or happen anywhere — position-correlated bursts point to the block
+    edge dwelling in the trigger hysteresis band (slow rotation / oscillation),
+  - the pulse width vs. rotation speed, to verify
+    `width ≈ block angular width / rotation period` and to size the debounce
+    against the narrowest pulse at `max_speed`,
+  - whether the block–sensor gap is marginal (compare the mounted gap with the
+    sensor's specified sensing distance; threshold flutter is the classic
+    symptom of a marginal gap).
 - One motor first (e.g. `roofs[1].motors[1]`); extend to all four after the
   first results.
 
@@ -128,6 +212,37 @@ The measured burst width and cadence directly size the filter:
 With only `max_position = 200` counts over the full travel, the legitimate
 pulse rate is very low — huge headroom for the filter.
 
+### Measured values (Roof.svdx, live recording from Becky, 2025-08-20)
+
+First recording decoded: **20.47 s at 10 ms** (PLC task sampling — so sub-10 ms
+detail is aliased, see above), 8 channels, one move with a velocity ramp-up.
+Decoded from the SVDX binary (10 ms series + 160 ms decimation cross-checked
+at 128/128 samples):
+
+| Quantity | Measured | Implication |
+|---|---|---|
+| Rotation period at run speed | **0.60 s** (≈1.67 rev/s), settling after ~1 s ramp | ~100 rpm; a full travel of 200 counts ≈ **120 s** at this speed |
+| Pulse width per channel | c[1,1] 40–80 ms, c[1,2] 80–90 ms, c[2,1] 70–80 ms, c[2,2] **20–40 ms** | blocks differ in width and/or sensor gap; narrowest ≈ **20 ms** |
+| Pulse cadence | clean single pulses, period 0.59–0.60 s steady | **no rattle/bursts in this recording** — the over-counting does not reproduce on every move |
+| `opened` limit switches | never engaged | recording captured mid-travel, not a full cycle |
+| Start behavior | c[1,2] + c[2,1] already high at t=0 (blocks parked in the sensing zone), stable for 2.9/3.2 s, then left the zone | the hysteresis-dwell case is real, but no flutter in this run |
+
+Sizing consequences (validated against §5):
+
+- **`counter_debounce` default T#20MS is marginal**: it equals the narrowest
+  legitimate pulse measured here (20 ms on c[2,2]). If the move was at
+  `max_speed`, a 10 ms debounce is the safer default; if it was a slow-mode
+  move, pulses at `max_speed` would be ~3× narrower (≈7 ms) and the debounce
+  must be ≤10 ms anyway. → **confirm whether the recording ran at
+  `max_speed`, then set `counter_debounce := T#10MS`.**
+- **`counter_min_spacing` T#50MS is safe**: the measured legitimate period is
+  600 ms, so 50 ms spacing has >10× margin and still kills burst pulses
+  (which arrive ≪50 ms apart).
+- The differing pulse widths per channel (20 vs 80–90 ms at the same rotation
+  period) also hint at **unequal block widths or marginal gaps** — worth
+  checking the c[2,2] sensor mounting (§3 sensor checks), since a marginal gap
+  is the classic trigger for threshold flutter.
+
 ## 4. Decision point (after measurement)
 
 Depending on the measurement results:
@@ -139,9 +254,11 @@ Depending on the measurement results:
    - raise `min_speed` so the roof starts cleanly and leaves the resonant
      speed range quickly,
    - tune `acceleration`,
-   - check the magnet/sensor mounting.
-3. **Mechanical oscillation of the magnet past the sensor** → no counter
-   filter fully fixes it; fix the mechanics, use the filter only as insurance.
+   - check the block/sensor mounting.
+3. **Mechanical oscillation of the block past the sensor** (shaft torsional
+   vibration / gearbox backlash at start, or a marginal block–sensor gap) →
+   no counter filter fully fixes it; fix the mechanics and/or the sensor
+   mounting/gap, and use the filter only as insurance.
 
 ## 5. Fix design: filter chain in `FB_RoofMotor`
 
@@ -158,7 +275,7 @@ Sketch (replaces the counter block in `FB_RoofMotor`):
 
 ```st
 // -- declaration additions --
-counter_debounce    : TIME := T#20MS;   // min. on-time of the hall pulse
+counter_debounce    : TIME := T#20MS;   // min. on-time of the sensor pulse — keep < narrowest legit pulse (§5)
 counter_min_spacing : TIME := T#50MS;   // min. time between accepted counts
 tonDebounce : TON;
 tonSpacing  : TON;
@@ -206,12 +323,19 @@ counter drift.
 
 ### Rules of thumb for tuning
 
-- `counter_debounce` ≥ max measured noise pulse width.
+- `counter_debounce` ≥ max measured noise pulse width, **and** below the
+  shortest *legitimate* pulse width at `max_speed` — that is
+  `block angular width fraction × T/200` (block width as a fraction of one
+  rotation, times the rotation period at `max_speed`). The default 20 ms is
+  only safe if the block is wide and/or the shaft turns slowly; validate it
+  against the measured numbers (§3). Note the EL1008 3 ms filter already
+  removes sub-3 ms chatter before the PLC sees it.
 - `counter_min_spacing` ≥ max measured burst cadence, **and** below the
-  shortest legitimate pulse period at `max_speed`.
-  - If a full open at `max_speed` takes `T` seconds and the travel is 200
-    counts, the spacing must be `< T/200`. For any realistic roof travel
-    time this is far above 50 ms.
+  shortest legitimate pulse period at `max_speed` — with one block per
+  rotation that is the rotation period at `max_speed` (`T/200`). The sensor's
+  600 Hz switching frequency sets an absolute floor of ~1.7 ms, the EL1008
+  filter ~3 ms; for any realistic roof travel time the legitimate period is
+  far above 50 ms.
 - Start conservative (debounce 20 ms, spacing 50 ms), then tighten based on
   the measured numbers.
 
