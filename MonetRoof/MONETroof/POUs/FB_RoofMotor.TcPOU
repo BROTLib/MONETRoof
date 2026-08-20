@@ -10,6 +10,10 @@ VAR_INPUT
 	real_speed				: INT;		// signed speed
 	zero_counter			: BOOL := FALSE;	// reset position counter to zero
 	comm					: I_Comm;
+	
+	// counting filters (insurance; defaults sized from the recordings — plan 2026-08-20)
+	counter_debounce		: TIME := T#10MS;	// min. on-time of a sensor pulse — keep < narrowest legit pulse (20 ms)
+	counter_min_spacing		: TIME := T#50MS;	// min. time between accepted counts — keep < rotation period (600 ms)
 END_VAR
 VAR_OUTPUT PERSISTENT
 	position				: INT;	// position
@@ -19,6 +23,9 @@ VAR_OUTPUT
 	
 	// moving
 	moving					: BOOL;
+	
+	// debug: raw (unfiltered, ungated) edge count for validation
+	raw_counts				: DINT;
 	
 	// error 
 	motor_error		AT%I*	: BOOL;
@@ -33,16 +40,15 @@ VAR_OUTPUT
 	position_close			: INT := -1000;
 END_VAR
 VAR
-	// triggers for opened/closed
-	opened_trigger			: R_TRIG;
-	closed_trigger			: R_TRIG;
-	
 	// error
 	drive_error_event		: FB_EventLog;
 
 	// inductive sensor for counting rotation
 	counter			AT%I*	: BOOL;
 	counter_trig			: R_TRIG;
+	counter_raw_trig		: R_TRIG;	// raw (unfiltered) edge trigger — for validation only
+	tonDebounce				: TON;		// level debounce for the sensor pulse
+	tonSpacing				: TON;		// rate limit: min. spacing between accepted counts
 	
 	// reset command to drive
 	reset_command			: BOOL;
@@ -84,20 +90,39 @@ percent_open := 1.0 * (position - min_position) / (max_position - min_position) 
 // get direction
 direction_open := real_speed > 0;
 direction_close := real_speed < 0;
-	
-// counter for position
-counter_trig(CLK := counter);
-IF counter_trig.Q THEN
-	IF direction_open THEN
-		position := position + 1;
-	ELSE
-		position := position - 1;
+
+// set moving before the counter gate (motion gate: no counting while idle)
+moving := real_speed <> 0;
+
+// counter for position — filtered and gated.
+// The limit re-sync in FB_Roof is the primary protection; these layers are
+// insurance only. Deliberately NOT gated on the limit switches: that would
+// blind the sync check to a broken connection or a stalled drive.
+tonDebounce(IN := counter, PT := counter_debounce);	// stable-high filter (kills short glitches)
+counter_trig(CLK := tonDebounce.Q);					// edge of the filtered signal
+
+// raw edge count (unfiltered, ungated) — for validation/comparison
+counter_raw_trig(CLK := counter);
+IF counter_raw_trig.Q THEN
+	raw_counts := raw_counts + 1;
+END_IF
+
+IF counter_trig.Q AND moving THEN					// motion gate
+	IF tonSpacing.Q THEN							// spacing window since last accepted count elapsed -> accept
+		tonSpacing(IN := FALSE);					// restart the spacing window
+		IF direction_open THEN
+			position := position + 1;
+		ELSIF direction_close THEN
+			position := position - 1;
+		END_IF
 	END_IF
 END_IF
+tonSpacing(IN := TRUE, PT := counter_min_spacing);	// rate limit timer (runs continuously)
 
 // zero?
 IF zero_counter THEN
 	position := 0;
+	raw_counts := 0;
 END_IF
 
 // remember position when entering/leaving limit switches
@@ -118,23 +143,8 @@ IF position_close_off_trig.Q THEN
 	position_close := -1000;
 END_IF
 
-// if in limits, reset position, but only if moving in that direction
-(*
-closed_trigger(CLK := closed);
-IF direction_close AND closed_trigger.Q THEN
-	position := min_position;
-END_IF
-opened_trigger(CLK := opened);
-IF direction_open AND opened_trigger.Q THEN
-	position := max_position;
-END_IF
-*)
-
 // absolute speed
 speed := ABS(real_speed);
-
-// set moving to zero, if no movement
-moving := real_speed <> 0;
 
 // error
 drive_error_event(	

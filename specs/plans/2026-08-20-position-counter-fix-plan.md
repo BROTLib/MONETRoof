@@ -1,6 +1,7 @@
 # Plan: Fix the roof position counter (pulse rattling / over-counting)
 
-Status: draft — measurement first, then implement the filter. First live
+Status: **implemented (steps 3–4)** on branch `fix/roof-counter-resync` —
+measurement first, then the filter. First live
 recording (`Roof.svdx`, Becky) decoded 2026-08-20 — measured values in §3;
 decoding format documented in
 `BROTLib/specs/design/twincat-scopeview-svdx-format.md`.
@@ -620,18 +621,23 @@ positions. This is the fix for the measured failure (§3.3).
       useful only as a one-off pulse-width diagnostic, not part of the fix.
 - [ ] **Step 2 — Decide**: decided — no over-counting; the fix is the re-sync
       + gates (§4, §5).
-- [ ] **Step 3 — Gates + filters (insurance)**: implement the motion gate
+- [x] **Step 3 — Gates + filters (insurance)**: implement the motion gate
       and the debounce/spacing layers in `FB_RoofMotor.TcPOU` with `VAR_INPUT`
       tuning parameters; keep the raw counter path available for comparison
       (e.g. a debug output `raw_counts`). Do **not** gate counting on the
       limit switches — that would blind the sync check to a broken
-      connection or stalled drive (§5).
-- [ ] **Step 4 — Re-sync (highest value)**: implement the symmetric limit
+      connection or stalled drive (§5). *(Implemented 2026-08-20:
+      `counter_debounce`/`counter_min_spacing` inputs, `tonDebounce` +
+      `tonSpacing` + motion gate, `raw_counts` debug output, `zero_counter`
+      also resets `raw_counts`.)*
+- [x] **Step 4 — Re-sync (highest value)**: implement the symmetric limit
       snap in `FB_Roof` (both motors snap to `min_position`/`max_position`
       when *both* closed / opened switches engage, §5 safety net) — clears any
       residue at every full open and close, and (given the mechanical
       connection) guarantees the two counters of a half agree after every full
-      cycle.
+      cycle. *(Implemented 2026-08-20: direction-gated re-sync after the
+      stop-on-limit block + one-shot boot-time snap, both at `FB_Roof` level
+      using `roof_limit_*`.)*
 - [ ] **Step 5 — Validate**: on the live system, do N open/stop/close cycles
       (the test that reproduces the failure); verify `position` at the limits
       equals `min_position`/`max_position` exactly, that the two counters of
@@ -643,6 +649,32 @@ positions. This is the fix for the measured failure (§3.3).
 - [ ] **Step 6 — Cleanup**: remove or disable the measurement task once the
       filter is validated; document the tuned values in the README
       (`Configuration` table) and in the code comments.
+
+### Implementation notes (2026-08-20, branch `fix/roof-counter-resync`)
+
+Two deliberate deviations from the §5 code draft (the *prose* design intent
+was followed where the draft code contradicted it):
+
+1. **Rate-limit condition corrected.** The draft counter block uses
+   `IF NOT tonSpacing.Q THEN … count … ELSE tonSpacing(IN := FALSE)` — with
+   standard `TON` semantics (`Q` = *elapsed*, not *running*) this accepts every
+   edge inside the spacing window and rejects the first edge *after* it: the
+   opposite of the described "ignore an edge within minimum spacing after the
+   last accepted count". Implemented instead: accept only when `tonSpacing.Q`
+   (window elapsed) and restart the window on each accepted count
+   (`tonSpacing(IN := FALSE)` then re-`IN := TRUE` next cycle).
+2. **Boot-time snap moved to `FB_Roof` (both-sensors condition).** The draft
+   places it in `FB_RoofMotor` per-motor (`IF closed THEN position :=
+   min_position`); a per-motor boot snap can create an immediate `|diff| = 1`
+   if only one switch is engaged at startup — the exact transient the
+   symmetric design avoids. Implemented as a one-shot in `FB_Roof` on the
+   first cycle using `roof_limit_closed` / `roof_limit_open` (both sensors
+   together), so it snaps both motors or neither. `FB_RoofMotor` therefore
+   does **not** get `bPositionInitialized` (the plan's `FB_Roof`-level
+   direction-gated re-sync itself is unchanged from §5).
+
+Also: `raw_counts` is reset together with `position` by `zero_counter`, so the
+raw-vs-filtered comparison stays valid after a manual zero.
 
 ## 7. Files to touch
 

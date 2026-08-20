@@ -57,6 +57,9 @@ VAR
 	// opening or closing?
 	is_opening				: BOOL;		// move direction
 	is_closing				: BOOL;	
+	
+	// boot-time snap guard
+	bRoofInitialized		: BOOL;
 END_VAR
 ]]></Declaration>
     <Implementation>
@@ -111,6 +114,35 @@ END_IF
 // stop on limit switches
 IF (is_closing AND roof_limit_closed) OR (is_opening AND roof_limit_open) THEN
 	Stop();
+END_IF
+
+// boot-time position snap: warm restart with the roof parked at a limit.
+// One-shot on the first cycle, both sensors together (symmetric — no |diff|).
+IF NOT bRoofInitialized THEN
+	bRoofInitialized := TRUE;
+	IF roof_limit_closed THEN
+		motors[1].position := motors[1].min_position;
+		motors[2].position := motors[2].min_position;
+	ELSIF roof_limit_open THEN
+		motors[1].position := motors[1].max_position;
+		motors[2].position := motors[2].max_position;
+	END_IF
+END_IF
+
+// limit re-sync: snap both drives to the physical end position (both sensors
+// engaged). Direction-gated: must NOT fire at the START of a move while the
+// opposite limit switch is still engaged (the first counter edge can arrive
+// ~0.5 s before the closed switch releases) — an ungated snap would erase
+// those legitimate counts and leave the move one count short. While stalled
+// against a limit the snap holds the position, so stall-jitter counts cannot
+// drive it past the end position.
+IF is_closing AND roof_limit_closed THEN
+	motors[1].position := motors[1].min_position;
+	motors[2].position := motors[2].min_position;
+END_IF
+IF is_opening AND roof_limit_open THEN
+	motors[1].position := motors[1].max_position;
+	motors[2].position := motors[2].max_position;
 END_IF
 
 // call motors
