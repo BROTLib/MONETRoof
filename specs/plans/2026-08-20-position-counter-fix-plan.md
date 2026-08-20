@@ -659,9 +659,12 @@ positions. This is the fix for the measured failure (§3.3).
       `sync_error`/`limit_error` observed. A systematic N-cycle run with the
       `raw_counts` comparison and long-term burst watching remains
       recommended but is not blocking.)*
-- [ ] **Step 6 — Cleanup**: remove or disable the measurement task once the
+- [x] **Step 6 — Cleanup**: remove or disable the measurement task once the
       filter is validated; document the tuned values in the README
-      (`Configuration` table) and in the code comments.
+      (`Configuration` table) and in the code comments. *(Done 2026-08-21: no
+      `PRG_MeasureCounter` fast task was ever created — nothing to remove;
+      tuned values documented in the README `Configuration` table and in the
+      `FB_RoofMotor` code comments.)*
 
 ### Implementation notes (2026-08-20, branch `fix/roof-counter-resync`)
 
@@ -720,5 +723,6 @@ compilable form.
 - [ ] No legitimate counts lost: total position change per full cycle matches
   the raw (unfiltered) counter within the expected tolerance. *(Still open —
   needs a `raw_counts` vs `position` comparison over a full cycle.)*
-- [ ] Filter parameters documented and tunable without code changes. *(Inputs
-  exist and are tunable; README documentation pending — §6 step 6.)*
+- [x] Filter parameters documented and tunable without code changes.
+  *(Verified 2026-08-21: documented in README `Configuration` + `FB_RoofMotor`
+  code comments; tunable `VAR_INPUT` defaults.)*
