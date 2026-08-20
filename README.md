@@ -5,7 +5,7 @@ TwinCAT 3 control application for the roof of the MONET telescopes
 
 The roof consists of two independently driven roof halves, each moved by two
 brushed DC motors. The application provides automatic and manual roof control,
-position tracking via hall-sensor counters and limit switches, velocity
+position tracking via inductive-sensor counters and limit switches, velocity
 ramping with slowdown near the travel limits, monitoring of the two drives of
 a roof half (synchronisation, direction, travel limits, drive faults), MQTT
 telemetry and logging, and a TwinSAFE safety concept with emergency-stop and
@@ -59,7 +59,7 @@ MONETRoof/
 | Term 26 | EL9011 | End cap |
 
 The roof motors are driven through the Device 2 terminals (digital direction
-outputs, analog speed setpoints, digital inputs for hall counters, limit
+outputs, analog speed setpoints, digital inputs for inductive counters, limit
 switches and drive faults). The NC task additionally provides axes (e.g.
 Axis 9 / Axis 10 mapped to the two channels of the EL7342 DC motor terminal)
 for further motion applications.
@@ -142,7 +142,7 @@ Controls one roof half with its two motors.
 
 Controls one drive of a roof half.
 
-- **Position counting**: a hall-sensor pulse train (`counter` input) is
+- **Position counting**: an inductive-sensor pulse train (`counter` input) is
   counted up/down according to the movement direction into a persistent
   `position` counter (survives warm restarts). `zero_counter` resets the
   counter of both motors.
@@ -203,7 +203,7 @@ Device 2 terminals (per roof half `r1`/`r2` and per drive `m1`/`m2`):
 | `direction_open` (out) | Term 43 Ch 1 | Term 43 Ch 6 | Term 43 Ch 5 | Term 43 Ch 2 |
 | `direction_close` (out) | Term 43 Ch 3 | Term 43 Ch 8 | Term 43 Ch 7 | Term 43 Ch 4 |
 | `reset_drive` (out) | Term 44 Ch 1 | Term 44 Ch 7 | Term 44 Ch 3 | Term 44 Ch 5 |
-| `counter` (hall sensor in) | Term 47 Ch 1 | Term 47 Ch 7 | Term 47 Ch 3 | Term 47 Ch 5 |
+| `counter` (inductive sensor in) | Term 47 Ch 1 | Term 47 Ch 7 | Term 47 Ch 3 | Term 47 Ch 5 |
 | `motor_error` (in) | Term 47 Ch 2 | Term 48 Ch 2 | Term 47 Ch 4 | Term 48 Ch 7 |
 | `opened` (limit switch in) | Term 48 Ch 4 | Term 49 Ch 7 | Term 48 Ch 8 | Term 49 Ch 3 |
 | `closed` (limit switch in) | Term 48 Ch 6 | Term 49 Ch 2 | Term 49 Ch 1 | Term 49 Ch 5 |

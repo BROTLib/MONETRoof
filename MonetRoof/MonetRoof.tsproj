@@ -3105,7 +3105,7 @@ External Setpoint Generation:
 						</Var>
 						<Var>
 							<Name>MAIN.RoofControl.roofs[1].motors[1].counter</Name>
-							<Comment><![CDATA[ hall sensor for counting rotation]]></Comment>
+							<Comment><![CDATA[ inductive sensor for counting rotation]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -3124,7 +3124,7 @@ External Setpoint Generation:
 						</Var>
 						<Var>
 							<Name>MAIN.RoofControl.roofs[1].motors[2].counter</Name>
-							<Comment><![CDATA[ hall sensor for counting rotation]]></Comment>
+							<Comment><![CDATA[ inductive sensor for counting rotation]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -3152,7 +3152,7 @@ External Setpoint Generation:
 						</Var>
 						<Var>
 							<Name>MAIN.RoofControl.roofs[2].motors[1].counter</Name>
-							<Comment><![CDATA[ hall sensor for counting rotation]]></Comment>
+							<Comment><![CDATA[ inductive sensor for counting rotation]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -3171,7 +3171,7 @@ External Setpoint Generation:
 						</Var>
 						<Var>
 							<Name>MAIN.RoofControl.roofs[2].motors[2].counter</Name>
-							<Comment><![CDATA[ hall sensor for counting rotation]]></Comment>
+							<Comment><![CDATA[ inductive sensor for counting rotation]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 					</Vars>
@@ -4421,7 +4421,7 @@ External Setpoint Generation:
 							<Pdo Name="Channel 1" Index="#x1a00" Flags="#x0011" SyncMan="0">
 								<Entry Name="MAIN.RoofControl.roofs[1].motors[1].counter" Index="#x6000" Sub="#x01">
 									<Type>BIT</Type>
-									<Comment><![CDATA[ hall sensor for counting rotation]]></Comment>
+									<Comment><![CDATA[ inductive sensor for counting rotation]]></Comment>
 								</Entry>
 							</Pdo>
 							<Pdo Name="Channel 2" Index="#x1a01" Flags="#x0011" SyncMan="0">
@@ -4433,7 +4433,7 @@ External Setpoint Generation:
 							<Pdo Name="Channel 3" Index="#x1a02" Flags="#x0011" SyncMan="0">
 								<Entry Name="MAIN.RoofControl.roofs[2].motors[1].counter" Index="#x6020" Sub="#x01">
 									<Type>BIT</Type>
-									<Comment><![CDATA[ hall sensor for counting rotation]]></Comment>
+									<Comment><![CDATA[ inductive sensor for counting rotation]]></Comment>
 								</Entry>
 							</Pdo>
 							<Pdo Name="Channel 4" Index="#x1a03" Flags="#x0011" SyncMan="0">
@@ -4445,7 +4445,7 @@ External Setpoint Generation:
 							<Pdo Name="Channel 5" Index="#x1a04" Flags="#x0011" SyncMan="0">
 								<Entry Name="MAIN.RoofControl.roofs[2].motors[2].counter" Index="#x6040" Sub="#x01">
 									<Type>BIT</Type>
-									<Comment><![CDATA[ hall sensor for counting rotation]]></Comment>
+									<Comment><![CDATA[ inductive sensor for counting rotation]]></Comment>
 								</Entry>
 							</Pdo>
 							<Pdo Name="Channel 6" Index="#x1a05" Flags="#x0011" SyncMan="0">
@@ -4457,7 +4457,7 @@ External Setpoint Generation:
 							<Pdo Name="Channel 7" Index="#x1a06" Flags="#x0011" SyncMan="0">
 								<Entry Name="MAIN.RoofControl.roofs[1].motors[2].counter" Index="#x6060" Sub="#x01">
 									<Type>BIT</Type>
-									<Comment><![CDATA[ hall sensor for counting rotation]]></Comment>
+									<Comment><![CDATA[ inductive sensor for counting rotation]]></Comment>
 								</Entry>
 							</Pdo>
 							<Pdo Name="Channel 8" Index="#x1a07" Flags="#x0011" SyncMan="0">

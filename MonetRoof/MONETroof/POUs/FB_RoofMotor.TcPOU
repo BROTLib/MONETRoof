@@ -40,7 +40,7 @@ VAR
 	// error
 	drive_error_event		: FB_EventLog;
 
-	// hall sensor for counting rotation
+	// inductive sensor for counting rotation
 	counter			AT%I*	: BOOL;
 	counter_trig			: R_TRIG;
 	
