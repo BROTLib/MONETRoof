@@ -317,6 +317,31 @@ mechanically connected drives); without the limit-switch position snap the
 residue survives each cycle and the phase oscillation trips `sync_error`.
 There is **no over-counting to filter** — the fix is the re-sync (§5 safety
 net), not the debounce/spacing layers.
+
+**Operator screenshots (checked later from home) confirm the drift extends
+beyond the recorded window** — roof #2 counters 4 apart, including negative
+values: (−2, +2) and (−4, 0). Two readings:
+
+- |diff| = 4 (> 2 × the tolerance) with no bursts involved = the ±1 residue
+  accumulated over many moves without re-sync, exactly the mechanism above
+  (the error recording reached 3; the screenshots show 4). The symmetric
+  re-sync clears this at every full open/close — the difference can never
+  grow past the limit cycle.
+- The **negative values** mean the counters have drifted *past the physical
+  reference* (the closed position should read 0, `min_position`): residues
+  from close moves leave the counters below zero. The close-side snap to
+  `min_position` corrects exactly this.
+- **How the difference can exceed the threshold at all**: `sync_error` is
+  evaluated unconditionally every cycle (`ABS(pos1 − pos2) >=
+  max_position_diff`), so a difference of 3–4 is never a *running* state —
+  the error already tripped at ≥2 and the roof is stopped. But **the error
+  stops the roof, not the counting**: without the motion gate, threshold
+  crossings while parked (wind rattle) keep incrementing one counter, growing
+  the difference to 3, 4, … while the roof sits in the latched error state.
+  This makes the **motion gate essential**, not just insurance — it is the
+  only layer that prevents the counters from diverging while the drive is
+  idle. (If the screenshots predate the sync check, the drift was simply
+  unguarded — check whether an error indicator was shown.)
   needed.
 
 ### Third recording (16-channel, open/stop/close cycles, 2025-08-20)
@@ -393,42 +418,118 @@ Filter layers (insurance):
    of a rotation with `real_speed` already 0, missing one count — the
    limit re-sync corrects it at the next full cycle.
 
-A limit-switch counting gate is **deliberately not used**: during a move to
-a limit the roof legitimately counts up to the last rotation (one drive may
-count one more as it hits the limit first), so gating on the limit switches
-would swallow legitimate counts. The motion gate is different — it only
-rejects pulses when the drive is idle.
+A **limit-switch counting gate is deliberately NOT used** — it is actively
+dangerous: the limit switches are on the roof *structure*, so if the
+connection between the two drives snaps and the roof never leaves a limit,
+both limit switches stay engaged and the gate would drop **all** counting —
+including the working drive's shaft pulses — leaving the sync check blind
+(position difference stays 0) and the failure undetected. Counting while
+commanded is exactly the evidence that detects a broken connection or a
+stalled drive (`|diff|` grows → `sync_error`). Wind rattle at the limits is
+already covered by the motion gate (the drive is idle), and any residue from
+open-start or stall counts is cleared by the re-sync.
 
-Sketch (replaces the counter block in `FB_RoofMotor`):
+A *per-motor* limit-switch counting gate (on the motor's own switch) is
+**deliberately not used** for the same reason: a stuck or early-engaging
+switch would silence a drive and mask a broken connection. The motion gate
+only depends on `real_speed` (the command), so it never drops the evidence of
+a commanded-but-stuck drive.
+
+### Full implementation
+
+Complete code for both POUs, based on the current sources (variable names and
+structure match `FB_RoofMotor.TcPOU` / `FB_Roof.TcPOU`).
+
+**`FB_RoofMotor` — declaration additions** (tunable per installation, no
+recompile needed to change them):
 
 ```st
-// -- declaration additions --
-counter_debounce    : TIME := T#10MS;   // min. on-time of the sensor pulse — keep < narrowest legit pulse (§3: 20 ms)
-counter_min_spacing : TIME := T#50MS;   // min. time between accepted counts — keep < 600 ms rotation period (§3)
-tonDebounce : TON;
-tonSpacing  : TON;
+VAR_INPUT
+    // counting filters (insurance, defaults from §3 measurements)
+    counter_debounce    : TIME := T#10MS;   // min. on-time of a sensor pulse — keep < narrowest legit pulse (20 ms)
+    counter_min_spacing : TIME := T#50MS;   // min. time between accepted counts — keep < rotation period (600 ms)
+END_VAR
+VAR
+    tonDebounce         : TON;
+    tonSpacing          : TON;
+    bPositionInitialized : BOOL;            // boot-snap guard
+END_VAR
+```
 
-// -- implementation --
-tonDebounce(IN := counter, PT := counter_debounce);   // stable-high filter
+**`FB_RoofMotor` — implementation** (replaces the counter block at
+`counter_trig(CLK := counter); ...` and the commented-out limit snap; the
+`moving` assignment must be moved before the counter gate):
+
+```st
+// boot-time position snap: warm restart with the roof parked at a limit
+IF NOT bPositionInitialized THEN
+    bPositionInitialized := TRUE;
+    IF closed THEN
+        position := min_position;
+    ELSIF opened THEN
+        position := max_position;
+    END_IF
+END_IF
+
+// set moving before the counter gate (was after the counter in the original)
+moving := real_speed <> 0;
+
+// counter for position — filtered and gated
+tonDebounce(IN := counter, PT := counter_debounce);   // stable-high filter (kills short glitches)
 counter_trig(CLK := tonDebounce.Q);                   // edge of the *filtered* signal
 
-IF counter_trig.Q AND moving THEN   // motion gate: no counting while the drive is idle (wind rattle)
-    // rate limit: allow a new count only after the spacing timer expired
-    IF NOT tonSpacing.Q THEN
+IF counter_trig.Q AND moving THEN                     // motion gate: no counting while idle (wind rattle)
+    IF NOT tonSpacing.Q THEN                          // rate limit: reject burst pulses
         tonSpacing(IN := TRUE, PT := counter_min_spacing);
-        IF real_speed > 0 THEN
+        IF direction_open THEN
             position := position + 1;
-        ELSIF real_speed < 0 THEN
+        ELSIF direction_close THEN
             position := position - 1;
         END_IF
     ELSE
-        tonSpacing(IN := FALSE);   // re-arm for the next burst
+        tonSpacing(IN := FALSE);                      // re-arm after a burst
     END_IF
 END_IF
 ```
 
-Make `counter_debounce` and `counter_min_spacing` **`VAR_INPUT`** (with the
-defaults above) so they can be tuned per installation without recompiling.
+(The original `IF counter_trig.Q THEN IF direction_open THEN +1 ELSE -1`
+decremented when *neither* direction was active; the `ELSIF direction_close`
+above fixes that — with the motion gate it can only count while `real_speed
+<> 0`, so the direction is always defined, but the explicit branch is safer.)
+
+**`FB_Roof` — implementation** (add the snap after the "stop on limit
+switches" block; no declaration changes needed — uses existing
+`is_opening`/`is_closing`, `roof_limit_*` and `motors[]`):
+
+```st
+// limit re-sync: snap both drives to the physical end position.
+// Direction-gated: must NOT fire at the START of a move while the opposite
+// limit switch is still engaged (measured: first counter edge ~0.5 s before
+// the closed switch releases) — see caveats below.
+IF is_closing AND roof_limit_closed THEN
+    motors[1].position := motors[1].min_position;
+    motors[2].position := motors[2].min_position;
+END_IF
+IF is_opening AND roof_limit_open THEN
+    motors[1].position := motors[1].max_position;
+    motors[2].position := motors[2].max_position;
+END_IF
+```
+
+Placement notes:
+
+- The snap must run **after** `roof_limit_*` is computed (line ~65) and
+  **before** the `FOR i := 1 TO 2 ... motors[i](...)` call, so the motors
+  compute `percent_open` from the snapped position in the same cycle.
+- While the roof stalls against a limit (still commanded, e.g. closing from
+  the closed position), `is_closing AND roof_limit_closed` stays true and the
+  snap continuously holds the position at `min_position`, so stall-jitter
+  counts cannot drive it negative.
+- The old per-motor commented-out snap in `FB_RoofMotor`
+  (`closed_trigger(CLK := closed); IF direction_close AND closed_trigger.Q
+  THEN position := min_position;`) is superseded by the `FB_Roof`-level
+  version above (both sensors together, no transient `|diff| = 1`); remove it
+  to avoid double-snapping.
 
 ### Safety net: re-sync at the limit switches
 
@@ -439,22 +540,11 @@ when **both** opened limit switches are engaged → both motors'
 per-motor on each switch) avoids a transient `|diff| = 1` right at the limit.
 `FB_Roof` already computes roof-level limit states from both motors
 (`roof_limit_closed` / `roof_limit_open`), so the snap belongs there, setting
-both motors' positions:
-
-```st
-// in FB_Roof (both motors of a half):
-IF direction_close AND roof_limit_closed THEN
-    motors[1].position := motors[1].min_position;
-    motors[2].position := motors[2].min_position;
-END_IF
-IF direction_open AND roof_limit_open THEN
-    motors[1].position := motors[1].max_position;
-    motors[2].position := motors[2].max_position;
-END_IF
-```
-
-(Equivalently, keep it in `FB_RoofMotor` per motor but driven by the
-roof-level `roof_limit_*` signal instead of the per-motor switch.)
+both motors' positions — see the **Full implementation** above for the exact
+code (`IF is_closing AND roof_limit_closed ...`, `IF is_opening AND
+roof_limit_open ...`, placed after the "stop on limit switches" block).
+`is_closing`/`is_opening` are used (not the per-motor `direction_*`) because
+they match the existing stop-on-limit logic and are set before the snap runs.
 
 Rationale:
 
@@ -470,6 +560,22 @@ Caveats:
 - Keep the direction gate (`direction_open`/`direction_close`) so a
   misadjusted or bouncing switch cannot corrupt the counter while the roof is
   not moving toward that limit.
+- **The open-start case (measured)**: when an open move begins, the first
+  counter edge can arrive while the closed switches are still engaged (in the
+  data: c[1,1] first edge at 3.08 s, `closed` release at 3.60 s). These edges
+  are legitimate (real first-rotation pulses; the switch release lags
+  mechanically) and are counted normally — the direction gate on the snap is
+  what keeps the close-snap from erasing them: an *ungated* snap (`IF
+  roof_limit_closed THEN position := min_position`) would continuously zero
+  the position during the ~0.5 s overlap and leave the move one count short,
+  tripping `sync_error` the other way. The edge-triggered original
+  (`closed_trigger(CLK := closed); IF direction_close AND
+  closed_trigger.Q`) has the same safety.
+- Trade-off of the direction gate: a *parked* drift (counters at −2/+2 while
+  sitting at the closed limit, `real_speed = 0`) is only cleared by the next
+  close move or the boot-time snap — acceptable because the motion gate
+  prevents wind rattle from creating new parked drift, and the boot snap
+  clears anything present at startup.
 - **Boot / warm-restart snap**: the limit may already be engaged at startup
   (no rising edge). On init, if `roof_limit_closed`/`roof_limit_open` is
   true, set the positions immediately.
@@ -513,11 +619,13 @@ positions. This is the fix for the measured failure (§3.3).
       The `PRG_MeasureCounter` fast task (250 µs, priority 10) is optional —
       useful only as a one-off pulse-width diagnostic, not part of the fix.
 - [ ] **Step 2 — Decide**: decided — no over-counting; the fix is the re-sync
-      (§4, §5).
-- [ ] **Step 3 — Filter (optional insurance)**: implement the
-      debounce/spacing layers in `FB_RoofMotor.TcPOU` with `VAR_INPUT` tuning
-      parameters; keep the raw counter path available for comparison (e.g. a
-      debug output `raw_counts`).
+      + gates (§4, §5).
+- [ ] **Step 3 — Gates + filters (insurance)**: implement the motion gate
+      and the debounce/spacing layers in `FB_RoofMotor.TcPOU` with `VAR_INPUT`
+      tuning parameters; keep the raw counter path available for comparison
+      (e.g. a debug output `raw_counts`). Do **not** gate counting on the
+      limit switches — that would blind the sync check to a broken
+      connection or stalled drive (§5).
 - [ ] **Step 4 — Re-sync (highest value)**: implement the symmetric limit
       snap in `FB_Roof` (both motors snap to `min_position`/`max_position`
       when *both* closed / opened switches engage, §5 safety net) — clears any
