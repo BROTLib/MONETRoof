@@ -229,57 +229,167 @@ at 128/128 samples):
 
 Sizing consequences (validated against §5):
 
-- **`counter_debounce` default T#20MS is marginal**: it equals the narrowest
-  legitimate pulse measured here (20 ms on c[2,2]). If the move was at
-  `max_speed`, a 10 ms debounce is the safer default; if it was a slow-mode
-  move, pulses at `max_speed` would be ~3× narrower (≈7 ms) and the debounce
-  must be ≤10 ms anyway. → **confirm whether the recording ran at
-  `max_speed`, then set `counter_debounce := T#10MS`.**
+- **The recorded move ran at `max_speed` (confirmed)** — so the measured 0.60 s
+  rotation period and 20 ms narrowest pulse *are* the worst (fastest) case, not
+  a slow-mode snapshot. Full travel at `max_speed`: `200 counts × 0.60 s ≈
+  **120 s** (the move in the recording was partial — 28 of 200 counts — so T
+  should still be verified once, e.g. from the MQTT percent-open telemetry over
+  a full open/close).
+- **`counter_debounce := T#10MS`** — below the narrowest legitimate pulse
+  (20 ms on c[2,2]) with 2× margin, above the EL1008's 3 ms input filter, so
+  all legitimate pulses count and sub-10 ms chatter does not.
 - **`counter_min_spacing` T#50MS is safe**: the measured legitimate period is
-  600 ms, so 50 ms spacing has >10× margin and still kills burst pulses
-  (which arrive ≪50 ms apart).
+  600 ms, so 50 ms spacing has 12× margin and still kills burst pulses (which
+  arrive ≪50 ms apart).
 - The differing pulse widths per channel (20 vs 80–90 ms at the same rotation
   period) also hint at **unequal block widths or marginal gaps** — worth
   checking the c[2,2] sensor mounting (§3 sensor checks), since a marginal gap
   is the classic trigger for threshold flutter.
+- **A rattle was later reproduced** — see the second recording below
+  (`Roof2.svdx`); it shows the failure mechanism and changes the fix emphasis
+  (§3.1).
+
+### Second recording (Roof2.svdx, reproduced failure, 2025-08-20)
+
+**12.47 s at 10 ms**, same channel mapping. Decode cross-checked (160 ms
+series 78/78, sparse 9/9). Operator report: *roof half 1 failed right at the
+beginning with a sync error — the two counters differed too much*.
+
+| Channel | Counts | Behavior |
+|---|---|---|
+| counter[1,1] | **+1** | block crosses **into** the sensing zone at 3.91 s and **dwells there for 8.5 s** (rest of recording) |
+| counter[1,2] | +0 | block parked in zone at t=0, crosses out at 3.09 s, never returns |
+| counter[2,1] | +11 | clean pulses, 0.6 s cadence, 4.5–11.0 s |
+| counter[2,2] | +11 | clean pulses, 0.6 s cadence, 4.47–10.8 s |
+| opened[1..2,1..2] | 0 | never engaged |
+
+Interpretation:
+
+- **Half 2 moved normally** (11 pulses/drive, same cadence as the clean
+  recording). **Half 1 never rotated**: the drives energised at ~3 s, the
+  shafts jittered a fraction of a turn (blocks crossing their sensor
+  thresholds at 3.09 / 3.91 s) and stalled — the mechanical "rattle".
+- The visible count difference is **exactly one edge** (c[1,1] @3.91 s — the
+  block crossing *into* the zone and staying), which is within the expected
+  ±1 phase behaviour (§3.2). `sync_error := ABS(pos1 − pos2) >=
+  max_position_diff (2)` therefore implies **the two counters already
+  differed by ≥ 1 before this move** — residues accumulated over earlier
+  partial moves (never fully reaching a limit), with this event pushing the
+  difference over the threshold. (Confirm: were the counters reset before the
+  test?)
+- **There is no pulse burst in the 10 ms data.** The 250 µs measurement task
+  remains the only way to see whether the *invisible* part of the rattle
+  (sub-10 ms crossings, hidden by the 3 ms EL1008 filter and 10 ms sampling)
+  produces additional counts.
+
+Consequences for the fix (updates §5/§6):
+
+- The **limit-switch position snap (§5 safety net) becomes the primary
+  protection**: it re-zeros the counters at every full open/close, so ±1
+  residues can no longer accumulate into a drift that trips `sync_error` at a
+  later move. Re-enabling it is the highest-value change.
+- **Root-cause remains open**: the recordings show clean pulses; whether the
+  ≥2 difference comes from sub-ms bursts (unseen at 10 ms) or from residues
+  stacking across partial moves is decided by (a) the counter reset question
+  above and (b) the 250 µs watchdog (§6).
+- Keep the debounce/spacing defaults (10 ms / 50 ms) — they cost nothing and
+  cover fast bursts if they occur, but they are not what this recording
+
+### Fourth recording (error event, 2025-08-20)
+
+The recording where `sync_error` actually fired: **127.4 s at 10 ms**, 16
+channels, repeated partial open/stop/close cycles with the error present for
+~60 % of the time (|dp1| ≥ 2 from t = 3.39 s onward).
+
+| Finding | Detail |
+|---|---|
+| **The counters count correctly** | all four channels: min edge interval 0.590 s, zero bursts, zero close pairs — every edge is a legitimate rotation pulse (c[1,1] 146, c[1,2] 144, c[2,1] 178, c[2,2] 179 edges) |
+| **The error is a phase-offset + residue effect** | c[1,1]'s block leads c[1,2] by ~one rotation, so during motion \|dp1\| **oscillates 1↔2 every ~1.5 s** (p11 counts → 2, p12 counts → 1) and crosses the `max_position_diff = 2` threshold routinely |
+| **The recording starts with residue 1** | p11 = 1, p12 = 0 at the closed position (from earlier moves, never re-zeroed) |
+| **The residue survives full closes** | at the closed limit the counters read p11 = 1, p12 = 0 (half 2: 0/1) instead of 0/0 — the limit-switch position snap is disabled, so the residue carries into every cycle |
+| Error onset | t = 3.39 s: p11 counts its 2nd edge while p12 is still 0 → \|dp1\| = 2 → `sync_error` |
+
+**Conclusion**: this is exactly the operator-expected behaviour ("one drive may
+count one more if it hits the limit first") made harmful by the disabled
+re-sync. The two counters legitimately sit ±1 apart (phase-offset blocks on
+mechanically connected drives); without the limit-switch position snap the
+residue survives each cycle and the phase oscillation trips `sync_error`.
+There is **no over-counting to filter** — the fix is the re-sync (§5 safety
+net), not the debounce/spacing layers.
+  needed.
+
+### Third recording (16-channel, open/stop/close cycles, 2025-08-20)
+
+Recording with the **absolute `position` counters added** (all 4 drives) plus
+the `closed` limit switches: **70.4 s at 10 ms**, two partial open → stop →
+close cycles, no sync error occurred.
+
+| Finding | Detail |
+|---|---|
+| **c[1,1] runs +1 vs c[1,2] during moves** | c[1,1] logged 72 rising edges vs 68 for the other three drives (15 vs 14 up, 15 vs 14 down per cycle); `position[1,1]` is 1 ahead of `position[1,2]` during motion and they equalise at stops (max \|dp1\| = 1) |
+| **The +1 is expected, not a fault** | the drives are mechanically connected; the two blocks sit at different angles, so pulses are phase-offset and a stop can legitimately leave one counter one ahead (operator-confirmed: moving to a limit, one drive may count one more if it hits the limit first). The sync tolerance (`max_position_diff = 2`) is exactly the headroom for this |
+| First c[1,1] pulse per move is wide | 160–190 ms vs the 20–90 ms steady pulses (the roof is still accelerating) — not a fault signature |
+| No bursts | no window with >1 edge per 200 ms anywhere |
+| Full cycles self-cancel | both counters return to 0 at full close; the ±1 residue does not accumulate across full cycles |
+
+**Consequence**: a counter difference of 1 is normal; `sync_error` (difference
+≥ 2) is the fault case. Its mechanism is still not directly observed at 10 ms
+resolution — candidates: (a) genuine over-counting (jitter bursts faster than
+the 3 ms EL1008 filter / 10 ms sampling can show), or (b) accumulated ±1
+residues across *partial* moves that never reach a limit (each stop leaves a
+±1 residue that can stack to 2). The recordings so far only show clean
+single pulses; the 250 µs watchdog (§6) exists to catch (a) if it occurs.
 
 ## 4. Decision point (after measurement)
 
-Depending on the measurement results:
-
-1. **Pulses are wide / bursts are long** (≥ several ms, spaced close) →
-   proceed with the software filter chain (§5).
-2. **Pulses are sub-ms and the EL1008 filter already hides them** → the
-   over-counting is *not* sensor chatter; look at the motion profile instead:
-   - raise `min_speed` so the roof starts cleanly and leaves the resonant
-     speed range quickly,
-   - tune `acceleration`,
-   - check the block/sensor mounting.
-3. **Mechanical oscillation of the block past the sensor** (shaft torsional
-   vibration / gearbox backlash at start, or a marginal block–sensor gap) →
-   no counter filter fully fixes it; fix the mechanics and/or the sensor
-   mounting/gap, and use the filter only as insurance.
+**Decided by the recordings (§3.3):** there is no pulse over-counting — all
+edges are clean rotation pulses at 0.6 s. The `sync_error` is the expected
+±1 counter difference (phase-offset blocks on mechanically connected drives,
+"one drive counts one more if it hits the limit first") made harmful by the
+**disabled limit-switch re-sync**: the residue survives every cycle, the
+phase oscillation pushes \|dp\| to 2 during moves, and the error trips. The
+debounce/spacing filters do not address this. Fix: re-enable the position
+snap (§5 safety net). The 250 µs watchdog remains only to rule out sub-10 ms
+bursts in other failure modes, none observed so far.
 
 ## 5. Fix design: filter chain in `FB_RoofMotor`
 
-Three layers, all cheap:
+**Key constraint (operator-confirmed): the two drives of a roof half are
+mechanically connected, so they physically always rotate the same number of
+times.** The two blocks sit at different angles, so the sensor pulses are
+phase-offset and a stop can legitimately leave one counter one ahead of the
+other — this is expected, and `max_position_diff = 2` is the headroom for it.
+A difference of ≥ 2 is therefore the fault case: either genuine over-counting
+(bursts) or residues that stacked across partial moves.
+
+**Primary fix — the limit-switch position snap (safety net below).** The
+recordings (§3.2, §3.3) show the counters count correctly and the error is
+the un-cleared ±1 residue crossing the threshold via the phase oscillation.
+Re-enabling the snap makes the counters agree after every full open/close,
+which eliminates the failure. The debounce/spacing layers below are cheap
+insurance only (no bursts have ever been observed).
+
+Filter layers (insurance):
 
 1. **Level debounce** — count only if the input stays high for a minimum
-   time (kills short glitches).
+   time (kills short glitches). Must stay below the narrowest legitimate
+   pulse (20 ms, §3).
 2. **Rate limit** — ignore an edge that arrives within a minimum spacing
-   after the last *accepted* count (kills the rest of the burst).
-3. **Only count while moving** — gate on `real_speed <> 0` so standstill
-   vibration never counts at all.
+   after the last *accepted* count (kills the rest of a burst).
+
+A "only count while moving" / limit-switch gate is **deliberately not used**:
+during a move to a limit the roof legitimately counts up to the last rotation
+(one drive may count one more as it hits the limit first), so gating on the
+limit switches or on `real_speed` would swallow legitimate counts.
 
 Sketch (replaces the counter block in `FB_RoofMotor`):
 
 ```st
 // -- declaration additions --
-counter_debounce    : TIME := T#20MS;   // min. on-time of the sensor pulse — keep < narrowest legit pulse (§5)
-counter_min_spacing : TIME := T#50MS;   // min. time between accepted counts
+counter_debounce    : TIME := T#10MS;   // min. on-time of the sensor pulse — keep < narrowest legit pulse (§3: 20 ms)
+counter_min_spacing : TIME := T#50MS;   // min. time between accepted counts — keep < 600 ms rotation period (§3)
 tonDebounce : TON;
 tonSpacing  : TON;
-bCounting   : BOOL;
 
 // -- implementation --
 tonDebounce(IN := counter, PT := counter_debounce);   // stable-high filter
@@ -326,38 +436,46 @@ counter drift.
 - `counter_debounce` ≥ max measured noise pulse width, **and** below the
   shortest *legitimate* pulse width at `max_speed` — that is
   `block angular width fraction × T/200` (block width as a fraction of one
-  rotation, times the rotation period at `max_speed`). The default 20 ms is
-  only safe if the block is wide and/or the shaft turns slowly; validate it
-  against the measured numbers (§3). Note the EL1008 3 ms filter already
-  removes sub-3 ms chatter before the PLC sees it.
+  rotation, times the rotation period at `max_speed`). Measured at `max_speed`:
+  narrowest legitimate pulse = **20 ms** (c[2,2]) → `counter_debounce = 10 ms`
+  (2× margin). Note the EL1008 3 ms filter already removes sub-3 ms chatter
+  before the PLC sees it.
 - `counter_min_spacing` ≥ max measured burst cadence, **and** below the
   shortest legitimate pulse period at `max_speed` — with one block per
-  rotation that is the rotation period at `max_speed` (`T/200`). The sensor's
-  600 Hz switching frequency sets an absolute floor of ~1.7 ms, the EL1008
-  filter ~3 ms; for any realistic roof travel time the legitimate period is
-  far above 50 ms.
-- Start conservative (debounce 20 ms, spacing 50 ms), then tighten based on
-  the measured numbers.
+  rotation that is the rotation period at `max_speed` (measured **600 ms**).
+  The sensor's 600 Hz switching frequency sets an absolute floor of ~1.7 ms,
+  the EL1008 filter ~3 ms; 50 ms sits comfortably between the (unmeasured)
+  burst cadence and the 600 ms legitimate period.
+- Start with the measured defaults (debounce 10 ms, spacing 50 ms), then
+  tighten only if validation shows legitimate counts being lost or bursts
+  slipping through.
 
 ## 6. Implementation steps
 
-- [ ] **Step 1 — Measurement**: add `PRG_MeasureCounter` + fast task
-      (250 µs, priority 10) in the tsproj; log/observe pulse width & cadence
-      for one motor; record burst behaviour at start, at low speed, at
-      standstill.
-- [ ] **Step 2 — Decide**: classify the rattle per §4 (electrical chatter vs
-      mechanics vs motion profile) and set target filter values.
-- [ ] **Step 3 — Filter**: implement the three-layer filter in
-      `FB_RoofMotor.TcPOU` with `VAR_INPUT` tuning parameters; keep the raw
-      counter path available for comparison (e.g. a debug output
-      `raw_counts`).
-- [ ] **Step 4 — Re-sync**: re-enable the limit-switch position snap in
-      `FB_RoofMotor`.
-- [ ] **Step 5 — Validate**: on the live system, do N open/close cycles;
-      verify `position` at the limits equals `min_position`/`max_position`
-      exactly, and that no spurious `sync_error` / `limit_error` occurs at
-      startup; verify no *legitimate* counts are lost (compare position
-      against the raw counter over a full cycle).
+- [ ] **Step 1 — Measurement**: done — four recordings (§3, §3.1, §3.2, §3.3)
+      give the legitimate pulse width (20–90 ms), cadence (600 ms) at
+      `max_speed`, the expected ±1 phase behaviour, and the error mechanism
+      (un-cleared residue + phase oscillation, §3.3). The `PRG_MeasureCounter`
+      fast task (250 µs, priority 10) is optional — no sub-10 ms burst has
+      ever been observed, but it remains the only way to rule that mode out.
+- [ ] **Step 2 — Decide**: decided — no over-counting; the fix is the re-sync
+      (§4, §5).
+- [ ] **Step 3 — Filter (optional insurance)**: implement the
+      debounce/spacing layers in `FB_RoofMotor.TcPOU` with `VAR_INPUT` tuning
+      parameters; keep the raw counter path available for comparison (e.g. a
+      debug output `raw_counts`).
+- [ ] **Step 4 — Re-sync (highest value)**: re-enable the limit-switch
+      position snap in `FB_RoofMotor` — clears any residue at every full
+      open/close, and (given the mechanical connection) guarantees the two
+      counters of a half agree after every full cycle.
+- [ ] **Step 5 — Validate**: on the live system, do N open/stop/close cycles
+      (the test that reproduces the failure); verify `position` at the limits
+      equals `min_position`/`max_position` exactly, that the two counters of
+      each half agree after every cycle, that no spurious `sync_error` /
+      `limit_error` occurs at startup, and that no *legitimate* counts are
+      lost (compare position against the raw counter over a full cycle).
+      Also watch the MQTT telemetry / measurement task over normal operations
+      for any first naturally occurring sub-10 ms burst.
 - [ ] **Step 6 — Cleanup**: remove or disable the measurement task once the
       filter is validated; document the tuned values in the README
       (`Configuration` table) and in the code comments.
