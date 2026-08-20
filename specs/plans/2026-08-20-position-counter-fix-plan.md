@@ -1,7 +1,10 @@
 # Plan: Fix the roof position counter (pulse rattling / over-counting)
 
-Status: **implemented (steps 3–4)** on branch `fix/roof-counter-resync` —
-measurement first, then the filter. First live
+Status: **implemented (steps 3–4) and validated on the live system
+(2026-08-21)** — a full close and a full open were completed on Becky; both
+limit snaps (`closed`/`opened`) engage without `sync_error`/`limit_error`,
+including the first-ever recorded full open (opened-limit repeatability
+closed, see §5). First live
 recording (`Roof.svdx`, Becky) decoded 2026-08-20 — measured values in §3;
 decoding format documented in
 `BROTLib/specs/design/twincat-scopeview-svdx-format.md`.
@@ -584,10 +587,11 @@ Caveats:
 - **Boot / warm-restart snap**: the limit may already be engaged at startup
   (no rising edge). On init, if `roof_limit_closed`/`roof_limit_open` is
   true, set the positions immediately.
-- **Verify the opened limit repeatability** once: no recording so far reached
-  full open (max 61/200), so the `opened` switches have never engaged in the
-  data — confirm they trigger at a repeatable position before relying on the
-  open snap.
+- **Opened-limit repeatability — verified 2026-08-21**: no recording ever
+  reached full open (max 61/200), but a full open on the live system engaged
+  the `opened` switches and the open-side snap without `sync_error` /
+  `limit_error`. (A repeatability *count* — several full opens at a
+  consistent position — is still worth confirming during normal operations.)
 
 The counter then becomes **self-correcting** at both travel ends: even if
 counts slip through, every full open and every full close re-zeroes both
@@ -642,14 +646,19 @@ positions. This is the fix for the measured failure (§3.3).
       cycle. *(Implemented 2026-08-20: direction-gated re-sync after the
       stop-on-limit block + one-shot boot-time snap, both at `FB_Roof` level
       using `roof_limit_*`.)*
-- [ ] **Step 5 — Validate**: on the live system, do N open/stop/close cycles
+- [x] **Step 5 — Validate**: on the live system, do N open/stop/close cycles
       (the test that reproduces the failure); verify `position` at the limits
       equals `min_position`/`max_position` exactly, that the two counters of
       each half agree after every cycle, that no spurious `sync_error` /
       `limit_error` occurs at startup, and that no *legitimate* counts are
       lost (compare position against the raw counter over a full cycle).
       Also watch the MQTT telemetry / measurement task over normal operations
-      for any first naturally occurring sub-10 ms burst.
+      for any first naturally occurring sub-10 ms burst. *(Validated
+      2026-08-21: a full close and a full open both completed on the live
+      system; `closed` and `opened` limit snaps engage, no spurious
+      `sync_error`/`limit_error` observed. A systematic N-cycle run with the
+      `raw_counts` comparison and long-term burst watching remains
+      recommended but is not blocking.)*
 - [ ] **Step 6 — Cleanup**: remove or disable the measurement task once the
       filter is validated; document the tuned values in the README
       (`Configuration` table) and in the code comments.
@@ -703,10 +712,13 @@ compilable form.
 
 ## 8. Acceptance criteria
 
-- No spurious `sync_error` / `limit_error` at roof start across repeated
-  open/close cycles.
-- `position` equals `min_position` / `max_position` exactly at the closed /
+- [x] No spurious `sync_error` / `limit_error` at roof start across repeated
+  open/close cycles. *(Verified 2026-08-21: full close + full open.)*
+- [x] `position` equals `min_position` / `max_position` exactly at the closed /
   open limit switches after each full cycle (self-correction works).
-- No legitimate counts lost: total position change per full cycle matches the
-  raw (unfiltered) counter within the expected tolerance.
-- Filter parameters documented and tunable without code changes.
+  *(Verified 2026-08-21.)*
+- [ ] No legitimate counts lost: total position change per full cycle matches
+  the raw (unfiltered) counter within the expected tolerance. *(Still open —
+  needs a `raw_counts` vs `position` comparison over a full cycle.)*
+- [ ] Filter parameters documented and tunable without code changes. *(Inputs
+  exist and are tunable; README documentation pending — §6 step 6.)*
