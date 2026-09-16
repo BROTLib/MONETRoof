@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <GVL Name="GVL_Version" Id="{041aa1d4-8866-44cd-8e75-c4a20818fd71}">
+    <Declaration><![CDATA[{attribute 'qualified_only'}
+VAR_GLOBAL CONSTANT
+	// Mirrors Beckhoff's own Global_Version.stLibVersion_* pattern (see ST_LibVersion),
+	// which only covers Tc2_*/Tc3_* library references, not custom ones like this one.
+	// Kept in sync with <ProjectVersion> in MonetRoof.plcproj at release time.
+	stVersion : ST_LibVersion := (
+		iMajor := 1,
+		iMinor := 0,
+		iBuild := 0,
+		iRevision := 0,
+		nFlags := 1,
+		sVersion := '1.0.0'
+	);
+END_VAR]]></Declaration>
+  </GVL>
+</TcPlcObject>
