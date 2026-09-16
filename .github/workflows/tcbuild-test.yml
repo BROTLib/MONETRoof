@@ -1,0 +1,15 @@
+name: TcBuild test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: [self-hosted, twincat, windows, monetroof]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build MonetRoof.sln
+        shell: powershell
+        run: |
+          & "C:\Program Files\Industrial Brains B.V\TcBuild\TcBuild.exe" build MonetRoof.sln
