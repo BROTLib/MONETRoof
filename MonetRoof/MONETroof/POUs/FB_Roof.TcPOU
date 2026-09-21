@@ -31,7 +31,7 @@ VAR_OUTPUT
 	overtravel_error		: BOOL;
 	stall_error				: BOOL;
 	drive_error				: BOOL;
-	state					: E_RoofState;	
+	state					: E_RoofState := E_RoofState.unknown;
 	percent_open			: REAL;	
 END_VAR
 VAR_OUTPUT PERSISTENT
@@ -233,22 +233,20 @@ ELSE
 		reset_roof := FALSE; 	
 
 		// check other states
+		// both motors get the same speed, so a moving roof has exactly one direction
 		IF motors[1].moving OR motors[2].moving THEN
 			IF motors[1].direction_open OR motors[2].direction_open THEN
 				state := E_RoofState.opening;
-			ELSIF motors[1].direction_close OR motors[2].direction_close THEN
-				state := E_RoofState.closing;
 			ELSE
-				; // error
+				state := E_RoofState.closing;
 			END_IF
-		ELSIF motors[1].opened OR motors[2].opened THEN
+		ELSIF roof_limit_open THEN
+			// fully open needs both switches, like is_open; one switch alone is only 'stopped'
 			state := E_RoofState.opened;
-		ELSIF motors[1].closed OR motors[2].closed THEN
+		ELSIF roof_limit_closed THEN
 			state := E_RoofState.closed;
-		ELSIF NOT motors[1].moving AND NOT motors[2].moving THEN
-			state := E_RoofState.stopped;
 		ELSE
-			state := E_RoofState.error;	
+			state := E_RoofState.stopped;
 		END_IF
 	END_IF
 END_IF

@@ -207,7 +207,10 @@ Roof states follow `E_RoofState` (BROTLib):
 | `closing` | Roof moving towards closed |
 | `stopped` | Roof at standstill |
 | `error` | Fault detected (sync / direction / limit / drive) |
-| `unknown` | Undefined |
+| `unknown` | Initial value before the first cycle has evaluated the state |
+
+`opened` / `closed` need both limit switches of the roof half; a half with only one switch engaged
+reports `stopped`. Opened and closed engaged at the same time is not detected as a sensor fault.
 
 Operating modes:
 
