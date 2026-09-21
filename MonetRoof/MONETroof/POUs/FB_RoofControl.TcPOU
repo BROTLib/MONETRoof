@@ -6,7 +6,7 @@ VAR_INPUT
 	min_speed				: UINT;			// minimum speed to drive
 	max_speed				: UINT;			// maximum speed to drive
 	acceleration			: UINT;			// acceleration [speed/call]
-	max_position_diff		: INT;			// maximum allowed position difference between two drives of roof
+	max_position_diff		: INT;			// position difference between the two drives of a roof at which sync_error / limit_error trigger (smaller is tolerated)
 	limit_slowdown			: REAL := 5;	// linear slowdown when moving towards limits starting at <x% and >(100-x)%
 	min_position_1			: INT := 0;		// minimum position of roof
 	max_position_1			: INT := 200;		// maximum position of roof

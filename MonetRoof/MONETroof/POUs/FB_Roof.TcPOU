@@ -9,7 +9,7 @@ VAR_INPUT
 	acceleration			: UINT;		// acceleration [speed/call]: the ramp time depends on the task cycle time (10 ms in all projects)
 	min_position			: INT;		// minimum position of roof
 	max_position			: INT;		// maximum position of roof
-	max_position_diff		: INT;		// maximum allowed position difference between two drives of roof
+	max_position_diff		: INT;		// position difference between the two drives of the roof at which sync_error / limit_error trigger (smaller is tolerated)
 	overtravel_margin		: INT := 10;	// stop if a drive counts more than this beyond min/max_position, e.g. with failed limit switches
 	stall_timeout			: TIME := T#10S;	// stop if a drive is driven this long without a counter edge (see FB_RoofMotor)
 	limit_slowdown			: REAL := 5;	// linear slowdown when moving towards limits starting at <x% and >(100-x)%

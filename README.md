@@ -88,7 +88,7 @@ MAIN
 `MAIN` wires the roof control parameters (speed, acceleration, position
 limits, synchronisation tolerance), starts the MQTT communication, and mirrors
 the aggregated roof state (`closed`, `opened`, `stopped`, `opening`, `closing`,
-`error`) into dedicated boolean outputs. It also provides the safety
+`error`) into plain boolean variables (not linked to I/O). It also provides the safety
 handshake outputs `running`, `restart` and `errack` for the TwinSAFE group.
 
 ### FB_RoofControl
@@ -130,12 +130,13 @@ Controls one roof half with its two motors.
 - **Slow mode**: `slow_open` / `slow_close` override normal operation and move
   the roof at `min_speed` (e.g. for maintenance or alignment).
 - **Consistency monitoring** (each roof half):
-  - `sync_error` — the two drives' positions differ by more than
-    `max_position_diff`;
+  - `sync_error` — the two drives' positions differ by `max_position_diff`
+    or more (with 2, a difference of 1 is tolerated);
   - `direction_error` — both drives move at the same time in opposite
     directions;
-  - `limit_error` — a drive has moved more than `max_position_diff` since
-    leaving its limit switch without the opposite limit switch being reached;
+  - `limit_error` — a drive has moved `max_position_diff` counts or more
+    since its own limit switch engaged, still moving towards it, without the
+    other drive's switch engaging too (both are needed to stop the roof);
   - `overtravel_error` — a drive has counted more than `overtravel_margin`
     (default 10 counts) beyond `min_position` / `max_position` while moving in
     that direction, e.g. because limit switches failed. Software end stop.
@@ -335,7 +336,7 @@ The roof control parameters are configured in `MAIN`:
 | `acceleration` | `150` | Acceleration [speed/call] |
 | `max_position_1` | `200` | Maximum position of roof half 1 |
 | `max_position_2` | `200` | Maximum position of roof half 2 |
-| `max_position_diff` | `2` | Maximum allowed position difference between the two drives of a roof half |
+| `max_position_diff` | `2` | Position difference between the two drives of a roof half at which `sync_error` (and `limit_error`) trigger; smaller differences are tolerated |
 | `limit_slowdown` | `5` | Linear slowdown within the last 5 % of the travel range near the limits |
 
 Counting-filter inputs on `FB_RoofMotor` (function-block defaults; tunable
@@ -355,8 +356,9 @@ overridden by `MAIN`; not yet verified on the real roof):
 | `overtravel_margin` | `10` | Counts beyond `min_position` / `max_position` before the move is stopped |
 
 Additional function-block inputs (e.g. `min_position_1/2`,
-`fTelemetryInterval`, `slow_open`, `slow_close`, `zero_counter`, `ups_fail`)
-can be driven by the application as required.
+`fTelemetryInterval`, `slow_open`, `slow_close`, `zero_counter`)
+can be driven by the application as required. `ups_fail` is linked to the UPS
+input in the consumer projects but is not evaluated anywhere yet.
 
 ---
 
