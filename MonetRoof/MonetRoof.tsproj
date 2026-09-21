@@ -3266,36 +3266,24 @@ External Setpoint Generation:
 					<UnrestoredVarLinks ImportTime="2024-09-18T15:58:40">
 						<OwnerA Name="InputDst" Prefix="TIPC^MONETroof^MONETroof Instance" Type="1">
 							<OwnerB Name="TIID^Device 4 (EtherCAT)^Term 4 (EK1100)^Term 7 (EL1008)">
-								<Link VarA="MAIN.RoofControl.open_roof1" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 8^MAIN.RoofControl.open_roof1" Size="1" RestoreInfo="ANotFound"/>
 							</OwnerB>
 							<OwnerB Name="TIID^Device 4 (EtherCAT)^Term 4 (EK1100)^Term 8 (EL1008)">
-								<Link VarA="MAIN.RoofControl.close_roof1" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 1^MAIN.RoofControl.close_roof1" Size="1" RestoreInfo="ANotFound"/>
-								<Link VarA="MAIN.RoofControl.close_roof2" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 5^MAIN.RoofControl.close_roof2" Size="1" RestoreInfo="ANotFound"/>
-								<Link VarA="MAIN.RoofControl.open_roof2" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 3^MAIN.RoofControl.open_roof2" Size="1" RestoreInfo="ANotFound"/>
 							</OwnerB>
 						</OwnerA>
 					</UnrestoredVarLinks>
 					<UnrestoredVarLinks ImportTime="2024-09-19T13:25:14">
 						<OwnerA Name="InputDst" Prefix="TIPC^MONETroof^MONETroof Instance" Type="1">
 							<OwnerB Name="TIID^Device 4 (EtherCAT)^Term 4 (EK1100)^Term 7 (EL1008)">
-								<Link VarA="MAIN.RoofControl.open_roof[1]" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 8^MAIN.RoofControl.open_roof[1]" Size="1" RestoreInfo="ANotFound"/>
 							</OwnerB>
 							<OwnerB Name="TIID^Device 4 (EtherCAT)^Term 4 (EK1100)^Term 8 (EL1008)">
-								<Link VarA="MAIN.RoofControl.close_roof[1]" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 1^MAIN.RoofControl.close_roof[1]" Size="1" RestoreInfo="ANotFound"/>
-								<Link VarA="MAIN.RoofControl.close_roof[2]" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 5^MAIN.RoofControl.close_roof2" Size="1" RestoreInfo="ANotFound"/>
-								<Link VarA="MAIN.RoofControl.open_roof[2]" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 3^MAIN.RoofControl.open_roof[2]" Size="1" RestoreInfo="ANotFound"/>
 							</OwnerB>
 						</OwnerA>
 					</UnrestoredVarLinks>
 					<UnrestoredVarLinks ImportTime="2024-11-02T03:19:14">
 						<OwnerA Name="InputDst" Prefix="TIPC^MonetRoof^MONETRoof Instance" Type="1">
 							<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 42 (EK1100)^Term 47 (EL1008)">
-								<Link VarA="MAIN.RoofControl.roofs[1].motors[1].error" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 2^MAIN.RoofControl.roofs[1].motors[1].error" Size="1" RestoreInfo="ANotFound"/>
-								<Link VarA="MAIN.RoofControl.roofs[2].motors[1].error" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 4^MAIN.RoofControl.roofs[2].motors[1].error" Size="1" RestoreInfo="ANotFound"/>
 							</OwnerB>
 							<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 42 (EK1100)^Term 48 (EL1008)">
-								<Link VarA="MAIN.RoofControl.roofs[1].motors[2].error" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 2^MAIN.RoofControl.roofs[1].motors[2].error" Size="1" RestoreInfo="ANotFound"/>
-								<Link VarA="MAIN.RoofControl.roofs[2].motors[2].error" TypeA="BOOL" InOutA="0" GuidA="{18071995-0000-0000-0000-000000000030}" VarB="Channel 7^MAIN.RoofControl.roofs[2].motors[2].error" Size="1" RestoreInfo="ANotFound"/>
 							</OwnerB>
 						</OwnerA>
 					</UnrestoredVarLinks>
