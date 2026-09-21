@@ -148,11 +148,15 @@ Controls one roof half with its two motors.
     10 s) without an accepted counter edge (jammed drive, ice, dead sensor).
     Both drives jamming together gives no position difference, so
     `sync_error` cannot catch it;
-  - `drive_error` — any drive reports a fault.
+  - `drive_error` — any drive reports a fault;
+  - `config_error` — invalid parameters: `max_speed` above 32767,
+    `min_speed` above `max_speed`, `max_position` not above `min_position`,
+    `max_position_diff` or `acceleration` not above 0. Unlike the others it
+    also stops slow mode, because a wrapped speed can reverse the direction.
   Any of these triggers an immediate stop and puts the roof half into the
   error state; a reset is required to resume.
 - **Events**: hint events when the roof half becomes fully open or fully
-  closed; error events for synchronisation, direction, limit and drive faults
+  closed; error events for synchronisation, direction, limit, over-travel, stall, drive and configuration faults
   (published to the log topic via `FB_EventLog`).
 
 ### FB_RoofMotor

@@ -6,7 +6,7 @@ VAR_INPUT
 	roof_number				: UINT;		// number of roof
 	min_speed				: UINT;		// minimum speed to drive
 	max_speed				: UINT;		// maximum speed to drive
-	acceleration			: UINT;		// acceleration [speed/call]
+	acceleration			: UINT;		// acceleration [speed/call]: the ramp time depends on the task cycle time (10 ms in all projects)
 	min_position			: INT;		// minimum position of roof
 	max_position			: INT;		// maximum position of roof
 	max_position_diff		: INT;		// maximum allowed position difference between two drives of roof
@@ -31,6 +31,7 @@ VAR_OUTPUT
 	overtravel_error		: BOOL;
 	stall_error				: BOOL;
 	drive_error				: BOOL;
+	config_error			: BOOL;		// invalid parameters (speed / position range, max_position_diff, acceleration): the roof is held at 0
 	state					: E_RoofState := E_RoofState.unknown;
 	percent_open			: REAL;	
 END_VAR
@@ -56,6 +57,7 @@ VAR
 	limit_error_event		: FB_EventLog;	// event for limit error
 	overtravel_error_event	: FB_EventLog;	// event for over-travel error
 	stall_error_event		: FB_EventLog;	// event for stall error
+	config_error_event		: FB_EventLog;	// event for configuration error
 	
 	// speed
 	vel_ramp				: FB_Ramp;
@@ -72,7 +74,12 @@ VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// limit switches for this roof?
+      <ST><![CDATA[// parameters that would make the speed wrap in TO_INT / UINT arithmetic, divide by zero in percent_open,
+// or leave the roof with a permanent sync error or without any ramp
+config_error := max_speed > 32767 OR min_speed > max_speed OR max_position <= min_position OR
+				max_position_diff <= 0 OR acceleration = 0;
+
+// limit switches for this roof?
 roof_limit_open   := motors[1].opened AND motors[2].opened;
 roof_limit_closed := motors[1].closed AND motors[2].closed;
 
@@ -168,7 +175,9 @@ END_IF
 // (real_speed = acceleration) before the error stop below zeroes it again.
 // Slow mode ignores errors on purpose, so it is exempted here explicitly: it must not depend
 // on the motors being called before the error stop.
-IF state = E_RoofState.error AND NOT slow_open AND NOT slow_close THEN
+// A configuration error is not exempted: with invalid parameters the speed can wrap to the
+// opposite direction, slow mode included.
+IF config_error OR (state = E_RoofState.error AND NOT slow_open AND NOT slow_close) THEN
 	Stop();
 END_IF
 
@@ -220,12 +229,12 @@ overtravel_error := position_valid AND
 stall_error := motors[1].stall_error OR motors[2].stall_error;
 
 // stop on error
-IF direction_error OR sync_error OR drive_error OR limit_error OR overtravel_error OR stall_error OR state = E_RoofState.error THEN
+IF direction_error OR sync_error OR drive_error OR limit_error OR overtravel_error OR stall_error OR config_error OR state = E_RoofState.error THEN
 	Stop();
 END_IF
 
 // set state
-IF direction_error OR sync_error OR drive_error OR limit_error OR overtravel_error OR stall_error THEN
+IF direction_error OR sync_error OR drive_error OR limit_error OR overtravel_error OR stall_error OR config_error THEN
 	state := E_RoofState.error;
 ELSE
 	// no current error, but if we're still in error state, only proceed, if reset_roof is set
@@ -293,7 +302,13 @@ overtravel_error_event(
 stall_error_event(
 	Trigger := stall_error, 
 	Level := ADSLOG_MSGTYPE_ERROR, 
-	FormatString := 'Drive of roof #%s does not move (no counts).', 
+	FormatString := 'Drive of roof #%s does not move (no counts).',
+	OnMessage := UINT_TO_STRING(roof_number),
+	Comm := comm);
+config_error_event(
+	Trigger := config_error,
+	Level := ADSLOG_MSGTYPE_ERROR,
+	FormatString := 'Roof #%s has invalid parameters.',
 	OnMessage := UINT_TO_STRING(roof_number),
 	Comm := comm); 	]]></ST>
     </Implementation>
@@ -338,8 +353,11 @@ END_IF
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[// a drive fault comes first: it is usually the root cause of the stall or sync error that follows
-IF drive_error THEN
+          <ST><![CDATA[// invalid parameters come first, the other checks are meaningless with them;
+// then a drive fault: it is usually the root cause of the stall or sync error that follows
+IF config_error THEN
+	Error := 'Configuration error';
+ELSIF drive_error THEN
 	Error := 'Drive error';
 ELSIF sync_error THEN
 	Error := 'Sync error';
