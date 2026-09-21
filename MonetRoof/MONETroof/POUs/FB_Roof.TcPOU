@@ -340,7 +340,10 @@ END_IF
 END_VAR
 ]]></Declaration>
         <Implementation>
-          <ST><![CDATA[IF sync_error THEN
+          <ST><![CDATA[// a drive fault comes first: it is usually the root cause of the stall or sync error that follows
+IF drive_error THEN
+	Error := 'Drive error';
+ELSIF sync_error THEN
 	Error := 'Sync error';
 ELSIF direction_error THEN
 	Error := 'Direction error';
