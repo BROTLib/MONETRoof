@@ -14,6 +14,9 @@ VAR_INPUT
 	// counting filters (insurance; defaults sized from the recordings — plan 2026-08-20)
 	counter_debounce		: TIME := T#10MS;	// min. on-time of a sensor pulse — keep < narrowest legit pulse (20 ms)
 	counter_min_spacing		: TIME := T#50MS;	// min. time between accepted counts — keep < rotation period (600 ms)
+	
+	// stall watchdog
+	stall_timeout			: TIME := T#10S;	// max. time moving without an accepted count — keep well above the rotation period (0.6 s at max_speed, slower at min_speed) and the ~3 s until the first count after a start
 END_VAR
 VAR_OUTPUT PERSISTENT
 	position				: INT;	// position
@@ -30,6 +33,7 @@ VAR_OUTPUT
 	// error 
 	motor_error		AT%I*	: BOOL;
 	error					: BOOL;
+	stall_error				: BOOL;	// moving, but no counter edge for stall_timeout (jammed drive, dead sensor)
 	
 	// signals from limit switches
 	opened			AT%I*	: BOOL;
@@ -49,6 +53,8 @@ VAR
 	counter_raw_trig		: R_TRIG;	// raw (unfiltered) edge trigger — for validation only
 	tonDebounce				: TON;		// level debounce for the sensor pulse
 	tonSpacing				: TON;		// rate limit: min. spacing between accepted counts
+	tonStall				: TON;		// time since the last accepted count while moving
+	bCountAccepted			: BOOL;		// a count was accepted in this cycle
 	
 	// reset command to drive
 	reset_command			: BOOL;
@@ -107,9 +113,11 @@ IF counter_raw_trig.Q THEN
 	raw_counts := raw_counts + 1;
 END_IF
 
+bCountAccepted := FALSE;
 IF counter_trig.Q AND moving THEN					// motion gate
 	IF tonSpacing.Q THEN							// spacing window since last accepted count elapsed -> accept
 		tonSpacing(IN := FALSE);					// restart the spacing window
+		bCountAccepted := TRUE;
 		IF direction_open THEN
 			position := position + 1;
 		ELSIF direction_close THEN
@@ -118,6 +126,11 @@ IF counter_trig.Q AND moving THEN					// motion gate
 	END_IF
 END_IF
 tonSpacing(IN := TRUE, PT := counter_min_spacing);	// rate limit timer (runs continuously)
+
+// stall watchdog: driven, but the position counter does not advance (both drives jammed
+// gives no position difference, so sync_error cannot see it)
+tonStall(IN := moving AND NOT bCountAccepted, PT := stall_timeout);
+stall_error := tonStall.Q;
 
 // zero?
 IF zero_counter THEN

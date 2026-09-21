@@ -136,6 +136,18 @@ Controls one roof half with its two motors.
     directions;
   - `limit_error` — a drive has moved more than `max_position_diff` since
     leaving its limit switch without the opposite limit switch being reached;
+  - `overtravel_error` — a drive has counted more than `overtravel_margin`
+    (default 10 counts) beyond `min_position` / `max_position` while moving in
+    that direction, e.g. because limit switches failed. Software end stop.
+    Only active while `position_valid` is set (persistent): a limit snap sets
+    it, `zero_counter` clears it, and it is lost together with the counters
+    (e.g. a cold reset or power loss with the roof halfway open), so the roof
+    can still be moved towards the end the counters wrongly claim to be at,
+    unprotected until the next limit switch is reached;
+  - `stall_error` — a drive has been driven for `stall_timeout` (default
+    10 s) without an accepted counter edge (jammed drive, ice, dead sensor).
+    Both drives jamming together gives no position difference, so
+    `sync_error` cannot catch it;
   - `drive_error` — any drive reports a fault.
   Any of these triggers an immediate stop and puts the roof half into the
   error state; a reset is required to resume.
@@ -326,6 +338,14 @@ per installation, currently not overridden by `MAIN`):
 |---|---|---|
 | `counter_debounce` | `10 ms` | Min. stable-high time of a sensor pulse before an edge is counted — keep below the narrowest legitimate pulse (20 ms) |
 | `counter_min_spacing` | `50 ms` | Min. time between accepted counts — keep below the rotation period (600 ms) |
+
+Bounding inputs on `FB_Roof` (function-block defaults, currently not
+overridden by `MAIN`; not yet verified on the real roof):
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `stall_timeout` | `10 s` | Max. time a drive is driven without an accepted count. Must exceed the rotation period (0.6 s at `max_speed`, slower at `min_speed`) and the ~3 s until the first count after a start |
+| `overtravel_margin` | `10` | Counts beyond `min_position` / `max_position` before the move is stopped |
 
 Additional function-block inputs (e.g. `min_position_1/2`,
 `fTelemetryInterval`, `slow_open`, `slow_close`, `zero_counter`, `ups_fail`)
