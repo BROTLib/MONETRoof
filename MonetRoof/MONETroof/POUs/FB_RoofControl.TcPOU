@@ -50,7 +50,7 @@ VAR
 	
 	// Comm
 	fbComm					: I_Comm;	
-	tonComm 				: TON := (PT:=fTelemetryInterval);
+	tonComm 				: TON;
 	
 	min_positions			: ARRAY[1..2] OF INT;		// minimum position of roof
 	max_positions			: ARRAY[1..2] OF INT;		// maximum position of roof
@@ -112,8 +112,8 @@ END_IF
 percent_open := (roofs[1].percent_open + roofs[2].percent_open) / 2.0;
 
 // send telemetry
-tonComm(IN:=TRUE);
-IF tonComm.Q THEN // publish new payload every 5 seconds
+tonComm(IN:=TRUE, PT:=fTelemetryInterval);
+IF tonComm.Q THEN // publish new payload every fTelemetryInterval (default 5 seconds)
 	tonComm(IN:=FALSE);
 	THIS^._SendTelemetry();	
 END_IF
