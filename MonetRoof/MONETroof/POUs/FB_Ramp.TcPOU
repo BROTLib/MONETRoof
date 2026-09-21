@@ -16,7 +16,8 @@ END_VAR]]></Declaration>
       <ST><![CDATA[value := start;
 
 // step
-IF target - value > 0 THEN	
+// compare in DINT: a reversal (e.g. -30000 -> +30000) does not fit in 16 bit
+IF TO_DINT(target) - TO_DINT(value) > 0 THEN	
 	value := value + TO_INT(accel);
 	IF value >= target THEN
 		value := target;
