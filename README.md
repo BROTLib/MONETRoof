@@ -7,9 +7,9 @@ The roof consists of two independently driven roof halves, each moved by two
 brushed DC motors. The application provides automatic and manual roof control,
 position tracking via inductive-sensor counters and limit switches, velocity
 ramping with slowdown near the travel limits, monitoring of the two drives of
-a roof half (synchronisation, direction, travel limits, drive faults), MQTT
-telemetry and logging, and a TwinSAFE safety concept with emergency-stop and
-external device monitoring.
+a roof half (synchronisation, direction, travel limits, drive faults) and MQTT
+telemetry and logging. The safety logic (TwinSAFE) is not part of this
+project.
 
 The application is built on the **BROTLib** library (`I_Roof`, `I_Comm`,
 `FB_Comm_MQTT_Influx`, `FB_EventLog`, `E_RoofState`, ...).
@@ -22,7 +22,7 @@ The application is built on the **BROTLib** library (`I_Roof`, `I_Comm`,
 MONETRoof/
 ├── MonetRoof.sln                  # TwinCAT solution
 ├── MonetRoof/
-│   ├── MonetRoof.tsproj           # TwinCAT system project (I/O, NC, tasks, mappings)
+│   ├── MonetRoof.tsproj           # TwinCAT system project (PLC task; no I/O configured)
 │   ├── MONETroof/                 # PLC project
 │   │   ├── MonetRoof.plcproj
 │   │   ├── PlcTask.TcTTO          # PLC task (10 ms, priority 20, calls MAIN)
@@ -33,17 +33,20 @@ MONETRoof/
 │   │   │   ├── FB_RoofMotor.TcPOU
 │   │   │   └── FB_Ramp.TcPOU
 │   │   ├── VISUs/Roof.TcVIS       # TwinCAT visualization "Roof"
-│   │   ├── GlobalTextList.TcGTLO  # Global text list (visu texts, format strings)
-│   │   └── _Libraries/            # Resolved library references
-│   ├── TwinSAFE/                  # Safety project (TwinSAFE group on EL6910)
-│   │   └── TwinSafeGroup1/        # Safety logic + alias devices
-│   └── _Boot/                     # Boot project for TwinCAT RT (x64)
+│   │   └── GlobalTextList.TcGTLO  # Global text list (visu texts, format strings)
 └── README.md
 ```
 
 ---
 
 ## Hardware / EtherCAT topology
+
+This project configures neither I/O nor a safety project any more: both came
+from testing with dummy hardware and were removed. The roof I/O is linked in
+the projects that use this library (MONETN, MONETS), which map the same PLC
+variables in their own EtherCAT trees. The topology and the I/O mapping below
+document the roof wiring as it was configured here; check the terminal numbers
+against the consuming project.
 
 **Device 2 (EK1100)** — roof drive bus:
 
@@ -60,9 +63,8 @@ MONETRoof/
 
 The roof motors are driven through the Device 2 terminals (digital direction
 outputs, analog speed setpoints, digital inputs for inductive counters, limit
-switches and drive faults). The NC task additionally provides axes (e.g.
-Axis 9 / Axis 10 mapped to the two channels of the EL7342 DC motor terminal)
-for further motion applications.
+switches and drive faults). The NC configuration in the system project (axes
+without I/O) is not used by the roof application.
 
 ---
 
@@ -88,8 +90,7 @@ MAIN
 `MAIN` wires the roof control parameters (speed, acceleration, position
 limits, synchronisation tolerance), starts the MQTT communication, and mirrors
 the aggregated roof state (`closed`, `opened`, `stopped`, `opening`, `closing`,
-`error`) into plain boolean variables (not linked to I/O). It also provides the safety
-handshake outputs `running`, `restart` and `errack` for the TwinSAFE group.
+`error`) into plain boolean variables (not linked to I/O).
 
 ### FB_RoofControl
 
@@ -296,26 +297,6 @@ interface (`I_Roof`). Events and log messages are published to the log topic
 
 ---
 
-## Safety (TwinSAFE)
-
-A TwinSAFE safety application runs on the EL6910 safety PLC (FSoE network
-with EL1904 safety inputs and EL2904 safety outputs):
-
-- **Emergency stop**: `FBEstop1` (`safeEstop`) monitors the emergency-stop
-  chain with configurable input filtering and a restart delay; the E-stop
-  output drives the safety relay output (EL2904).
-- **External device monitoring**: `FBEdm1` (`safeEdm`) monitors the
-  contactor/feedback contacts of the switched load with switch-on and
-  switch-off monitoring times.
-- **Group ports**: the safety group exposes `Restart`, `RunStop` and
-  `ErrAck` (error acknowledge) ports as standard alias devices for the
-  controller, plus status ports (`FbErr`, `ComErr`, `OutErr`, `OtherErr`,
-  `ModuleFault`, `ComStartup`, `FbDeactive`, `FbRun`, `InRun`).
-- The PLC application provides the corresponding handshake outputs
-  (`running`, `restart`, `errack`).
-
----
-
 ## Visualization
 
 The TwinCAT visualization `Roof` (`VISUs/Roof.TcVIS`) provides an operator
@@ -377,6 +358,4 @@ input in the consumer projects but is not evaluated anywhere yet.
 
 The solution is built with TwinCAT 3.1 (Build 4024) in TwinCAT XAE.
 Build configurations are provided for `TwinCAT RT (x64)`, `TwinCAT RT (x86)`,
-`TwinCAT CE7 (ARMV7)` and `TwinCAT OS (ARMT2)`. A boot project for
-`TwinCAT RT (x64)` is included under `_Boot`, so the roof controller can boot
-directly into the application.
+`TwinCAT CE7 (ARMV7)` and `TwinCAT OS (ARMT2)`.

@@ -12,19 +12,11 @@ VAR
 	stopped			: BOOL;
 	opening			: BOOL;
 	closing			: BOOL;
-	error			: BOOL;	
-	
-	// safety
-	running		AT%Q*	: BOOL;
-	restart		AT%Q*	: BOOL;
-	errack		AT%Q*	: BOOL;
+	error			: BOOL;
 END_VAR
 ]]></Declaration>
     <Implementation>
-      <ST><![CDATA[// safety
-running := TRUE;
-
-RoofControl(
+      <ST><![CDATA[RoofControl(
 	min_speed			:= 10000,
 	max_speed 			:= 30000, 
 	acceleration 		:= 150,
