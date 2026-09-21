@@ -2951,7 +2951,7 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{69EF3A5D-605B-4F5C-8B9F-420938A0CACB}" Name="MonetRoof" PrjFilePath="MONETroof\MonetRoof.plcproj" TmcFilePath="MONETroof\MonetRoof.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MonetRoof.tmc" TmcHash="{44E8C51F-AAD3-ABD9-A905-C364DCF48399}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MonetRoof.tmc" TmcHash="{8023EB02-A932-6705-6D29-7DADDB66B146}">
 					<Name>MONETRoof Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Vars VarGrpType="1">
@@ -2963,7 +2963,7 @@ External Setpoint Generation:
 						</Var>
 						<Var>
 							<Name>MAIN.RoofControl.ups_fail</Name>
-							<Comment><![CDATA[ UPS failure]]></Comment>
+							<Comment><![CDATA[ UPS failure: linked to the UPS input in the consumer projects (tsproj), not evaluated yet]]></Comment>
 							<Type>BOOL</Type>
 						</Var>
 						<Var>
@@ -3064,11 +3064,6 @@ External Setpoint Generation:
 					<Vars VarGrpType="2" AreaNo="1">
 						<Name>PlcTask Outputs</Name>
 						<Var>
-							<Name>MAIN.running</Name>
-							<Comment><![CDATA[ safety]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
 							<Name>MAIN.RoofControl.roofs[1].motors[1].reset_drive</Name>
 							<Type>BOOL</Type>
 						</Var>
@@ -3140,33 +3135,7 @@ External Setpoint Generation:
 							<Name>MAIN.RoofControl.roofs[2].motors[2].direction_close</Name>
 							<Type>BOOL</Type>
 						</Var>
-						<Var>
-							<Name>MAIN.restart</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.errack</Name>
-							<Type>BOOL</Type>
-						</Var>
 					</Vars>
-					<UnrestoredVarLinks ImportTime="2024-09-18T15:58:40">
-						<OwnerA Name="InputDst" Prefix="TIPC^MONETroof^MONETroof Instance" Type="1">
-							<OwnerB Name="TIID^Device 4 (EtherCAT)^Term 4 (EK1100)^Term 7 (EL1008)"/>
-							<OwnerB Name="TIID^Device 4 (EtherCAT)^Term 4 (EK1100)^Term 8 (EL1008)"/>
-						</OwnerA>
-					</UnrestoredVarLinks>
-					<UnrestoredVarLinks ImportTime="2024-09-19T13:25:14">
-						<OwnerA Name="InputDst" Prefix="TIPC^MONETroof^MONETroof Instance" Type="1">
-							<OwnerB Name="TIID^Device 4 (EtherCAT)^Term 4 (EK1100)^Term 7 (EL1008)"/>
-							<OwnerB Name="TIID^Device 4 (EtherCAT)^Term 4 (EK1100)^Term 8 (EL1008)"/>
-						</OwnerA>
-					</UnrestoredVarLinks>
-					<UnrestoredVarLinks ImportTime="2024-11-02T03:19:14">
-						<OwnerA Name="InputDst" Prefix="TIPC^MonetRoof^MONETRoof Instance" Type="1">
-							<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 42 (EK1100)^Term 47 (EL1008)"/>
-							<OwnerB Name="TIID^Device 2 (EtherCAT)^Term 42 (EK1100)^Term 48 (EL1008)"/>
-						</OwnerA>
-					</UnrestoredVarLinks>
 					<Contexts>
 						<Context>
 							<Id>0</Id>
@@ -3184,10 +3153,5 @@ External Setpoint Generation:
 				</Instance>
 			</Project>
 		</Plc>
-		<Io/>
 	</Project>
-	<Mappings>
-		<MappingInfo Identifier="{00000000-2001-0850-0020-500830000403}" Id="#x02030010"/>
-		<MappingInfo Identifier="{00000000-0010-0304-6000-040310000403}" Id="#x02030020"/>
-	</Mappings>
 </TcSmProject>
