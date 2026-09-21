@@ -15,10 +15,7 @@ VAR_INPUT
 	limit_slowdown			: REAL := 5;	// linear slowdown when moving towards limits starting at <x% and >(100-x)%
 	comm					: I_Comm;
 	reset_roof				: BOOL;
-	
-	is_open					: BOOL;		// fully open
-	is_closed				: BOOL;		// fully closed
-	
+
 	slow_open				: BOOL := FALSE;	// open at min_speed, ignoring all errors and other commands
 	slow_close				: BOOL := FALSE;	// close at min_speed, ignoring all errors and other commands
 	
@@ -33,7 +30,9 @@ VAR_OUTPUT
 	drive_error				: BOOL;
 	config_error			: BOOL;		// invalid parameters (speed / position range, max_position_diff, acceleration): the roof is held at 0
 	state					: E_RoofState := E_RoofState.unknown;
-	percent_open			: REAL;	
+	percent_open			: REAL;
+	is_open					: BOOL;		// fully open (both open limit switches)
+	is_closed				: BOOL;		// fully closed (both closed limit switches)
 END_VAR
 VAR_OUTPUT PERSISTENT
 	position_valid			: BOOL;		// position counters are trustworthy: set by a limit snap, cleared by zero_counter and whenever the counters are lost
@@ -42,8 +41,7 @@ VAR
 	// commands for roofs
 	open_roof		AT%I*	: BOOL;
 	close_roof		AT%I*	: BOOL;
-	stop_roof				: BOOL;	
-	
+
 	motors			: ARRAY[1..2] OF FB_RoofMotor;
 	i				: UINT;
 	
@@ -83,10 +81,7 @@ config_error := max_speed > 32767 OR min_speed > max_speed OR max_position <= mi
 roof_limit_open   := motors[1].opened AND motors[2].opened;
 roof_limit_closed := motors[1].closed AND motors[2].closed;
 
-// percent open
-percent_open := (motors[1].percent_open + motors[2].percent_open) / 2.0;
-
-// ramp for roof velocity
+// ramp for roof velocity (percent_open below is still the value from the end of the previous cycle)
 IF slow_open THEN
 	speed := TO_INT(min_speed); 
 ELSIF slow_close THEN
@@ -203,8 +198,6 @@ END_FOR
 percent_open := (motors[1].percent_open + motors[2].percent_open) / 2.0;
 
 // fully open/closed
-//is_open 	:= percent_open = 100.0;
-//is_closed 	:= percent_open = 0.0;
 is_open := roof_limit_open;
 is_closed := roof_limit_closed;
 

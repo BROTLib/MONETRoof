@@ -26,7 +26,7 @@ VAR_INPUT
 	// automatic mode
 	automatic		AT%I*	: BOOL;
 	
-	// UPS failure
+	// UPS failure: linked to the UPS input in the consumer projects (tsproj), not evaluated yet
 	ups_fail		AT%I*	: BOOL;
 	
 	// telemetry interval
@@ -42,7 +42,7 @@ VAR
 	roofs					: ARRAY[1..2] OF FB_Roof;
 	
 	// loop variable	
-	i, j					: UINT;
+	i						: UINT;
 	
 	// open and close delays
 	tonOpen2Delay			: TON;
