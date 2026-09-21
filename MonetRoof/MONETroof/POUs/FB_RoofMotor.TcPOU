@@ -216,7 +216,20 @@ END_VAR
       <Implementation>
         <ST><![CDATA[// 'position' is a VAR_OUTPUT — read-only from outside the FB, so the
 // FB_Roof-level limit re-sync sets it through this method.
-position := position_value;]]></ST>
+position := position_value;
+
+// Re-anchor the limit-switch records of a switch that is engaged right now. They hold the counter
+// reading at engagement, which is meaningless after the snap (e.g. a restart with the roof half
+// open: the switch engages at a wrong reading, the snap then corrects the counter). Left alone,
+// MovedSince* would report the correction as travel and raise a false limit_error.
+// A drive that really overruns its switch still trips limit_error: that check runs every cycle
+// before a snap can happen, and a snap needs both switches engaged.
+IF opened THEN
+	position_open := position_value;
+END_IF
+IF closed THEN
+	position_close := position_value;
+END_IF]]></ST>
       </Implementation>
     </Method>
     <LineIds Name="FB_RoofMotor">
