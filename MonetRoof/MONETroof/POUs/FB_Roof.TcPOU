@@ -163,6 +163,15 @@ IF zero_counter THEN
 	position_valid := FALSE;
 END_IF
 
+// latched error: hold the drive at 0 from the start of the cycle. Without this a level command
+// (button held, open_roofs set) re-arms the ramp every cycle and the drive gets one ramp step
+// (real_speed = acceleration) before the error stop below zeroes it again.
+// Slow mode ignores errors on purpose, so it is exempted here explicitly: it must not depend
+// on the motors being called before the error stop.
+IF state = E_RoofState.error AND NOT slow_open AND NOT slow_close THEN
+	Stop();
+END_IF
+
 // call motors
 drive_error := FALSE;
 FOR i := 1 TO 2 DO
