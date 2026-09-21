@@ -108,8 +108,10 @@ ELSE
 	roof_state := E_RoofState.error;	
 END_IF
 
-// percent open
-percent_open := (roofs[1].percent_open + roofs[2].percent_open) / 2.0;
+// percent open, clamped to 0..100: the over-travel margin and unsynced counters (after a restart with
+// the roof halfway open) let the raw value leave that range, and telemetry uses -1.0 as the error marker.
+// The per-roof values stay raw as a diagnostic of the counters.
+percent_open := MAX(0.0, MIN(100.0, (roofs[1].percent_open + roofs[2].percent_open) / 2.0));
 
 // send telemetry
 tonComm(IN:=TRUE, PT:=fTelemetryInterval);
