@@ -1,6 +1,6 @@
 # Code review of MONETRoof (develop @ f315116)
 
-**Status: draft. Review finished, no fixes applied. Nothing here has been run on a PLC.**
+**Status: draft. Review finished; the body below describes `develop` at the review commit. Since then #4 (`FB_Ramp` direction test in DINT, `4fd843d`) and #5 (stall watchdog and over-travel stop, `db13a47`) were fixed on `develop`. Neither has been run on a PLC or the roof; #31 and #32 track the checks. Open items: GitHub issues.**
 
 Reviewed at `develop` f315116. `origin/main` is 2 commits ahead (TcBuild workflow and runner labels);
 those only matter for the CI and release sections.
