@@ -132,6 +132,12 @@ END_IF
 // very first cycle ever (before that call has run once) they are still 0.
 IF NOT bRoofInitialized THEN
 	bRoofInitialized := TRUE;
+	// position_valid is PERSISTENT and may be stale: TwinCAT does not flush persistent data every
+	// cycle, so an uncontrolled power loss mid-move can restore a value from before the roof's last
+	// recorded position, with position_valid still TRUE from that earlier, once-valid state. Distrust
+	// it unconditionally on every restart (clean or not, there is no way to tell them apart here) and
+	// require it to be reconfirmed below, exactly like a lost/zeroed counter.
+	position_valid := FALSE;
 	IF roof_limit_closed THEN
 		motors[1].SetPosition(min_position);
 		motors[2].SetPosition(min_position);

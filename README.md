@@ -149,10 +149,15 @@ Controls one roof half with its two motors.
     (default 10 counts) beyond `min_position` / `max_position` while moving in
     that direction, e.g. because limit switches failed. Software end stop.
     Only active while `position_valid` is set (persistent): a limit snap sets
-    it, `zero_counter` clears it, and it is lost together with the counters
-    (e.g. a cold reset or power loss with the roof halfway open), so the roof
-    can still be moved towards the end the counters wrongly claim to be at,
-    unprotected until the next limit switch is reached;
+    it, `zero_counter` clears it, and it is also forced `FALSE` on every
+    restart until re-confirmed by a limit snap — `position` and
+    `position_valid` are both `PERSISTENT`, and TwinCAT does not flush
+    persistent data every cycle, so an uncontrolled power loss mid-move can
+    restore an older, once-valid `position_valid = TRUE` alongside a stale
+    `position`; there is no way from the PLC side to tell a clean shutdown
+    from an unclean one, so every restart is treated as untrusted. Until the
+    next limit switch is reached, the roof can be moved towards the end the
+    counters claim to be at without this protection;
   - `stall_error` — a drive has been driven for `stall_timeout` (default
     10 s) without an accepted counter edge (jammed drive, ice, dead sensor).
     Both drives jamming together gives no position difference, so
