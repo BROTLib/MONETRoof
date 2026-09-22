@@ -1425,13 +1425,6 @@ External Setpoint Generation:
 		</DataType>
 	</DataTypes>
 	<Project ProjectGUID="{886225E6-AF24-4259-BDB7-C131B3BFB76D}" TargetNetId="5.131.251.159.1.1" ShowHideConfigurations="#x106">
-		<System>
-			<Tasks>
-				<Task Id="3" Priority="20" CycleTime="100000" AmsPort="350" AdtTasks="true">
-					<Name>PlcTask</Name>
-				</Task>
-			</Tasks>
-		</System>
 		<Motion>
 			<NC>
 				<SafTask Priority="4" CycleTime="20000" AmsPort="501" IoAtBegin="true" SafTaskInfo="256">
@@ -2951,205 +2944,15 @@ External Setpoint Generation:
 		</Motion>
 		<Plc>
 			<Project GUID="{69EF3A5D-605B-4F5C-8B9F-420938A0CACB}" Name="MonetRoof" PrjFilePath="MONETroof\MonetRoof.plcproj" TmcFilePath="MONETroof\MonetRoof.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MonetRoof.tmc" TmcHash="{8023EB02-A932-6705-6D29-7DADDB66B146}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MONETroof\MonetRoof.tmc" TmcHash="{6DA35FBB-B1FF-5AF4-05D7-18A148DDED62}">
 					<Name>MONETRoof Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
-					<Vars VarGrpType="1">
-						<Name>PlcTask Inputs</Name>
-						<Var>
-							<Name>MAIN.RoofControl.automatic</Name>
-							<Comment><![CDATA[ automatic mode]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.ups_fail</Name>
-							<Comment><![CDATA[ UPS failure: linked to the UPS input in the consumer projects (tsproj), not evaluated yet]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].open_roof</Name>
-							<Comment><![CDATA[ commands for roofs]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].close_roof</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[1].motor_error</Name>
-							<Comment><![CDATA[ error ]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[1].opened</Name>
-							<Comment><![CDATA[ signals from limit switches]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[1].closed</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[1].counter</Name>
-							<Comment><![CDATA[ inductive sensor for counting rotation]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[2].motor_error</Name>
-							<Comment><![CDATA[ error ]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[2].opened</Name>
-							<Comment><![CDATA[ signals from limit switches]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[2].closed</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[2].counter</Name>
-							<Comment><![CDATA[ inductive sensor for counting rotation]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].open_roof</Name>
-							<Comment><![CDATA[ commands for roofs]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].close_roof</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[1].motor_error</Name>
-							<Comment><![CDATA[ error ]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[1].opened</Name>
-							<Comment><![CDATA[ signals from limit switches]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[1].closed</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[1].counter</Name>
-							<Comment><![CDATA[ inductive sensor for counting rotation]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[2].motor_error</Name>
-							<Comment><![CDATA[ error ]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[2].opened</Name>
-							<Comment><![CDATA[ signals from limit switches]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[2].closed</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[2].counter</Name>
-							<Comment><![CDATA[ inductive sensor for counting rotation]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-					</Vars>
-					<Vars VarGrpType="2" AreaNo="1">
-						<Name>PlcTask Outputs</Name>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[1].reset_drive</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[1].speed</Name>
-							<Comment><![CDATA[ move speed]]></Comment>
-							<Type>INT</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[1].direction_open</Name>
-							<Comment><![CDATA[ move direction]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[1].direction_close</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[2].reset_drive</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[2].speed</Name>
-							<Comment><![CDATA[ move speed]]></Comment>
-							<Type>INT</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[2].direction_open</Name>
-							<Comment><![CDATA[ move direction]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[1].motors[2].direction_close</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[1].reset_drive</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[1].speed</Name>
-							<Comment><![CDATA[ move speed]]></Comment>
-							<Type>INT</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[1].direction_open</Name>
-							<Comment><![CDATA[ move direction]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[1].direction_close</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[2].reset_drive</Name>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[2].speed</Name>
-							<Comment><![CDATA[ move speed]]></Comment>
-							<Type>INT</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[2].direction_open</Name>
-							<Comment><![CDATA[ move direction]]></Comment>
-							<Type>BOOL</Type>
-						</Var>
-						<Var>
-							<Name>MAIN.RoofControl.roofs[2].motors[2].direction_close</Name>
-							<Type>BOOL</Type>
-						</Var>
-					</Vars>
 					<Contexts>
 						<Context>
-							<Id>0</Id>
-							<Name>PlcTask</Name>
-							<ManualConfig>
-								<OTCID>#x02010030</OTCID>
-							</ManualConfig>
-							<Priority>20</Priority>
-							<CycleTime>10000000</CycleTime>
+							<Id>1</Id>
+							<Name>Default</Name>
 						</Context>
 					</Contexts>
-					<TaskPouOids>
-						<TaskPouOid Prio="20" OTCID="#x08502001"/>
-					</TaskPouOids>
 				</Instance>
 			</Project>
 		</Plc>

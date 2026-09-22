@@ -14,6 +14,14 @@ project.
 The application is built on the **BROTLib** library (`I_Roof`, `I_Comm`,
 `FB_Comm_MQTT_Influx`, `FB_EventLog`, `E_RoofState`, ...).
 
+This repository holds only the library function blocks: `FB_RoofControl`,
+`FB_Roof`, `FB_RoofMotor` and `FB_Ramp`. There is no PLC application here
+(no `MAIN`, no PLC task) — MONETN and MONETS each wire `FB_RoofControl` into
+their own `MAIN`, with their own I/O mapping, broker and parameters. This
+project used to include a standalone test application with hardcoded
+parameters and a dummy hardware setup (I/O devices, a TwinSAFE project); both
+were removed once they were no longer needed for testing.
+
 ---
 
 ## Repository layout
@@ -22,12 +30,10 @@ The application is built on the **BROTLib** library (`I_Roof`, `I_Comm`,
 MONETRoof/
 ├── MonetRoof.sln                  # TwinCAT solution
 ├── MonetRoof/
-│   ├── MonetRoof.tsproj           # TwinCAT system project (PLC task; no I/O configured)
-│   ├── MONETroof/                 # PLC project
+│   ├── MonetRoof.tsproj           # TwinCAT system project (no task, no I/O)
+│   ├── MONETroof/                 # PLC project (library only, no MAIN/task)
 │   │   ├── MonetRoof.plcproj
-│   │   ├── PlcTask.TcTTO          # PLC task (10 ms, priority 20, calls MAIN)
-│   │   ├── POUs/                  # Program and function blocks
-│   │   │   ├── MAIN.TcPOU
+│   │   ├── POUs/                  # Function blocks
 │   │   │   ├── FB_RoofControl.TcPOU
 │   │   │   ├── FB_Roof.TcPOU
 │   │   │   ├── FB_RoofMotor.TcPOU
@@ -70,11 +76,12 @@ without I/O) is not used by the roof application.
 
 ## PLC application architecture
 
-The PLC task (`PlcTask`, 10 ms, priority 20) calls `MAIN`, which instantiates
-the communication function block and the roof control function block:
+Each consuming project's `MAIN` instantiates the communication function block
+and the roof control function block (call cycle depends on the consumer's
+PLC task):
 
 ```
-MAIN
+MAIN (in the consuming project, e.g. MONETN, MONETS)
 ├── comm        : FB_Comm_MQTT_Influx     (MQTT + Influx telemetry, BROTLib)
 └── RoofControl : FB_RoofControl          (implements I_Roof)
     ├── roofs[1] : FB_Roof                (roof half 1)
@@ -85,12 +92,11 @@ MAIN
         └── motors[2] : FB_RoofMotor
 ```
 
-### MAIN
-
-`MAIN` wires the roof control parameters (speed, acceleration, position
-limits, synchronisation tolerance), starts the MQTT communication, and mirrors
-the aggregated roof state (`closed`, `opened`, `stopped`, `opening`, `closing`,
-`error`) into plain boolean variables (not linked to I/O).
+The consumer's `MAIN` wires the roof control parameters (speed, acceleration,
+position limits, synchronisation tolerance), starts the MQTT communication
+with `Roof := RoofControl` so remote roof commands are routed, and typically
+mirrors the aggregated roof state (`closed`, `opened`, `stopped`, `opening`,
+`closing`, `error`) into its own variables.
 
 ### FB_RoofControl
 
@@ -262,18 +268,14 @@ Device 2 terminals (per roof half `r1`/`r2` and per drive `m1`/`m2`):
 ## Telemetry and communication
 
 `FB_Comm_MQTT_Influx` (BROTLib) connects to the MQTT broker and publishes
-telemetry in Influx line protocol.
+telemetry in Influx line protocol. Broker host, port, keep-alive and topics
+are configured by the consuming project's `MAIN` (see e.g. MONETN's or
+MONETS's `MAIN.TcPOU`), not by this repository.
 
-Configured in `MAIN`:
-
-| Parameter | Value |
-|---|---|
-| Broker host | `10.129.129.76` |
-| Port | `1883` |
-| Keep-alive | `60 s` |
-| Subscribe topic | `MONETN` |
-| Publish topic (telemetry) | `MONETN/Telemetry` |
-| Log topic | `MONETN/Log` |
+For MQTT commands to reach the roof, `MAIN` must pass `Roof := RoofControl`
+to `comm`, so `FB_Comm_MQTT_Influx._handleMQTTMessage` routes `dome_open` /
+`dome_close` / `dome_stop` to it; otherwise they only log "MQTT not
+understood".
 
 Every 5 s the roof telemetry is published (`telescope`/`dome` measurement
 domain, following the MONET dome conventions):
@@ -308,28 +310,25 @@ global text list (`GlobalTextList.TcGTLO`).
 
 ## Configuration
 
-The roof control parameters are configured in `MAIN`:
-
-| Parameter | Value | Meaning |
-|---|---|---|
-| `min_speed` | `10000` | Minimum drive speed |
-| `max_speed` | `30000` | Maximum drive speed |
-| `acceleration` | `150` | Acceleration [speed/call] |
-| `max_position_1` | `200` | Maximum position of roof half 1 |
-| `max_position_2` | `200` | Maximum position of roof half 2 |
-| `max_position_diff` | `2` | Position difference between the two drives of a roof half at which `sync_error` (and `limit_error`) trigger; smaller differences are tolerated |
-| `limit_slowdown` | `5` | Linear slowdown within the last 5 % of the travel range near the limits |
+The roof control parameters (`min_speed`, `max_speed`, `acceleration`,
+`max_position_1/2`, `max_position_diff`, `limit_slowdown`) are set by the
+consuming project's `MAIN` when it calls `FB_RoofControl`. MONETN and MONETS
+currently use `min_speed := 10000`, `max_speed := 30000`,
+`acceleration := 150` and `limit_slowdown := 5`, with
+`max_position_1/2 := 202/202` (MONETN) or `205/203` (MONETS) and
+`max_position_diff := 3` — check each project's `MAIN.TcPOU` for the current
+values.
 
 Counting-filter inputs on `FB_RoofMotor` (function-block defaults; tunable
-per installation, currently not overridden by `MAIN`):
+per installation, not currently overridden by any consumer):
 
 | Parameter | Default | Meaning |
 |---|---|---|
 | `counter_debounce` | `10 ms` | Min. stable-high time of a sensor pulse before an edge is counted — keep below the narrowest legitimate pulse (20 ms) |
 | `counter_min_spacing` | `50 ms` | Min. time between accepted counts — keep below the rotation period (600 ms) |
 
-Bounding inputs on `FB_Roof` (function-block defaults, currently not
-overridden by `MAIN`; not yet verified on the real roof):
+Bounding inputs on `FB_Roof` (function-block defaults, not currently
+overridden by any consumer; not yet verified on the real roof):
 
 | Parameter | Default | Meaning |
 |---|---|---|
