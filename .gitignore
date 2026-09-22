@@ -272,4 +272,7 @@ _Libraries/
 *.suo
 *.tclrs
 *.tclrq
+
+# The one vendored library: TcUnit, needed to build and run MonetRoofTests (see MonetRoofTests/vendor/README.md)
+!MonetRoofTests/vendor/tcunit.library
 VSSettings/

@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Ramp_Tests" Id="{2e95e034-5515-4e2f-b331-83d6da0891d4}" SpecialFunc="None">
+    <Declaration><![CDATA[// Tests for MONETRoof.FB_Ramp, the per-call velocity ramp.
+//
+// FB_Ramp holds no state of its own: every call recomputes `value` fresh from the `start` input, so
+// a multi-cycle ramp only happens because the caller (FB_Roof) feeds its own persisted speed back in
+// as `start` each cycle. All these tests can therefore drive a fresh instance directly within a
+// single method call, calling it as many times as needed in a FOR loop.
+FUNCTION_BLOCK FB_Ramp_Tests EXTENDS TcUnit.FB_TestSuite
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Single_Step_Increases_Toward_Target();
+Single_Step_Decreases_Toward_Target();
+Reaches_Target_Without_Overshoot();
+Reaches_Target_Without_Undershoot();
+Large_Reversal_Steps_Instead_Of_Jumping();
+Full_Reversal_Ramps_Through_Zero_Over_Many_Cycles();
+Zero_Accel_Never_Moves();
+]]></ST>
+    </Implementation>
+    <Method Name="Single_Step_Increases_Toward_Target" Id="{a994d0d6-7d3f-4d79-ba72-bd45d7137f28}">
+      <Declaration><![CDATA[METHOD PRIVATE Single_Step_Increases_Toward_Target
+VAR
+	fbRamp	: MONETRoof.FB_Ramp;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Single_Step_Increases_Toward_Target');
+fbRamp(start := 0, target := 1000, accel := 100);
+AssertEquals_INT(Expected := 100, Actual := fbRamp.value, Message := 'one step of 100 towards +1000');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Single_Step_Decreases_Toward_Target" Id="{128121c4-9f9e-47c5-8898-ae2e8738aab8}">
+      <Declaration><![CDATA[METHOD PRIVATE Single_Step_Decreases_Toward_Target
+VAR
+	fbRamp	: MONETRoof.FB_Ramp;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Single_Step_Decreases_Toward_Target');
+fbRamp(start := 1000, target := 0, accel := 100);
+AssertEquals_INT(Expected := 900, Actual := fbRamp.value, Message := 'one step of 100 towards 0');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Reaches_Target_Without_Overshoot" Id="{09a2208c-d481-496e-a7e0-be4dbc8cb4f4}">
+      <Declaration><![CDATA[METHOD PRIVATE Reaches_Target_Without_Overshoot
+VAR
+	fbRamp	: MONETRoof.FB_Ramp;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Reaches_Target_Without_Overshoot');
+// 950 + 100 would be 1050: must clamp to the target instead
+fbRamp(start := 950, target := 1000, accel := 100);
+AssertEquals_INT(Expected := 1000, Actual := fbRamp.value, Message := 'clamped at target, not 1050');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Reaches_Target_Without_Undershoot" Id="{c1f8d737-816d-49e0-a94f-388189430ef6}">
+      <Declaration><![CDATA[METHOD PRIVATE Reaches_Target_Without_Undershoot
+VAR
+	fbRamp	: MONETRoof.FB_Ramp;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Reaches_Target_Without_Undershoot');
+// 50 - 100 would be -50: must clamp to the target instead
+fbRamp(start := 50, target := 0, accel := 100);
+AssertEquals_INT(Expected := 0, Actual := fbRamp.value, Message := 'clamped at target, not -50');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Large_Reversal_Steps_Instead_Of_Jumping" Id="{71fee101-a8b3-4f9b-b566-62550ee176d1}">
+      <Declaration><![CDATA[METHOD PRIVATE Large_Reversal_Steps_Instead_Of_Jumping
+VAR
+	fbRamp	: MONETRoof.FB_Ramp;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Regression test for code review finding H1: target - value on two INTs overflowed 16 bit for a
+// reversal like -30000 -> +30000 (60000 does not fit), which flipped the sign of the comparison and
+// jumped straight to the target in one step (fixed by computing it in DINT, FB_Ramp.TcPOU:19-20).
+// This asserts one ramp step, not the jump the old code produced.
+TEST('Large_Reversal_Steps_Instead_Of_Jumping');
+fbRamp(start := -30000, target := 30000, accel := 150);
+AssertEquals_INT(Expected := -29850, Actual := fbRamp.value, Message := '-30000 -> +30000: one step of 150, not a jump to +30000');
+// symmetric: the same reversal the other way round
+fbRamp(start := 30000, target := -30000, accel := 150);
+AssertEquals_INT(Expected := 29850, Actual := fbRamp.value, Message := '+30000 -> -30000: one step of 150, not a jump to -30000');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Full_Reversal_Ramps_Through_Zero_Over_Many_Cycles" Id="{37005449-4069-41a8-a4e2-065fb2aa2e8a}">
+      <Declaration><![CDATA[METHOD PRIVATE Full_Reversal_Ramps_Through_Zero_Over_Many_Cycles
+VAR
+	fbRamp			: MONETRoof.FB_Ramp;
+	i				: INT;
+	prevValue		: INT;
+	curValue		: INT;
+	bAllStepsBounded	: BOOL := TRUE;
+	valueAtStep200	: INT;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Drives a full -30000 -> +30000 reversal the way FB_Roof does (feeding value back in as the next
+// call's start) and checks every intermediate step, not just the first one. -30000 + 200*150 = 0
+// exactly, so this also confirms the ramp actually passes through zero at a known step, not just
+// that the endpoints are right. Uses local flags instead of one assertion per loop iteration: TcUnit
+// budgets asserts per suite (256 here), and this alone would be 400 calls.
+TEST('Full_Reversal_Ramps_Through_Zero_Over_Many_Cycles');
+curValue := -30000;
+FOR i := 1 TO 400 DO
+	prevValue := curValue;
+	fbRamp(start := prevValue, target := 30000, accel := 150);
+	curValue := fbRamp.value;
+	IF ABS(TO_DINT(curValue) - TO_DINT(prevValue)) > 150 THEN
+		bAllStepsBounded := FALSE;
+	END_IF
+	IF i = 200 THEN
+		valueAtStep200 := curValue;
+	END_IF
+END_FOR
+AssertTrue(Condition := bAllStepsBounded, Message := 'no single step exceeded accel (150)');
+AssertEquals_INT(Expected := 0, Actual := valueAtStep200, Message := 'passes through exactly 0 at step 200 (-30000 + 200*150)');
+AssertEquals_INT(Expected := 30000, Actual := curValue, Message := 'reaches target after 400 steps of 150 (60000 / 150)');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Zero_Accel_Never_Moves" Id="{8558c501-db2a-46aa-a7cb-4e2ea340021d}">
+      <Declaration><![CDATA[METHOD PRIVATE Zero_Accel_Never_Moves
+VAR
+	fbRamp	: MONETRoof.FB_Ramp;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// accel = 0 is one of the config_error conditions FB_Roof guards against (M0/L6); documented here as
+// what FB_Ramp itself does with it, in isolation: it never reaches the target.
+TEST('Zero_Accel_Never_Moves');
+fbRamp(start := 100, target := 1000, accel := 0);
+AssertEquals_INT(Expected := 100, Actual := fbRamp.value, Message := 'accel = 0: value never leaves start');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

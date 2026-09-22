@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Roof_State_Tests" Id="{cc5d60a7-7f07-4c34-b04e-da46caa01717}" SpecialFunc="None">
+    <Declaration><![CDATA[// Tests for MONETRoof.FB_Roof's state machine (code review finding L5).
+//
+// Covers: the E_RoofState.unknown default before the first call, opening/closing (driven purely by
+// Open()/Close()/SoftStop() and the ramp, no hardware inputs needed), stopped, and Reset() recovering
+// from a cleared error.
+//
+// Deliberately not covered: the opened/closed states. Both need roof_limit_open/roof_limit_closed,
+// which come from motors[i].opened/.closed -- AT%I*, hardware-linked, and this project configures no
+// I/O. Validate those on the PLC instead (same as the plan's open step 5).
+FUNCTION_BLOCK FB_Roof_State_Tests EXTENDS TcUnit.FB_TestSuite
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Initial_State_Is_Unknown();
+Open_Drives_State_To_Opening();
+SoftStop_From_Moving_Drives_State_To_Stopped();
+Close_Drives_State_To_Closing();
+Reset_Clears_Error_State();
+]]></ST>
+    </Implementation>
+    <Method Name="Call" Id="{c239d15f-3145-4b9a-8aa7-9aae42d1948c}">
+      <Declaration><![CDATA[METHOD PRIVATE Call
+VAR_IN_OUT
+	roof		: MONETRoof.FB_Roof;
+END_VAR
+VAR_INPUT
+	comm		: BROTLib.I_Comm;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[roof(
+	roof_number			:= 1,
+	min_speed			:= 10000,
+	max_speed			:= 30000,
+	acceleration		:= 150,
+	min_position		:= 0,
+	max_position		:= 200,
+	max_position_diff	:= 2,
+	comm				:= comm);
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Initial_State_Is_Unknown" Id="{690883c6-9340-4841-8609-cea5e2d6306d}">
+      <Declaration><![CDATA[METHOD PRIVATE Initial_State_Is_Unknown
+VAR
+	fbRoof	: MONETRoof.FB_Roof;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// Before FB_Roof is ever called, its VAR_OUTPUT members already hold their declared defaults.
+TEST('Initial_State_Is_Unknown');
+AssertTrue(Condition := fbRoof.state = E_RoofState.unknown, Message := 'declared default before the first call (was closed / enum value 0, L5)');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Open_Drives_State_To_Opening" Id="{8cd11ade-06b1-445e-91e7-d122e282467e}">
+      <Declaration><![CDATA[METHOD PRIVATE Open_Drives_State_To_Opening
+VAR
+	fbRoof	: MONETRoof.FB_Roof;
+	fbComm	: FB_NullComm;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Open_Drives_State_To_Opening');
+fbRoof.Open();
+Call(roof := fbRoof, comm := fbComm);
+AssertTrue(Condition := fbRoof.state = E_RoofState.opening, Message := 'speed > 0, both motors moving and direction_open: state becomes opening');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="SoftStop_From_Moving_Drives_State_To_Stopped" Id="{7417f10f-cac2-4588-8139-3122a8cdd706}">
+      <Declaration><![CDATA[METHOD PRIVATE SoftStop_From_Moving_Drives_State_To_Stopped
+VAR
+	fbRoof	: MONETRoof.FB_Roof;
+	fbComm	: FB_NullComm;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('SoftStop_From_Moving_Drives_State_To_Stopped');
+fbRoof.Open();
+Call(roof := fbRoof, comm := fbComm);
+AssertTrue(Condition := fbRoof.state = E_RoofState.opening, Message := 'sanity: moving before the stop');
+fbRoof.SoftStop();
+// speed was 150, accel is 150: one ramp step reaches exactly 0
+Call(roof := fbRoof, comm := fbComm);
+AssertTrue(Condition := fbRoof.state = E_RoofState.stopped, Message := 'ramped down to 0, no longer moving, no switches engaged: stopped');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Close_Drives_State_To_Closing" Id="{4ead5a6b-80a5-4455-bd68-94611f7a8ea8}">
+      <Declaration><![CDATA[METHOD PRIVATE Close_Drives_State_To_Closing
+VAR
+	fbRoof	: MONETRoof.FB_Roof;
+	fbComm	: FB_NullComm;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Close_Drives_State_To_Closing');
+fbRoof.Close();
+Call(roof := fbRoof, comm := fbComm);
+AssertTrue(Condition := fbRoof.state = E_RoofState.closing, Message := 'speed < 0, both motors moving and direction_close: state becomes closing');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Reset_Clears_Error_State" Id="{1ca99bf6-322a-41b6-abda-0bd656922417}">
+      <Declaration><![CDATA[METHOD PRIVATE Reset_Clears_Error_State
+VAR
+	fbRoof	: MONETRoof.FB_Roof;
+	fbComm	: FB_NullComm;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Reset_Clears_Error_State');
+// invalid parameters (max_position = min_position) force config_error and the error state
+fbRoof(roof_number := 1, min_speed := 10000, max_speed := 30000, acceleration := 150,
+	min_position := 100, max_position := 100, max_position_diff := 2, comm := fbComm);
+AssertTrue(Condition := fbRoof.state = E_RoofState.error, Message := 'sanity: config_error puts it in the error state');
+fbRoof.Reset();
+// same call as Call(), but spelled out: valid parameters now, and reset_roof is pending
+Call(roof := fbRoof, comm := fbComm);
+AssertFalse(Condition := fbRoof.config_error, Message := 'valid parameters now');
+AssertTrue(Condition := fbRoof.state = E_RoofState.stopped, Message := 'reset_roof clears the latched error once the fault itself is gone');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>
