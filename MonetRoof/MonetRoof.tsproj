@@ -1424,7 +1424,7 @@ External Setpoint Generation:
 			</Relations>
 		</DataType>
 	</DataTypes>
-	<Project ProjectGUID="{886225E6-AF24-4259-BDB7-C131B3BFB76D}" TargetNetId="5.131.251.159.1.1" ShowHideConfigurations="#x106">
+	<Project ProjectGUID="{886225E6-AF24-4259-BDB7-C131B3BFB76D}" TargetNetId="0.0.0.0.1.1" ShowHideConfigurations="#x106">
 		<Motion>
 			<NC>
 				<SafTask Priority="4" CycleTime="20000" AmsPort="501" IoAtBegin="true" SafTaskInfo="256">
