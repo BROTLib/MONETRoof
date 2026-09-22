@@ -69,8 +69,7 @@ against the consuming project.
 
 The roof motors are driven through the Device 2 terminals (digital direction
 outputs, analog speed setpoints, digital inputs for inductive counters, limit
-switches and drive faults). The NC configuration in the system project (axes
-without I/O) is not used by the roof application.
+switches and drive faults).
 
 ---
 
