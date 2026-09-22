@@ -10,7 +10,7 @@
 		</System>
 		<Plc>
 			<Project GUID="{6805A042-E201-47CA-AAE6-0EBD65881511}" Name="MonetRoofTests" PrjFilePath="MonetRoofTests\MonetRoofTests.plcproj" TmcFilePath="MonetRoofTests\MonetRoofTests.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e" SymbolicMapping="true">
-				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MonetRoofTests\MonetRoofTests.tmc" TmcHash="{B127A608-C5DA-4C22-ACD0-016FF7B9DEA4}">
+				<Instance Id="#x08502000" TcSmClass="TComPlcObjDef" KeepUnrestoredLinks="2" TmcPath="MonetRoofTests\MonetRoofTests.tmc" TmcHash="{605E8EC0-4B6B-CA75-175F-CE5B0DF4F219}">
 					<Name>MonetRoofTests Instance</Name>
 					<CLSID ClassFactory="TcPlc30">{08500001-0000-0000-F000-000000000064}</CLSID>
 					<Contexts>
