@@ -129,15 +129,18 @@ END_IF
 
 // boot-time position snap: warm restart with the roof parked at a limit.
 // One-shot on the first cycle, both sensors together (symmetric — no |diff|).
+// Uses FB_Roof's own min_position/max_position, not motors[i].min_position/max_position: the
+// latter are FB_RoofMotor's VAR_INPUTs, only assigned by the motor call further below, so on the
+// very first cycle ever (before that call has run once) they are still 0.
 IF NOT bRoofInitialized THEN
 	bRoofInitialized := TRUE;
 	IF roof_limit_closed THEN
-		motors[1].SetPosition(motors[1].min_position);
-		motors[2].SetPosition(motors[2].min_position);
+		motors[1].SetPosition(min_position);
+		motors[2].SetPosition(min_position);
 		position_valid := TRUE;
 	ELSIF roof_limit_open THEN
-		motors[1].SetPosition(motors[1].max_position);
-		motors[2].SetPosition(motors[2].max_position);
+		motors[1].SetPosition(max_position);
+		motors[2].SetPosition(max_position);
 		position_valid := TRUE;
 	END_IF
 END_IF
@@ -150,13 +153,13 @@ END_IF
 // against a limit the snap holds the position, so stall-jitter counts cannot
 // drive it past the end position.
 IF is_closing AND roof_limit_closed THEN
-	motors[1].SetPosition(motors[1].min_position);
-	motors[2].SetPosition(motors[2].min_position);
+	motors[1].SetPosition(min_position);
+	motors[2].SetPosition(min_position);
 	position_valid := TRUE;
 END_IF
 IF is_opening AND roof_limit_open THEN
-	motors[1].SetPosition(motors[1].max_position);
-	motors[2].SetPosition(motors[2].max_position);
+	motors[1].SetPosition(max_position);
+	motors[2].SetPosition(max_position);
 	position_valid := TRUE;
 END_IF
 
