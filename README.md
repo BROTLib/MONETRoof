@@ -138,9 +138,10 @@ Controls one roof half with its two motors.
   the roof at `min_speed` (e.g. for maintenance or alignment).
 - **Consistency monitoring** (each roof half):
   - `sync_error` — the two drives' positions differ by `max_position_diff`
-    or more (with 2, a difference of 1 is tolerated);
-  - `direction_error` — both drives move at the same time in opposite
-    directions;
+    or more (with 2, a difference of 1 is tolerated). The two motors of a
+    roof half are mechanically coupled by a shaft and always driven at the
+    same commanded speed, so `sync_error` is the only check that can catch
+    the two drives disagreeing;
   - `limit_error` — a drive has moved `max_position_diff` counts or more
     since its own limit switch engaged, still moving towards it, without the
     other drive's switch engaging too (both are needed to stop the roof);
