@@ -12,7 +12,11 @@ VAR_INPUT
 	comm					: I_Comm;
 	
 	// counting filters (insurance; defaults sized from the recordings — plan 2026-08-20)
-	counter_debounce		: TIME := T#10MS;	// min. on-time of a sensor pulse — keep < narrowest legit pulse (20 ms)
+	counter_debounce		: TIME := T#5MS;	// min. on-time of a sensor pulse. Keep clear of the 10 ms task cycle: at
+										// PT = cycle time, ordinary cycle jitter can push the elapsed time on the
+										// deciding scan just under PT and drop an otherwise-valid pulse entirely
+										// (modelled in testing/check_debounce_aliasing.py). 5 ms sits above the
+										// EL1008's ~3 ms input filter and comfortably below one cycle.
 	counter_min_spacing		: TIME := T#50MS;	// min. time between accepted counts — keep < rotation period (600 ms)
 	
 	// stall watchdog

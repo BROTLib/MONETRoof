@@ -178,9 +178,12 @@ Controls one drive of a roof half.
   counter of both motors. The counting path is filtered and gated (insurance,
   sized from measured pulses — see
   `specs/plans/2026-08-20-position-counter-fix-plan.md`):
-  - `counter_debounce` (default `10 ms`) — the input must be stable high for
+  - `counter_debounce` (default `5 ms`) — the input must be stable high for
     at least this long before an edge counts (below the narrowest legitimate
-    pulse, 20 ms);
+    pulse, 20 ms, and clear of the 10 ms task cycle: at `PT` equal to the
+    cycle time, ordinary cycle jitter could push the elapsed time on the
+    deciding scan just under `PT` and drop an otherwise-valid pulse
+    entirely — modelled in `testing/check_debounce_aliasing.py`);
   - `counter_min_spacing` (default `50 ms`) — minimum time between accepted
     counts (below the 600 ms rotation period);
   - **motion gate** — counts only while the drive is commanded to move
@@ -325,7 +328,7 @@ per installation, not currently overridden by any consumer):
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| `counter_debounce` | `10 ms` | Min. stable-high time of a sensor pulse before an edge is counted — keep below the narrowest legitimate pulse (20 ms) |
+| `counter_debounce` | `5 ms` | Min. stable-high time of a sensor pulse before an edge is counted — keep below the narrowest legitimate pulse (20 ms) and clear of the 10 ms task cycle (jitter at `PT` = cycle time can drop a valid pulse; see `testing/check_debounce_aliasing.py`) |
 | `counter_min_spacing` | `50 ms` | Min. time between accepted counts — keep below the rotation period (600 ms) |
 
 Bounding inputs on `FB_Roof` (function-block defaults, not currently
