@@ -1,4 +1,4 @@
-name: TcBuild test
+name: TcBuild
 
 on:
   workflow_dispatch:
