@@ -6,7 +6,7 @@ VAR_INPUT
 	min_speed				: UINT;			// minimum speed to drive
 	max_speed				: UINT;			// maximum speed to drive
 	acceleration			: UINT;			// acceleration [speed/call]
-	max_position_diff		: INT;			// maximum allowed position difference between two drives of roof
+	max_position_diff		: INT;			// position difference between the two drives of a roof at which sync_error / limit_error trigger (smaller is tolerated)
 	limit_slowdown			: REAL := 5;	// linear slowdown when moving towards limits starting at <x% and >(100-x)%
 	min_position_1			: INT := 0;		// minimum position of roof
 	max_position_1			: INT := 200;		// maximum position of roof
@@ -26,7 +26,7 @@ VAR_INPUT
 	// automatic mode
 	automatic		AT%I*	: BOOL;
 	
-	// UPS failure
+	// UPS failure: linked to the UPS input in the consumer projects (tsproj), not evaluated yet
 	ups_fail		AT%I*	: BOOL;
 	
 	// telemetry interval
@@ -42,7 +42,7 @@ VAR
 	roofs					: ARRAY[1..2] OF FB_Roof;
 	
 	// loop variable	
-	i, j					: UINT;
+	i						: UINT;
 	
 	// open and close delays
 	tonOpen2Delay			: TON;
@@ -50,7 +50,7 @@ VAR
 	
 	// Comm
 	fbComm					: I_Comm;	
-	tonComm 				: TON := (PT:=fTelemetryInterval);
+	tonComm 				: TON;
 	
 	min_positions			: ARRAY[1..2] OF INT;		// minimum position of roof
 	max_positions			: ARRAY[1..2] OF INT;		// maximum position of roof
@@ -108,12 +108,14 @@ ELSE
 	roof_state := E_RoofState.error;	
 END_IF
 
-// percent open
-percent_open := (roofs[1].percent_open + roofs[2].percent_open) / 2.0;
+// percent open, clamped to 0..100: the over-travel margin and unsynced counters (after a restart with
+// the roof halfway open) let the raw value leave that range, and telemetry uses -1.0 as the error marker.
+// The per-roof values stay raw as a diagnostic of the counters.
+percent_open := MAX(0.0, MIN(100.0, (roofs[1].percent_open + roofs[2].percent_open) / 2.0));
 
 // send telemetry
-tonComm(IN:=TRUE);
-IF tonComm.Q THEN // publish new payload every 5 seconds
+tonComm(IN:=TRUE, PT:=fTelemetryInterval);
+IF tonComm.Q THEN // publish new payload every fTelemetryInterval (default 5 seconds)
 	tonComm(IN:=FALSE);
 	THIS^._SendTelemetry();	
 END_IF

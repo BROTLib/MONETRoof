@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="MAIN" Id="{11ea50d4-78ed-46db-b34b-5d3ab91201be}" SpecialFunc="None">
+    <Declaration><![CDATA[PROGRAM MAIN
+VAR
+	// TcUnit finds every FB_TestSuite instance by itself; it is enough to declare them here.
+	fbRampTests				: FB_Ramp_Tests;
+	fbRoofConsistencyTests	: FB_Roof_Consistency_Tests;
+	fbRoofStateTests		: FB_Roof_State_Tests;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[TcUnit.RUN();
+]]></ST>
+    </Implementation>
+  </POU>
+</TcPlcObject>

@@ -268,7 +268,7 @@ The measured burst width and cadence directly size the filter:
 With only `max_position = 200` counts over the full travel, the legitimate
 pulse rate is very low — huge headroom for the filter.
 
-### Measured values (Roof.svdx, live recording from Becky, 2025-08-20)
+### Measured values (Roof.svdx, live recording from Becky, 2026-08-20)
 
 First recording decoded: **20.47 s at 10 ms** (PLC task sampling — so sub-10 ms
 detail is aliased, see above), 8 channels, one move with a velocity ramp-up.
@@ -305,7 +305,7 @@ Sizing consequences (validated against §5):
   (`Roof2.svdx`); it shows the failure mechanism and changes the fix emphasis
   (§3.1).
 
-### Second recording (Roof2.svdx, reproduced failure, 2025-08-20)
+### Second recording (Roof2.svdx, reproduced failure, 2026-08-20)
 
 **12.47 s at 10 ms**, same channel mapping. Decode cross-checked (160 ms
 series 78/78, sparse 9/9). Operator report: *roof half 1 failed right at the
@@ -351,7 +351,7 @@ Consequences for the fix (updates §5/§6):
 - Keep the debounce/spacing defaults (10 ms / 50 ms) — they cost nothing and
   cover fast bursts if they occur, but they are not what this recording
 
-### Fourth recording (error event, 2025-08-20)
+### Fourth recording (error event, 2026-08-20)
 
 The recording where `sync_error` actually fired: **127.4 s at 10 ms**, 16
 channels, repeated partial open/stop/close cycles with the error present for
@@ -399,7 +399,7 @@ values: (−2, +2) and (−4, 0). Two readings:
   unguarded — check whether an error indicator was shown.)
   needed.
 
-### Third recording (16-channel, open/stop/close cycles, 2025-08-20)
+### Third recording (16-channel, open/stop/close cycles, 2026-08-20)
 
 Recording with the **absolute `position` counters added** (all 4 drives) plus
 the `closed` limit switches: **70.4 s at 10 ms**, two partial open → stop →

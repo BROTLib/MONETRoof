@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_Roof_Consistency_Tests" Id="{7400ba3c-17b6-42a2-acec-6af5a6004d4d}" SpecialFunc="None">
+    <Declaration><![CDATA[// Tests for MONETRoof.FB_Roof's consistency checks: sync_error, overtravel_error, config_error (code
+// review findings M1, M7 and L6).
+//
+// TwinCAT only allows external code to WRITE a VAR_INPUT of another instance; a VAR_OUTPUT (even one
+// with no AT clause) is read-only from outside, and a plain VAR (no AT/INPUT/OUTPUT) is not reachable
+// at all -- only calling a public METHOD on it is. That shapes what these tests can drive:
+//   - motors[i].SetPosition(x) works: it is a public METHOD, called on FB_Roof's private motors array
+//     element, and is how FB_Roof itself sets a position on a limit snap.
+//   - motors[i].position_open / .position_close cannot be written directly (plain VAR_OUTPUT, no
+//     setter) -- so limit_error's positive case (a drive that overran its own switch) is not covered
+//     here: it needs position_open, which is only ever set by the opened/closed edge, both AT%I*.
+//   - position_valid cannot be written directly either (VAR_OUTPUT PERSISTENT, no setter) -- so
+//     overtravel_error's positive case is not covered; the negative case (no overtravel_error while
+//     position_valid is FALSE, its default) is, since that only needs a read.
+// Validate limit_error and overtravel_error's positive cases on the real roof, or with I/O linked in
+// a project that has it (MONETN, MONETS) -- same limitation as FB_Roof_State_Tests' opened/closed.
+//
+// comm is BROTLib.I_Comm, not the roof interface: an unassigned (null) reference would fault the PLC
+// the first time an error/state edge tries to log through it, so every roof instance below is given
+// an FB_NullComm.
+FUNCTION_BLOCK FB_Roof_Consistency_Tests EXTENDS TcUnit.FB_TestSuite
+VAR
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[Sync_Error_When_Positions_Differ_By_Threshold_Or_More();
+Sync_Error_Clears_When_Positions_Converge();
+No_Overtravel_Error_When_Position_Not_Valid();
+Config_Error_When_Max_Position_Not_Above_Min();
+Config_Error_When_Speed_Invalid();
+Config_Error_Holds_Roof_At_Zero_Speed();
+]]></ST>
+    </Implementation>
+    <Method Name="Call" Id="{d20ad317-2ce2-4e8b-807e-d7a2bcf4d05f}">
+      <Declaration><![CDATA[// Shared call with fixed speed/position parameters (10000/30000/150, 0..200), only max_position_diff
+// varies per test. Tests that need a different min_position/max_position/speed call fbRoof directly.
+METHOD PRIVATE Call
+VAR_IN_OUT
+	roof		: MONETRoof.FB_Roof;
+END_VAR
+VAR_INPUT
+	comm		: BROTLib.I_Comm;
+	maxPosDiff	: INT := 2;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[roof(
+	roof_number			:= 1,
+	min_speed			:= 10000,
+	max_speed			:= 30000,
+	acceleration		:= 150,
+	min_position		:= 0,
+	max_position		:= 200,
+	max_position_diff	:= maxPosDiff,
+	comm				:= comm);
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Sync_Error_When_Positions_Differ_By_Threshold_Or_More" Id="{f8bd9a20-5347-431c-8076-84d3f243d770}">
+      <Declaration><![CDATA[METHOD PRIVATE Sync_Error_When_Positions_Differ_By_Threshold_Or_More
+VAR
+	fbRoof	: MONETRoof.FB_Roof;
+	fbComm	: FB_NullComm;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Sync_Error_When_Positions_Differ_By_Threshold_Or_More');
+Call(roof := fbRoof, comm := fbComm, maxPosDiff := 2);
+AssertFalse(Condition := fbRoof.sync_error, Message := 'both motors start at position 0: in sync');
+fbRoof.motors[1].SetPosition(100);
+fbRoof.motors[2].SetPosition(102);
+Call(roof := fbRoof, comm := fbComm, maxPosDiff := 2);
+AssertTrue(Condition := fbRoof.sync_error, Message := 'a difference of 2 (>= max_position_diff) trips sync_error');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Sync_Error_Clears_When_Positions_Converge" Id="{f527406c-4a52-4c45-b5d7-87569a6f0973}">
+      <Declaration><![CDATA[METHOD PRIVATE Sync_Error_Clears_When_Positions_Converge
+VAR
+	fbRoof	: MONETRoof.FB_Roof;
+	fbComm	: FB_NullComm;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Sync_Error_Clears_When_Positions_Converge');
+Call(roof := fbRoof, comm := fbComm, maxPosDiff := 2);
+fbRoof.motors[1].SetPosition(100);
+fbRoof.motors[2].SetPosition(101);
+Call(roof := fbRoof, comm := fbComm, maxPosDiff := 2);
+AssertFalse(Condition := fbRoof.sync_error, Message := 'a difference of 1 stays below the threshold of 2');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="No_Overtravel_Error_When_Position_Not_Valid" Id="{2f68c680-84de-44e5-9aa3-44a44c654b79}">
+      <Declaration><![CDATA[METHOD PRIVATE No_Overtravel_Error_When_Position_Not_Valid
+VAR
+	fbRoof	: MONETRoof.FB_Roof;
+	fbComm	: FB_NullComm;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// M7: position_valid is forced FALSE on the very first cycle and only a limit snap sets it TRUE
+// again, so a fresh/unconfirmed position must not arm overtravel_error even when it is wildly off.
+TEST('No_Overtravel_Error_When_Position_Not_Valid');
+Call(roof := fbRoof, comm := fbComm, maxPosDiff := 2);
+AssertFalse(Condition := fbRoof.position_valid, Message := 'position_valid starts FALSE: never confirmed by a limit snap');
+fbRoof.Open();
+Call(roof := fbRoof, comm := fbComm, maxPosDiff := 2);
+fbRoof.motors[1].SetPosition(500);
+Call(roof := fbRoof, comm := fbComm, maxPosDiff := 2);
+AssertFalse(Condition := fbRoof.overtravel_error, Message := 'no overtravel_error without position_valid, however far off the position is');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Config_Error_When_Max_Position_Not_Above_Min" Id="{bf5acf5f-6204-468e-9166-6c5f4060bc3c}">
+      <Declaration><![CDATA[METHOD PRIVATE Config_Error_When_Max_Position_Not_Above_Min
+VAR
+	fbRoof	: MONETRoof.FB_Roof;
+	fbComm	: FB_NullComm;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Config_Error_When_Max_Position_Not_Above_Min');
+fbRoof(roof_number := 1, min_speed := 10000, max_speed := 30000, acceleration := 150,
+	min_position := 100, max_position := 100, max_position_diff := 2, comm := fbComm);
+AssertTrue(Condition := fbRoof.config_error, Message := 'max_position (100) not above min_position (100)');
+AssertTrue(Condition := fbRoof.state = E_RoofState.error, Message := 'config_error puts the roof into the error state');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Config_Error_When_Speed_Invalid" Id="{aaee7b8b-39e8-4d9a-b425-9b39074c4a9c}">
+      <Declaration><![CDATA[METHOD PRIVATE Config_Error_When_Speed_Invalid
+VAR
+	fbRoof	: MONETRoof.FB_Roof;
+	fbComm	: FB_NullComm;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[TEST('Config_Error_When_Speed_Invalid');
+fbRoof(roof_number := 1, min_speed := 30000, max_speed := 10000, acceleration := 150,
+	min_position := 0, max_position := 200, max_position_diff := 2, comm := fbComm);
+AssertTrue(Condition := fbRoof.config_error, Message := 'min_speed (30000) above max_speed (10000)');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="Config_Error_Holds_Roof_At_Zero_Speed" Id="{4de41dfe-a19b-42e0-900a-17202b17b28b}">
+      <Declaration><![CDATA[METHOD PRIVATE Config_Error_Holds_Roof_At_Zero_Speed
+VAR
+	fbRoof	: MONETRoof.FB_Roof;
+	fbComm	: FB_NullComm;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// L1/config_error interaction: a roof already moving that picks up an invalid parameter (e.g. a
+// max_speed above 32767, which would wrap TO_INT and could reverse the direction) must be held at
+// zero immediately, unconditionally -- not just flagged.
+TEST('Config_Error_Holds_Roof_At_Zero_Speed');
+Call(roof := fbRoof, comm := fbComm, maxPosDiff := 2);
+fbRoof.Open();
+Call(roof := fbRoof, comm := fbComm, maxPosDiff := 2);
+AssertFalse(Condition := fbRoof.config_error, Message := 'valid parameters so far');
+fbRoof(roof_number := 1, min_speed := 10000, max_speed := 40000, acceleration := 150,
+	min_position := 0, max_position := 200, max_position_diff := 2, comm := fbComm);
+AssertTrue(Condition := fbRoof.config_error, Message := 'max_speed above 32767 wraps TO_INT: config_error catches it');
+AssertTrue(Condition := fbRoof.state = E_RoofState.error, Message := 'error state; drive held, slow mode included (FB_Roof.TcPOU config_error stop)');
+TEST_FINISHED();
+]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

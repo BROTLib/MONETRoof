@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
+  <POU Name="FB_NullComm" Id="{78831305-3941-44e3-b3e0-2f7e7528e9d4}" SpecialFunc="None">
+    <Declaration><![CDATA[// No-op I_Comm implementation for tests. FB_Roof/FB_RoofMotor call Comm.Publish / Comm.PublishLog
+// (via FB_EventLog) on error/state edges; a null (unassigned) I_Comm reference there would fault the
+// PLC, so every FB_Roof test instance is given one of these instead of a real MQTT connection.
+FUNCTION_BLOCK FB_NullComm IMPLEMENTS BROTLib.I_Comm
+VAR
+	// number of Publish/PublishLog calls seen, in case a test ever wants to assert an event fired
+	nPublishCalls		: UDINT;
+	nPublishLogCalls	: UDINT;
+END_VAR
+]]></Declaration>
+    <Implementation>
+      <ST><![CDATA[]]></ST>
+    </Implementation>
+    <Method Name="Publish" Id="{708d8db2-8eac-4a88-9ff6-cb72a2fc3822}">
+      <Declaration><![CDATA[METHOD Publish : BOOL
+VAR_INPUT
+	domain			: STRING(255) := 'environment';
+	location		: STRING(255) := 'roof';
+	parameter		: STRING(255);
+	value			: STRING(255);
+END_VAR
+VAR_OUTPUT
+	published	: BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[nPublishCalls := nPublishCalls + 1;
+published := TRUE;
+Publish := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="PublishLog" Id="{e9980b27-b480-4670-a4bd-74e6f77ee55b}">
+      <Declaration><![CDATA[METHOD PublishLog : BOOL
+VAR_INPUT
+	level		: STRING(255) := 'INFO';
+	message		: STRING(255);
+END_VAR
+VAR_OUTPUT
+	published	: BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[nPublishLogCalls := nPublishLogCalls + 1;
+published := TRUE;
+PublishLog := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+  </POU>
+</TcPlcObject>

@@ -7,12 +7,20 @@ The roof consists of two independently driven roof halves, each moved by two
 brushed DC motors. The application provides automatic and manual roof control,
 position tracking via inductive-sensor counters and limit switches, velocity
 ramping with slowdown near the travel limits, monitoring of the two drives of
-a roof half (synchronisation, direction, travel limits, drive faults), MQTT
-telemetry and logging, and a TwinSAFE safety concept with emergency-stop and
-external device monitoring.
+a roof half (synchronisation, direction, travel limits, drive faults) and MQTT
+telemetry and logging. The safety logic (TwinSAFE) is not part of this
+project.
 
 The application is built on the **BROTLib** library (`I_Roof`, `I_Comm`,
 `FB_Comm_MQTT_Influx`, `FB_EventLog`, `E_RoofState`, ...).
+
+This repository holds only the library function blocks: `FB_RoofControl`,
+`FB_Roof`, `FB_RoofMotor` and `FB_Ramp`. There is no PLC application here
+(no `MAIN`, no PLC task) — MONETN and MONETS each wire `FB_RoofControl` into
+their own `MAIN`, with their own I/O mapping, broker and parameters. This
+project used to include a standalone test application with hardcoded
+parameters and a dummy hardware setup (I/O devices, a TwinSAFE project); both
+were removed once they were no longer needed for testing.
 
 ---
 
@@ -22,28 +30,29 @@ The application is built on the **BROTLib** library (`I_Roof`, `I_Comm`,
 MONETRoof/
 ├── MonetRoof.sln                  # TwinCAT solution
 ├── MonetRoof/
-│   ├── MonetRoof.tsproj           # TwinCAT system project (I/O, NC, tasks, mappings)
-│   ├── MONETroof/                 # PLC project
+│   ├── MonetRoof.tsproj           # TwinCAT system project (no task, no I/O)
+│   ├── MONETroof/                 # PLC project (library only, no MAIN/task)
 │   │   ├── MonetRoof.plcproj
-│   │   ├── PlcTask.TcTTO          # PLC task (10 ms, priority 20, calls MAIN)
-│   │   ├── POUs/                  # Program and function blocks
-│   │   │   ├── MAIN.TcPOU
+│   │   ├── POUs/                  # Function blocks
 │   │   │   ├── FB_RoofControl.TcPOU
 │   │   │   ├── FB_Roof.TcPOU
 │   │   │   ├── FB_RoofMotor.TcPOU
 │   │   │   └── FB_Ramp.TcPOU
 │   │   ├── VISUs/Roof.TcVIS       # TwinCAT visualization "Roof"
-│   │   ├── GlobalTextList.TcGTLO  # Global text list (visu texts, format strings)
-│   │   └── _Libraries/            # Resolved library references
-│   ├── TwinSAFE/                  # Safety project (TwinSAFE group on EL6910)
-│   │   └── TwinSafeGroup1/        # Safety logic + alias devices
-│   └── _Boot/                     # Boot project for TwinCAT RT (x64)
+│   │   └── GlobalTextList.TcGTLO  # Global text list (visu texts, format strings)
 └── README.md
 ```
 
 ---
 
 ## Hardware / EtherCAT topology
+
+This project configures neither I/O nor a safety project any more: both came
+from testing with dummy hardware and were removed. The roof I/O is linked in
+the projects that use this library (MONETN, MONETS), which map the same PLC
+variables in their own EtherCAT trees. The topology and the I/O mapping below
+document the roof wiring as it was configured here; check the terminal numbers
+against the consuming project.
 
 **Device 2 (EK1100)** — roof drive bus:
 
@@ -60,19 +69,18 @@ MONETRoof/
 
 The roof motors are driven through the Device 2 terminals (digital direction
 outputs, analog speed setpoints, digital inputs for inductive counters, limit
-switches and drive faults). The NC task additionally provides axes (e.g.
-Axis 9 / Axis 10 mapped to the two channels of the EL7342 DC motor terminal)
-for further motion applications.
+switches and drive faults).
 
 ---
 
 ## PLC application architecture
 
-The PLC task (`PlcTask`, 10 ms, priority 20) calls `MAIN`, which instantiates
-the communication function block and the roof control function block:
+Each consuming project's `MAIN` instantiates the communication function block
+and the roof control function block (call cycle depends on the consumer's
+PLC task):
 
 ```
-MAIN
+MAIN (in the consuming project, e.g. MONETN, MONETS)
 ├── comm        : FB_Comm_MQTT_Influx     (MQTT + Influx telemetry, BROTLib)
 └── RoofControl : FB_RoofControl          (implements I_Roof)
     ├── roofs[1] : FB_Roof                (roof half 1)
@@ -83,13 +91,11 @@ MAIN
         └── motors[2] : FB_RoofMotor
 ```
 
-### MAIN
-
-`MAIN` wires the roof control parameters (speed, acceleration, position
-limits, synchronisation tolerance), starts the MQTT communication, and mirrors
-the aggregated roof state (`closed`, `opened`, `stopped`, `opening`, `closing`,
-`error`) into dedicated boolean outputs. It also provides the safety
-handshake outputs `running`, `restart` and `errack` for the TwinSAFE group.
+The consumer's `MAIN` wires the roof control parameters (speed, acceleration,
+position limits, synchronisation tolerance), starts the MQTT communication
+with `Roof := RoofControl` so remote roof commands are routed, and typically
+mirrors the aggregated roof state (`closed`, `opened`, `stopped`, `opening`,
+`closing`, `error`) into its own variables.
 
 ### FB_RoofControl
 
@@ -130,17 +136,40 @@ Controls one roof half with its two motors.
 - **Slow mode**: `slow_open` / `slow_close` override normal operation and move
   the roof at `min_speed` (e.g. for maintenance or alignment).
 - **Consistency monitoring** (each roof half):
-  - `sync_error` — the two drives' positions differ by more than
-    `max_position_diff`;
-  - `direction_error` — both drives move at the same time in opposite
-    directions;
-  - `limit_error` — a drive has moved more than `max_position_diff` since
-    leaving its limit switch without the opposite limit switch being reached;
-  - `drive_error` — any drive reports a fault.
+  - `sync_error` — the two drives' positions differ by `max_position_diff`
+    or more (with 2, a difference of 1 is tolerated). The two motors of a
+    roof half are mechanically coupled by a shaft and always driven at the
+    same commanded speed, so `sync_error` is the only check that can catch
+    the two drives disagreeing;
+  - `limit_error` — a drive has moved `max_position_diff` counts or more
+    since its own limit switch engaged, still moving towards it, without the
+    other drive's switch engaging too (both are needed to stop the roof);
+  - `overtravel_error` — a drive has counted more than `overtravel_margin`
+    (default 10 counts) beyond `min_position` / `max_position` while moving in
+    that direction, e.g. because limit switches failed. Software end stop.
+    Only active while `position_valid` is set (persistent): a limit snap sets
+    it, `zero_counter` clears it, and it is also forced `FALSE` on every
+    restart until re-confirmed by a limit snap — `position` and
+    `position_valid` are both `PERSISTENT`, and TwinCAT does not flush
+    persistent data every cycle, so an uncontrolled power loss mid-move can
+    restore an older, once-valid `position_valid = TRUE` alongside a stale
+    `position`; there is no way from the PLC side to tell a clean shutdown
+    from an unclean one, so every restart is treated as untrusted. Until the
+    next limit switch is reached, the roof can be moved towards the end the
+    counters claim to be at without this protection;
+  - `stall_error` — a drive has been driven for `stall_timeout` (default
+    10 s) without an accepted counter edge (jammed drive, ice, dead sensor).
+    Both drives jamming together gives no position difference, so
+    `sync_error` cannot catch it;
+  - `drive_error` — any drive reports a fault;
+  - `config_error` — invalid parameters: `max_speed` above 32767,
+    `min_speed` above `max_speed`, `max_position` not above `min_position`,
+    `max_position_diff` or `acceleration` not above 0. Unlike the others it
+    also stops slow mode, because a wrapped speed can reverse the direction.
   Any of these triggers an immediate stop and puts the roof half into the
   error state; a reset is required to resume.
 - **Events**: hint events when the roof half becomes fully open or fully
-  closed; error events for synchronisation, direction, limit and drive faults
+  closed; error events for synchronisation, direction, limit, over-travel, stall, drive and configuration faults
   (published to the log topic via `FB_EventLog`).
 
 ### FB_RoofMotor
@@ -153,9 +182,12 @@ Controls one drive of a roof half.
   counter of both motors. The counting path is filtered and gated (insurance,
   sized from measured pulses — see
   `specs/plans/2026-08-20-position-counter-fix-plan.md`):
-  - `counter_debounce` (default `10 ms`) — the input must be stable high for
+  - `counter_debounce` (default `5 ms`) — the input must be stable high for
     at least this long before an edge counts (below the narrowest legitimate
-    pulse, 20 ms);
+    pulse, 20 ms, and clear of the 10 ms task cycle: at `PT` equal to the
+    cycle time, ordinary cycle jitter could push the elapsed time on the
+    deciding scan just under `PT` and drop an otherwise-valid pulse
+    entirely — modelled in `testing/check_debounce_aliasing.py`);
   - `counter_min_spacing` (default `50 ms`) — minimum time between accepted
     counts (below the 600 ms rotation period);
   - **motion gate** — counts only while the drive is commanded to move
@@ -195,7 +227,10 @@ Roof states follow `E_RoofState` (BROTLib):
 | `closing` | Roof moving towards closed |
 | `stopped` | Roof at standstill |
 | `error` | Fault detected (sync / direction / limit / drive) |
-| `unknown` | Undefined |
+| `unknown` | Initial value before the first cycle has evaluated the state |
+
+`opened` / `closed` need both limit switches of the roof half; a half with only one switch engaged
+reports `stopped`. Opened and closed engaged at the same time is not detected as a sensor fault.
 
 Operating modes:
 
@@ -241,18 +276,14 @@ Device 2 terminals (per roof half `r1`/`r2` and per drive `m1`/`m2`):
 ## Telemetry and communication
 
 `FB_Comm_MQTT_Influx` (BROTLib) connects to the MQTT broker and publishes
-telemetry in Influx line protocol.
+telemetry in Influx line protocol. Broker host, port, keep-alive and topics
+are configured by the consuming project's `MAIN` (see e.g. MONETN's or
+MONETS's `MAIN.TcPOU`), not by this repository.
 
-Configured in `MAIN`:
-
-| Parameter | Value |
-|---|---|
-| Broker host | `10.129.129.76` |
-| Port | `1883` |
-| Keep-alive | `60 s` |
-| Subscribe topic | `MONETN` |
-| Publish topic (telemetry) | `MONETN/Telemetry` |
-| Log topic | `MONETN/Log` |
+For MQTT commands to reach the roof, `MAIN` must pass `Roof := RoofControl`
+to `comm`, so `FB_Comm_MQTT_Influx._handleMQTTMessage` routes `dome_open` /
+`dome_close` / `dome_stop` to it; otherwise they only log "MQTT not
+understood".
 
 Every 5 s the roof telemetry is published (`telescope`/`dome` measurement
 domain, following the MONET dome conventions):
@@ -276,26 +307,6 @@ interface (`I_Roof`). Events and log messages are published to the log topic
 
 ---
 
-## Safety (TwinSAFE)
-
-A TwinSAFE safety application runs on the EL6910 safety PLC (FSoE network
-with EL1904 safety inputs and EL2904 safety outputs):
-
-- **Emergency stop**: `FBEstop1` (`safeEstop`) monitors the emergency-stop
-  chain with configurable input filtering and a restart delay; the E-stop
-  output drives the safety relay output (EL2904).
-- **External device monitoring**: `FBEdm1` (`safeEdm`) monitors the
-  contactor/feedback contacts of the switched load with switch-on and
-  switch-off monitoring times.
-- **Group ports**: the safety group exposes `Restart`, `RunStop` and
-  `ErrAck` (error acknowledge) ports as standard alias devices for the
-  controller, plus status ports (`FbErr`, `ComErr`, `OutErr`, `OtherErr`,
-  `ModuleFault`, `ComStartup`, `FbDeactive`, `FbRun`, `InRun`).
-- The PLC application provides the corresponding handshake outputs
-  (`running`, `restart`, `errack`).
-
----
-
 ## Visualization
 
 The TwinCAT visualization `Roof` (`VISUs/Roof.TcVIS`) provides an operator
@@ -307,29 +318,35 @@ global text list (`GlobalTextList.TcGTLO`).
 
 ## Configuration
 
-The roof control parameters are configured in `MAIN`:
-
-| Parameter | Value | Meaning |
-|---|---|---|
-| `min_speed` | `10000` | Minimum drive speed |
-| `max_speed` | `30000` | Maximum drive speed |
-| `acceleration` | `150` | Acceleration [speed/call] |
-| `max_position_1` | `200` | Maximum position of roof half 1 |
-| `max_position_2` | `200` | Maximum position of roof half 2 |
-| `max_position_diff` | `2` | Maximum allowed position difference between the two drives of a roof half |
-| `limit_slowdown` | `5` | Linear slowdown within the last 5 % of the travel range near the limits |
+The roof control parameters (`min_speed`, `max_speed`, `acceleration`,
+`max_position_1/2`, `max_position_diff`, `limit_slowdown`) are set by the
+consuming project's `MAIN` when it calls `FB_RoofControl`. MONETN and MONETS
+currently use `min_speed := 10000`, `max_speed := 30000`,
+`acceleration := 150` and `limit_slowdown := 5`, with
+`max_position_1/2 := 202/202` (MONETN) or `205/203` (MONETS) and
+`max_position_diff := 3` — check each project's `MAIN.TcPOU` for the current
+values.
 
 Counting-filter inputs on `FB_RoofMotor` (function-block defaults; tunable
-per installation, currently not overridden by `MAIN`):
+per installation, not currently overridden by any consumer):
 
 | Parameter | Default | Meaning |
 |---|---|---|
-| `counter_debounce` | `10 ms` | Min. stable-high time of a sensor pulse before an edge is counted — keep below the narrowest legitimate pulse (20 ms) |
+| `counter_debounce` | `5 ms` | Min. stable-high time of a sensor pulse before an edge is counted — keep below the narrowest legitimate pulse (20 ms) and clear of the 10 ms task cycle (jitter at `PT` = cycle time can drop a valid pulse; see `testing/check_debounce_aliasing.py`) |
 | `counter_min_spacing` | `50 ms` | Min. time between accepted counts — keep below the rotation period (600 ms) |
 
+Bounding inputs on `FB_Roof` (function-block defaults, not currently
+overridden by any consumer; not yet verified on the real roof):
+
+| Parameter | Default | Meaning |
+|---|---|---|
+| `stall_timeout` | `10 s` | Max. time a drive is driven without an accepted count. Must exceed the rotation period (0.6 s at `max_speed`, slower at `min_speed`) and the ~3 s until the first count after a start |
+| `overtravel_margin` | `10` | Counts beyond `min_position` / `max_position` before the move is stopped |
+
 Additional function-block inputs (e.g. `min_position_1/2`,
-`fTelemetryInterval`, `slow_open`, `slow_close`, `zero_counter`, `ups_fail`)
-can be driven by the application as required.
+`fTelemetryInterval`, `slow_open`, `slow_close`, `zero_counter`)
+can be driven by the application as required. `ups_fail` is linked to the UPS
+input in the consumer projects but is not evaluated anywhere yet.
 
 ---
 
@@ -348,6 +365,4 @@ can be driven by the application as required.
 
 The solution is built with TwinCAT 3.1 (Build 4024) in TwinCAT XAE.
 Build configurations are provided for `TwinCAT RT (x64)`, `TwinCAT RT (x86)`,
-`TwinCAT CE7 (ARMV7)` and `TwinCAT OS (ARMT2)`. A boot project for
-`TwinCAT RT (x64)` is included under `_Boot`, so the roof controller can boot
-directly into the application.
+`TwinCAT CE7 (ARMV7)` and `TwinCAT OS (ARMT2)`.
