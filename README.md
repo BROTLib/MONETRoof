@@ -366,3 +366,5 @@ input in the consumer projects but is not evaluated anywhere yet.
 The solution is built with TwinCAT 3.1 (Build 4024) in TwinCAT XAE.
 Build configurations are provided for `TwinCAT RT (x64)`, `TwinCAT RT (x86)`,
 `TwinCAT CE7 (ARMV7)` and `TwinCAT OS (ARMT2)`.
+
+**CI.** `.github/workflows/tcbuild.yml` builds `MonetRoof.sln` with TcBuild on every push (self-hosted runner, never on pull requests). A green run means the project compiles; TcBuild exit code 1 (built with warnings) counts as success. The TcUnit tests are not run there (see below).

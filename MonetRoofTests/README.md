@@ -43,7 +43,7 @@ that works (it is how `FB_Roof` itself sets a position on a limit snap) — but 
 
 ## Running the tests
 
-TcBuild only compiles. Running needs a TwinCAT runtime that executes the PLC, plus a (trial) license for it.
+TcBuild only compiles, so CI (`tcbuild.yml`, every push) is a compile check, not a test run. Running needs a TwinCAT runtime that executes the PLC, plus a (trial) license for it.
 
 **Windows 11 note.** The TwinCAT 3.1 Build 4024 *real-time* runtime does not run on Windows 11
 ([Beckhoff system requirements](https://infosys.beckhoff.com/content/1033/tc3_overview/6162419083.html)); Run mode
@@ -83,8 +83,8 @@ activate the configuration, log in and start the PLC. TcUnit prints every result
 
 ## Things to know
 
-- **Trial license.** The PLC trial license lasts 7 days and is renewed by hand (captcha). This is the open point
-  for running this unattended in CI, same as `BROTLibTests`.
+- **Trial license.** The PLC trial license lasts 7 days and is renewed by hand (captcha). This is why the tests
+  are not run in CI yet (the compile check is), same as `BROTLibTests`.
 - **TcUnit sizing.** TcUnit's defaults (1000 suites x 100 tests x 1000 assertions) allocate about 78 MB of PLC
   data, which the user-mode runtime cannot start. The project overrides them to 32 / 32 / 256 in the
   `TcUnit` reference (`Parameters` in `MonetRoofTests.plcproj`).
