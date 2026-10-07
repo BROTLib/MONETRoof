@@ -27,7 +27,7 @@ jobs:
   test:
     runs-on: [self-hosted, twincat, windows]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       # The PLC needs a license. The 7-day trial is renewed by hand; fail with a clear message instead of a
       # cryptic activation error once it has run out.
@@ -57,7 +57,7 @@ jobs:
         run: |
           $file = Join-Path $env:RUNNER_TEMP 'MONETRoof.library'
           for ($i = 1; $i -le 4; $i++) {
-            & "C:\Program Files\Industrial Brains B.V\TcBuild\TcBuild.exe" install MonetRoof.sln -x MONETroof -p MonetRoof -l $file
+            & "C:\Program Files\Industrial Brains B.V\TcBuild\TcBuild.exe" install MonetRoof.sln -x MonetRoof -p MonetRoof -l $file
             if ($LASTEXITCODE -ne 3) { break }
             Start-Sleep -Seconds 30
           }
