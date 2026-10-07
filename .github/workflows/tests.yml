@@ -50,28 +50,21 @@ jobs:
             throw "The TwinCAT user-mode runtime is not running. It is started at boot by the scheduled task 'TwinCAT UmRT_Default'; start it with: Start-ScheduledTask 'TwinCAT UmRT_Default'"
           }
 
-      # TcBuild drives XAE over COM and is sometimes busy (RPC_E_SERVERCALL_RETRYLATER, exit 3): retry.
+      # TcBuild drives XAE over COM, shared with the other TwinCAT jobs and test scripts. Invoke-TcBuild.ps1 runs it
+      # under the machine-wide lock (Global\BROT-TwinCAT-UmRT) and retries exit 3 (RPC_E_SERVERCALL_RETRYLATER).
       # Exit 1 = built with compile warnings, still a success (see tcbuild.yml).
       - name: Install MONETRoof
         shell: powershell
         run: |
           $file = Join-Path $env:RUNNER_TEMP 'MONETRoof.library'
-          for ($i = 1; $i -le 4; $i++) {
-            & "C:\Program Files\Industrial Brains B.V\TcBuild\TcBuild.exe" install MonetRoof.sln -x MONETroof -p MonetRoof -l $file
-            if ($LASTEXITCODE -ne 3) { break }
-            Start-Sleep -Seconds 30
-          }
+          & .\MonetRoofTests\tools\Invoke-TcBuild.ps1 install MonetRoof.sln -x MONETroof -p MonetRoof -l $file
           if ($LASTEXITCODE -gt 1) { exit $LASTEXITCODE }
 
       - name: Build MonetRoofTests
         shell: powershell
         working-directory: MonetRoofTests
         run: |
-          for ($i = 1; $i -le 4; $i++) {
-            & "C:\Program Files\Industrial Brains B.V\TcBuild\TcBuild.exe" build MonetRoofTests.sln
-            if ($LASTEXITCODE -ne 3) { break }
-            Start-Sleep -Seconds 30
-          }
+          & .\tools\Invoke-TcBuild.ps1 build MonetRoofTests.sln
           if ($LASTEXITCODE -gt 1) { exit $LASTEXITCODE }
 
       # Exit 0 = all passed, 1 = a test failed, 2 = no result within the timeout.
