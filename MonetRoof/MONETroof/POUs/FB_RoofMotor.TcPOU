@@ -94,8 +94,13 @@ IF reset_timer.Q THEN
 	reset_timer(IN := FALSE);
 END_IF
 
-// relative position
-percent_open := 1.0 * (position - min_position) / (max_position - min_position) * 100.0;
+// relative position; FB_Roof still calls the motors with max_position <= min_position when config_error is set,
+// and a division by zero stops the user-mode runtime (STATUS_FLOAT_DIVIDE_BY_ZERO)
+IF max_position > min_position THEN
+	percent_open := 1.0 * (position - min_position) / (max_position - min_position) * 100.0;
+ELSE
+	percent_open := 0.0;
+END_IF
 
 // get direction
 direction_open := real_speed > 0;
