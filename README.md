@@ -30,7 +30,7 @@ were removed once they were no longer needed for testing.
 MONETRoof/
 ├── MonetRoof.sln                  # TwinCAT solution
 ├── MonetRoof/
-│   ├── MonetRoof.tsproj           # TwinCAT system project (no task, no I/O)
+│   ├── MonetRoof.tspproj          # standalone PLC project (no system part)
 │   ├── MONETroof/                 # PLC project (library only, no MAIN/task)
 │   │   ├── MonetRoof.plcproj
 │   │   ├── POUs/                  # Function blocks

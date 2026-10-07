@@ -8,6 +8,8 @@ Layout (see BROTLib/specs/design/twincat-scopeview-svdx-format.md):
   holding 16 samples each at BaseSampleTime (100000 ticks = 10 ms):
   [u64 ts0][u64 16][val0 (1 or 2 bytes)][15 x (u32 delta_ticks, val)]
 - embedded ScopeProject XML at 40 + payload_size provides names/types
+- channel values may be any ScopeView DataType (BIT, INT16, UINT32, REAL64, ...), see TYPES;
+  the segment layout is the same for all of them, only the value width changes
 
 Usage: python3 decode_svdx.py <file.svdx> [out.csv] [out.png]
 """
@@ -36,19 +38,34 @@ def channel_meta(d, payload):
     meta = []
     for a in acqs:
         name = (re.search(r'<Name>(.*?)</Name>', a) or [None, '?'])[1]
+        symbol = (re.search(r'<SymbolName>(.+?)</SymbolName>', a) or [None, name])[1]
         dtype = (re.search(r'<DataType>(.*?)</DataType>', a) or [None, '?'])[1]
         fh = (re.search(r'<FileHandle>(\d+)</FileHandle>', a) or [None, '0'])[1]
-        meta.append((int(fh), name, dtype))
+        meta.append((int(fh), name, dtype, symbol))
     meta.sort()
-    return meta
+    # keep the short channel name unless it is ambiguous (e.g. "ActPos" for two axes): then use the symbol
+    # (ScopeView itself renames duplicates to "ActPos (1)")
+    if len({m[1] for m in meta}) < len(meta) or any(re.search(r' \(\d+\)$', m[1]) for m in meta):
+        meta = [(fh, symbol, dtype, symbol) for fh, _, dtype, symbol in meta]
+    return [m[:3] for m in meta]
 
 
-def val_size(dtype):
-    return 2 if dtype in ('INT16', 'INT', 'UINT', 'WORD') else 1
+# ScopeView DataType -> struct format (little endian). Unknown types fall back to an unsigned byte.
+TYPES = {
+    'BIT': '<B', 'BOOL': '<B', 'BYTE': '<B', 'UINT8': '<B', 'INT8': '<b',
+    'INT16': '<h', 'INT': '<h', 'UINT16': '<H', 'UINT': '<H', 'WORD': '<H',
+    'INT32': '<i', 'DINT': '<i', 'UINT32': '<I', 'UDINT': '<I', 'DWORD': '<I',
+    'INT64': '<q', 'UINT64': '<Q', 'REAL32': '<f', 'REAL': '<f', 'REAL64': '<d', 'LREAL': '<d',
+}
 
 
-def decode_block(blk, vsize):
-    """Return list of (timestamp_ticks, value)."""
+def val_fmt(dtype):
+    return TYPES.get(dtype, '<B')
+
+
+def decode_block(blk, fmt):
+    """Return list of (timestamp_ticks, value); fmt is a struct format from val_fmt()."""
+    vsize = struct.calcsize(fmt)
     start_ts = struct.unpack('<Q', blk[11:19])[0]
     seg = 8 + 8 + vsize + 15 * (4 + vsize)  # bytes per segment
     # find first segment: u64==16 preceded by ts-like u64, followed by plausible value
@@ -70,12 +87,11 @@ def decode_block(blk, vsize):
         if not (start_ts <= ts0 < start_ts + 72000000000):
             break
         n = struct.unpack('<Q', blk[i + 8:i + 16])[0]
-        out.append((ts0, int.from_bytes(blk[i + 16:i + 16 + vsize], 'little', signed=(vsize == 2))))
+        out.append((ts0, struct.unpack(fmt, blk[i + 16:i + 16 + vsize])[0]))
         pos = i + 16 + vsize
         for _ in range(1, min(n, 16)):
             delta = struct.unpack('<I', blk[pos:pos + 4])[0]
-            out.append((ts0 + delta,
-                        int.from_bytes(blk[pos + 4:pos + 4 + vsize], 'little', signed=(vsize == 2))))
+            out.append((ts0 + delta, struct.unpack(fmt, blk[pos + 4:pos + 4 + vsize])[0]))
             pos += 4 + vsize
         i += seg
     return out
@@ -86,12 +102,13 @@ def decode_file(path):
     payload, nch, data_start, ends = read_header(d)
     meta = channel_meta(d, payload)
     names = [m[1] for m in meta] or NAMES_DEFAULT[:nch]
-    sizes = [val_size(m[2]) for m in meta] if meta else [1] * nch
+    fmts = [val_fmt(m[2]) for m in meta] if meta else ['<B'] * nch
     starts = [data_start] + ends[:-1]
     chans = []
     for k in range(nch):
-        blk = d[starts[k]:ends[k]]
-        recs = decode_block(blk, sizes[k])
+        # the last block's end field is not stored in the header: it ends where the payload ends
+        blk = d[starts[k]:ends[k]] if k < nch - 1 else d[starts[k]:40 + payload]
+        recs = decode_block(blk, fmts[k])
         t0 = recs[0][0] if recs else 0
         chans.append((names[k], [(ts - t0) / 1e7 for ts, _ in recs], [v for _, v in recs]))
     return chans, names
@@ -99,7 +116,7 @@ def decode_file(path):
 
 def to_csv(chans, out):
     import csv as _csv
-    n = len(chans[0][1])
+    n = min(len(c[1]) for c in chans)   # channels can differ by a segment; keep the common length
     with open(out, 'w', newline='') as f:
         w = _csv.writer(f)
         w.writerow(['t_s'] + [c[0] for c in chans])

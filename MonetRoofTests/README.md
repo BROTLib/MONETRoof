@@ -18,7 +18,7 @@ like MONETN or MONETS do.
 
 - **`opened`/`closed` roof states**, and anything that needs `roof_limit_open`/`roof_limit_closed`. Those come
   from `motors[i].opened`/`.closed`, which are `AT%I*` (hardware-linked) on `FB_RoofMotor`, and this project
-  configures no I/O (same as `MonetRoof.tsproj` itself, since the removal of the dummy hardware). Validate those
+  configures no I/O (same as `MonetRoof.tspproj` itself, which is a standalone PLC project). Validate those
   on the real roof instead — this is exactly the plan's still-open step 5 (`raw_counts` vs `position` over a
   full cycle).
 - **`limit_error`'s positive case** (a drive that overran its own switch). It needs `position_open`/
@@ -60,7 +60,7 @@ One-time setup on a machine:
 2. Make sure the current MONETRoof (and BROTLib) is installed too (the tests use the *installed* copy, not the
    source tree):
    ```powershell
-   & "C:\Program Files\Industrial Brains B.V\TcBuild\TcBuild.exe" install ..\MonetRoof.sln -x MONETroof -p MonetRoof -l MonetRoof.library
+   & "C:\Program Files\Industrial Brains B.V\TcBuild\TcBuild.exe" install ..\MonetRoof.sln -x MonetRoof -p MonetRoof -l MonetRoof.library
    ```
 
 Every run:
