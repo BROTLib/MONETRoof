@@ -60,7 +60,7 @@ One-time setup on a machine:
 2. Make sure the current MONETRoof (and BROTLib) is installed too (the tests use the *installed* copy, not the
    source tree):
    ```powershell
-   & "C:\Program Files\Industrial Brains B.V\TcBuild\TcBuild.exe" install ..\MonetRoof.sln -x MONETroof -p MonetRoof -l MonetRoof.library
+   & "C:\Program Files\Industrial Brains B.V\TcBuild\TcBuild.exe" install ..\MonetRoof.sln -x MonetRoof -p MonetRoof -l MonetRoof.library
    ```
 
 Every run:
