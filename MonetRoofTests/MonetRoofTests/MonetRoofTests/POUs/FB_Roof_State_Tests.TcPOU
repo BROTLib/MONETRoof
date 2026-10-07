@@ -10,6 +10,12 @@
 // Deliberately not covered: the opened/closed states. Both need roof_limit_open/roof_limit_closed,
 // which come from motors[i].opened/.closed -- AT%I*, hardware-linked, and this project configures no
 // I/O. Validate those on the PLC instead (same as the plan's open step 5).
+//
+// Two things every test here has to do (without them FB_Roof never leaves the error / stopped state):
+//  - SetDrivesOk(): FB_RoofMotor.motor_error is AT%I* and means "drive OK" (error := NOT motor_error). This project
+//    maps no I/O, so it stays FALSE and both motors report error, which puts FB_Roof into the error state.
+//  - one Call() before Open()/Close(): FB_Roof's parameters (max_speed, ...) are VAR_INPUTs that are only assigned
+//    by a call, so Open() before the first call sets target_speed := TO_INT(0).
 FUNCTION_BLOCK FB_Roof_State_Tests EXTENDS TcUnit.FB_TestSuite
 VAR
 END_VAR
@@ -44,6 +50,19 @@ END_VAR
 ]]></ST>
       </Implementation>
     </Method>
+    <Method Name="SetDrivesOk" Id="{3dba44f8-6f40-5d3a-8f2d-c2ce84c8a10b}">
+      <Declaration><![CDATA[METHOD PRIVATE SetDrivesOk
+VAR_IN_OUT
+	roof		: MONETRoof.FB_Roof;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[// motor_error is AT%I* with no I/O mapped here: TRUE = drive OK (see the header comment)
+roof.motors[1].motor_error := TRUE;
+roof.motors[2].motor_error := TRUE;
+]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="Initial_State_Is_Unknown" Id="{690883c6-9340-4841-8609-cea5e2d6306d}">
       <Declaration><![CDATA[METHOD PRIVATE Initial_State_Is_Unknown
 VAR
@@ -67,6 +86,8 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[TEST('Open_Drives_State_To_Opening');
+SetDrivesOk(roof := fbRoof);
+Call(roof := fbRoof, comm := fbComm);	// assigns the parameters; Open() before this would see max_speed = 0
 fbRoof.Open();
 Call(roof := fbRoof, comm := fbComm);
 AssertTrue(Condition := fbRoof.state = E_RoofState.opening, Message := 'speed > 0, both motors moving and direction_open: state becomes opening');
@@ -83,6 +104,8 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[TEST('SoftStop_From_Moving_Drives_State_To_Stopped');
+SetDrivesOk(roof := fbRoof);
+Call(roof := fbRoof, comm := fbComm);	// assigns the parameters
 fbRoof.Open();
 Call(roof := fbRoof, comm := fbComm);
 AssertTrue(Condition := fbRoof.state = E_RoofState.opening, Message := 'sanity: moving before the stop');
@@ -103,6 +126,8 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[TEST('Close_Drives_State_To_Closing');
+SetDrivesOk(roof := fbRoof);
+Call(roof := fbRoof, comm := fbComm);	// assigns the parameters
 fbRoof.Close();
 Call(roof := fbRoof, comm := fbComm);
 AssertTrue(Condition := fbRoof.state = E_RoofState.closing, Message := 'speed < 0, both motors moving and direction_close: state becomes closing');
@@ -119,6 +144,7 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[TEST('Reset_Clears_Error_State');
+SetDrivesOk(roof := fbRoof);
 // invalid parameters (max_position = min_position) force config_error and the error state
 fbRoof(roof_number := 1, min_speed := 10000, max_speed := 30000, acceleration := 150,
 	min_position := 100, max_position := 100, max_position_diff := 2, comm := fbComm);
