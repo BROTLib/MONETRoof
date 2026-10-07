@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<TcSmProject xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="http://www.beckhoff.com/schemas/2012/07/TcSmProject" TcSmVersion="1.0" TcVersion="3.1.4024.66">
+	<Project ProjectGUID="{886225E6-AF24-4259-BDB7-C131B3BFB76D}" ShowHideConfigurations="#x6">
+		<Plc>
+			<Project GUID="{69EF3A5D-605B-4F5C-8B9F-420938A0CACB}" Name="MonetRoof" PrjFilePath="MONETroof\MonetRoof.plcproj" TmcFilePath="MONETroof\MonetRoof.tmc" ReloadTmc="true" AmsPort="851" FileArchiveSettings="#x000e"/>
+		</Plc>
+	</Project>
+</TcSmProject>
