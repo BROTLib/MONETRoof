@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <TcPlcObject Version="1.1.0.1" ProductVersion="3.1.4024.15">
   <POU Name="FB_Roof_State_Tests" Id="{cc5d60a7-7f07-4c34-b04e-da46caa01717}" SpecialFunc="None">
-    <Declaration><![CDATA[// Tests for MONETRoof.FB_Roof's state machine (code review finding L5).
+    <Declaration><![CDATA[// Tests for MONETRoof.FB_Roof's state machine (code review finding L5): the E_RoofState.unknown default
+// before the first call, and what the roof does while a drive reports an error.
 //
-// Covers: the E_RoofState.unknown default before the first call, opening/closing (driven purely by
-// Open()/Close()/SoftStop() and the ramp, no hardware inputs needed), stopped, and Reset() recovering
-// from a cleared error.
-//
-// Deliberately not covered: the opened/closed states. Both need roof_limit_open/roof_limit_closed,
-// which come from motors[i].opened/.closed -- AT%I*, hardware-linked, and this project configures no
-// I/O. Validate those on the PLC instead (same as the plan's open step 5).
+// In this project every drive reports an error: FB_RoofMotor.motor_error is AT%I* and means "drive OK"
+// (error := NOT motor_error), and no I/O is mapped here, so it stays FALSE. FB_Roof therefore sits in the
+// error state from its first call. A test cannot set motor_error from outside (it is a VAR_OUTPUT of an
+// internal variable; TwinCAT only accepts assignments to inputs). The transitions that need healthy drives
+// (stopped, opening, closing, opened, closed, and Reset() clearing the latched error once the fault is
+// gone) are therefore validated on the PLC with the real hardware, like the plan's open step 5.
 FUNCTION_BLOCK FB_Roof_State_Tests EXTENDS TcUnit.FB_TestSuite
 VAR
 END_VAR
 ]]></Declaration>
     <Implementation>
       <ST><![CDATA[Initial_State_Is_Unknown();
-Open_Drives_State_To_Opening();
-SoftStop_From_Moving_Drives_State_To_Stopped();
-Close_Drives_State_To_Closing();
-Reset_Clears_Error_State();
+Drive_Error_Puts_Roof_In_Error_State();
+Open_Is_Refused_While_Drive_Error();
+Close_Is_Refused_While_Drive_Error();
+Reset_Does_Not_Clear_A_Drive_Error();
 ]]></ST>
     </Implementation>
     <Method Name="Call" Id="{c239d15f-3145-4b9a-8aa7-9aae42d1948c}">
@@ -58,76 +58,73 @@ TEST_FINISHED();
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="Open_Drives_State_To_Opening" Id="{8cd11ade-06b1-445e-91e7-d122e282467e}">
-      <Declaration><![CDATA[METHOD PRIVATE Open_Drives_State_To_Opening
+    <Method Name="Open_Is_Refused_While_Drive_Error" Id="{8cd11ade-06b1-445e-91e7-d122e282467e}">
+      <Declaration><![CDATA[METHOD PRIVATE Open_Is_Refused_While_Drive_Error
 VAR
 	fbRoof	: MONETRoof.FB_Roof;
 	fbComm	: FB_NullComm;
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[TEST('Open_Drives_State_To_Opening');
+        <ST><![CDATA[TEST('Open_Is_Refused_While_Drive_Error');
+Call(roof := fbRoof, comm := fbComm);	// assigns the parameters; Open() before this would see max_speed = 0
 fbRoof.Open();
 Call(roof := fbRoof, comm := fbComm);
-AssertTrue(Condition := fbRoof.state = E_RoofState.opening, Message := 'speed > 0, both motors moving and direction_open: state becomes opening');
+AssertTrue(Condition := fbRoof.state = E_RoofState.error, Message := 'Open() with a drive error: the error stop wins, the roof never reaches opening');
 TEST_FINISHED();
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="SoftStop_From_Moving_Drives_State_To_Stopped" Id="{7417f10f-cac2-4588-8139-3122a8cdd706}">
-      <Declaration><![CDATA[METHOD PRIVATE SoftStop_From_Moving_Drives_State_To_Stopped
+    <Method Name="Drive_Error_Puts_Roof_In_Error_State" Id="{7417f10f-cac2-4588-8139-3122a8cdd706}">
+      <Declaration><![CDATA[METHOD PRIVATE Drive_Error_Puts_Roof_In_Error_State
 VAR
 	fbRoof	: MONETRoof.FB_Roof;
 	fbComm	: FB_NullComm;
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[TEST('SoftStop_From_Moving_Drives_State_To_Stopped');
-fbRoof.Open();
+        <ST><![CDATA[TEST('Drive_Error_Puts_Roof_In_Error_State');
 Call(roof := fbRoof, comm := fbComm);
-AssertTrue(Condition := fbRoof.state = E_RoofState.opening, Message := 'sanity: moving before the stop');
-fbRoof.SoftStop();
-// speed was 150, accel is 150: one ramp step reaches exactly 0
-Call(roof := fbRoof, comm := fbComm);
-AssertTrue(Condition := fbRoof.state = E_RoofState.stopped, Message := 'ramped down to 0, no longer moving, no switches engaged: stopped');
+AssertTrue(Condition := fbRoof.state = E_RoofState.error, Message := 'motor_error is FALSE (no I/O): both drives report an error, so the roof is in the error state');
 TEST_FINISHED();
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="Close_Drives_State_To_Closing" Id="{4ead5a6b-80a5-4455-bd68-94611f7a8ea8}">
-      <Declaration><![CDATA[METHOD PRIVATE Close_Drives_State_To_Closing
+    <Method Name="Close_Is_Refused_While_Drive_Error" Id="{4ead5a6b-80a5-4455-bd68-94611f7a8ea8}">
+      <Declaration><![CDATA[METHOD PRIVATE Close_Is_Refused_While_Drive_Error
 VAR
 	fbRoof	: MONETRoof.FB_Roof;
 	fbComm	: FB_NullComm;
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[TEST('Close_Drives_State_To_Closing');
+        <ST><![CDATA[TEST('Close_Is_Refused_While_Drive_Error');
+Call(roof := fbRoof, comm := fbComm);	// assigns the parameters
 fbRoof.Close();
 Call(roof := fbRoof, comm := fbComm);
-AssertTrue(Condition := fbRoof.state = E_RoofState.closing, Message := 'speed < 0, both motors moving and direction_close: state becomes closing');
+AssertTrue(Condition := fbRoof.state = E_RoofState.error, Message := 'Close() with a drive error: the error stop wins, the roof never reaches closing');
 TEST_FINISHED();
 ]]></ST>
       </Implementation>
     </Method>
-    <Method Name="Reset_Clears_Error_State" Id="{1ca99bf6-322a-41b6-abda-0bd656922417}">
-      <Declaration><![CDATA[METHOD PRIVATE Reset_Clears_Error_State
+    <Method Name="Reset_Does_Not_Clear_A_Drive_Error" Id="{1ca99bf6-322a-41b6-abda-0bd656922417}">
+      <Declaration><![CDATA[METHOD PRIVATE Reset_Does_Not_Clear_A_Drive_Error
 VAR
 	fbRoof	: MONETRoof.FB_Roof;
 	fbComm	: FB_NullComm;
 END_VAR
 ]]></Declaration>
       <Implementation>
-        <ST><![CDATA[TEST('Reset_Clears_Error_State');
+        <ST><![CDATA[TEST('Reset_Does_Not_Clear_A_Drive_Error');
 // invalid parameters (max_position = min_position) force config_error and the error state
 fbRoof(roof_number := 1, min_speed := 10000, max_speed := 30000, acceleration := 150,
 	min_position := 100, max_position := 100, max_position_diff := 2, comm := fbComm);
-AssertTrue(Condition := fbRoof.state = E_RoofState.error, Message := 'sanity: config_error puts it in the error state');
+AssertTrue(Condition := fbRoof.config_error, Message := 'sanity: invalid parameters set config_error');
 fbRoof.Reset();
-// same call as Call(), but spelled out: valid parameters now, and reset_roof is pending
+// valid parameters now, reset_roof is pending: the parameter fault is gone, the drive error is not
 Call(roof := fbRoof, comm := fbComm);
 AssertFalse(Condition := fbRoof.config_error, Message := 'valid parameters now');
-AssertTrue(Condition := fbRoof.state = E_RoofState.stopped, Message := 'reset_roof clears the latched error once the fault itself is gone');
+AssertTrue(Condition := fbRoof.state = E_RoofState.error, Message := 'a reset must not hide a drive error that is still present');
 TEST_FINISHED();
 ]]></ST>
       </Implementation>
