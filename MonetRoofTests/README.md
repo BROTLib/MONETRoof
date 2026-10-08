@@ -18,7 +18,7 @@ like MONETN or MONETS do.
 
 - **`opened`/`closed` roof states**, and anything that needs `roof_limit_open`/`roof_limit_closed`. Those come
   from `motors[i].opened`/`.closed`, which are `AT%I*` (hardware-linked) on `FB_RoofMotor`, and this project
-  configures no I/O (same as `MonetRoof.tsproj` itself, since the removal of the dummy hardware). Validate those
+  configures no I/O (same as `MonetRoof.tspproj` itself, which is a standalone PLC project). Validate those
   on the real roof instead — this is exactly the plan's still-open step 5 (`raw_counts` vs `position` over a
   full cycle).
 - **`limit_error`'s positive case** (a drive that overran its own switch). It needs `position_open`/
@@ -43,7 +43,7 @@ that works (it is how `FB_Roof` itself sets a position on a limit snap) — but 
 
 ## Running the tests
 
-TcBuild only compiles. Running needs a TwinCAT runtime that executes the PLC, plus a (trial) license for it.
+TcBuild only compiles, so running the tests needs a TwinCAT runtime that executes the PLC, plus a (trial) license for it. CI runs these tests: `tests.yml` (every push) installs the library with TcBuild, builds the tests and runs the suites on the self-hosted runner's user-mode runtime. `tcbuild.yml` (every push) is only a compile check. The 7-day trial license is renewed by hand; the run fails with a clear message when it has expired.
 
 **Windows 11 note.** The TwinCAT 3.1 Build 4024 *real-time* runtime does not run on Windows 11
 ([Beckhoff system requirements](https://infosys.beckhoff.com/content/1033/tc3_overview/6162419083.html)); Run mode
@@ -60,7 +60,7 @@ One-time setup on a machine:
 2. Make sure the current MONETRoof (and BROTLib) is installed too (the tests use the *installed* copy, not the
    source tree):
    ```powershell
-   & "C:\Program Files\Industrial Brains B.V\TcBuild\TcBuild.exe" install ..\MonetRoof.sln -x MONETroof -p MonetRoof -l MonetRoof.library
+   & "C:\Program Files\Industrial Brains B.V\TcBuild\TcBuild.exe" install ..\MonetRoof.sln -x MonetRoof -p MonetRoof -l MonetRoof.library
    ```
 
 Every run:
@@ -83,8 +83,8 @@ activate the configuration, log in and start the PLC. TcUnit prints every result
 
 ## Things to know
 
-- **Trial license.** The PLC trial license lasts 7 days and is renewed by hand (captcha). This is the open point
-  for running this unattended in CI, same as `BROTLibTests`.
+- **Trial license.** The PLC trial license lasts 7 days and is renewed by hand (captcha). This is why the tests
+  are not run in CI yet (the compile check is), same as `BROTLibTests`.
 - **TcUnit sizing.** TcUnit's defaults (1000 suites x 100 tests x 1000 assertions) allocate about 78 MB of PLC
   data, which the user-mode runtime cannot start. The project overrides them to 32 / 32 / 256 in the
   `TcUnit` reference (`Parameters` in `MonetRoofTests.plcproj`).
