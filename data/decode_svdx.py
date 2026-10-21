@@ -4,9 +4,9 @@
 Layout (see BROTLib/specs/design/twincat-scopeview-svdx-format.md):
 - u64 @0 payload size; u32 @16 channel count; u32 @20 first block offset
 - block table @28: per channel [u64 block size][u32 channel idx][u64 block end]
-- per channel block: sub-header, preview series, then 92/108-byte segments
-  holding 16 samples each at BaseSampleTime (100000 ticks = 10 ms):
-  [u64 ts0][u64 16][val0 (1 or 2 bytes)][15 x (u32 delta_ticks, val)]
+- per channel block: sub-header, preview series, then segments
+  holding 16 samples each (tick = 100 ns, spacing = BaseSampleTime, e.g. 20000 ticks = 2 ms):
+  [u64 ts0][u64 16][val0 (1-8 bytes, per DataType)][15 x (u32 delta_ticks, val)]
 - embedded ScopeProject XML at 40 + payload_size provides names/types
 - channel values may be any ScopeView DataType (BIT, INT16, UINT32, REAL64, ...), see TYPES;
   the segment layout is the same for all of them, only the value width changes
@@ -67,6 +67,7 @@ def decode_block(blk, fmt):
     """Return list of (timestamp_ticks, value); fmt is a struct format from val_fmt()."""
     vsize = struct.calcsize(fmt)
     start_ts = struct.unpack('<Q', blk[11:19])[0]
+    max_span = 10 ** 12  # ticks, ~28 h; only used to reject garbage timestamps
     seg = 8 + 8 + vsize + 15 * (4 + vsize)  # bytes per segment
     # find first segment: u64==16 preceded by ts-like u64, followed by plausible value
     seg_start = None
@@ -74,7 +75,7 @@ def decode_block(blk, fmt):
     while i + 8 + vsize + 5 < len(blk):
         if struct.unpack('<Q', blk[i:i + 8])[0] == 16:
             ts = struct.unpack('<Q', blk[i - 8:i])[0]
-            if start_ts <= ts < start_ts + 72000000000:
+            if start_ts <= ts < start_ts + max_span:
                 seg_start = i - 8
                 break
         i += 1
@@ -84,7 +85,7 @@ def decode_block(blk, fmt):
     i = seg_start
     while i + seg <= len(blk):
         ts0 = struct.unpack('<Q', blk[i:i + 8])[0]
-        if not (start_ts <= ts0 < start_ts + 72000000000):
+        if not (start_ts <= ts0 < start_ts + max_span):
             break
         n = struct.unpack('<Q', blk[i + 8:i + 16])[0]
         out.append((ts0, struct.unpack(fmt, blk[i + 16:i + 16 + vsize])[0]))
@@ -153,4 +154,6 @@ if __name__ == '__main__':
     else:
         to_csv(chans, f'{base}_decoded.csv')
     if len(sys.argv) > 3:
-        plot(chans, f'{path} — {len(chans)} channels @ 10 ms', sys.argv[3])
+        times = chans[0][1]
+        step_ms = (times[1] - times[0]) * 1000 if len(times) > 1 else 0
+        plot(chans, f'{path} — {len(chans)} channels @ {step_ms:g} ms', sys.argv[3])
