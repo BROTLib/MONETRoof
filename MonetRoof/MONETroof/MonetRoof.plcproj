@@ -18,7 +18,7 @@
     <Company>Georg-August-Universitaet Goettingen</Company>
     <Released>false</Released>
     <Title>MONET Roof</Title>
-    <ProjectVersion>1.1.5</ProjectVersion>
+    <ProjectVersion>1.1.6</ProjectVersion>
     <AllowChecksForLibrary>false</AllowChecksForLibrary>
     <POUsForPropertyAccessIncluded>false</POUsForPropertyAccessIncluded>
     <GlobalVersionStructureIncluded>false</GlobalVersionStructureIncluded>
@@ -58,6 +58,10 @@
     <Folder Include="POUs" />
   </ItemGroup>
   <ItemGroup>
+    <PlaceholderReference Include="BROTLib">
+      <DefaultResolution>BROTLib, 0.10.0 (BROT)</DefaultResolution>
+      <Namespace>BROTLib</Namespace>
+    </PlaceholderReference>
     <PlaceholderReference Include="System_VisuElemEventTable">
       <DefaultResolution>VisuElemEventTable, 1.0.3.0 (System)</DefaultResolution>
       <Namespace>VisuElemEventTable</Namespace>
@@ -130,9 +134,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <LibraryReference Include="BROTLib,newest,BROT">
-      <Namespace>BROTLib</Namespace>
-    </LibraryReference>
     <LibraryReference Include="VisuSymbols,3.5.10.0,System">
       <Namespace>VisuSymbols</Namespace>
     </LibraryReference>

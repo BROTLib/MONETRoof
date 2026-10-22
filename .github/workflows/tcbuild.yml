@@ -1,13 +1,28 @@
 name: TcBuild
 
+# Compiles MonetRoof and runs the MonetRoofTests TcUnit suites on the shared self-hosted runner: installs the
+# checked-out MonetRoof into the machine's library repository (this is the compile; the tests use the *installed*
+# copy, not the source tree), builds the test project and runs it on the user-mode runtime (see
+# MonetRoofTests/README.md). One job, so one runner slot and one compile per push.
+#
 # runs-on is a self-hosted runner and most of these repos are public. Therefore: `push` only, NEVER
 # `pull_request` / `pull_request_target` -- a PR from any fork would otherwise execute on the runner
 # (BROTLib#31; an earlier push+PR auto-trigger did exactly that and was reverted, see BROTLib
 # specs/design/twincat-ci-runner-setup.md). A push can only come from someone with write access.
-# Tags are ignored (the release flow tags after a build), and a newer push to the same branch
-# cancels a queued/running build so the single runner does not pile up.
-# Every repo of the org builds on every push, so the check name `build` exists everywhere. release.yml
+# Tags are ignored (the release flow tags after a build).
+#
+# The job is called `build` and covers the tests too, so a failing test blocks the required `build` check on
+# main. A missing/expired trial license or a stopped user-mode runtime does NOT: the tests are skipped with a
+# warning, so releases are not blocked whenever that hand-renewed infrastructure is down (IAG
+# tools/github-rulesets.sh). Every repo of the org builds on every push, so the check name `build` exists everywhere. release.yml
 # dispatches this workflow for the version bump (a push made with GITHUB_TOKEN starts no workflow).
+#
+# Not cancelled when a newer push arrives: a test run is deploying to the runtime and talking to a hidden XAE
+# instance, and killing that mid-run leaves a stray TcXaeShell behind. Runs queue instead (GitHub keeps only
+# the newest pending one).
+
+# Skipped when the pushed tree is one that already passed (typically the merge of a tested branch): see the
+# `Skip if this tree was already built and tested` step. A workflow_dispatch run always builds.
 on:
   push:
     branches: ['**']
@@ -15,24 +30,126 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: tcbuild-${{ github.ref }}
-  cancel-in-progress: true
+  group: twincat-tests
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: [self-hosted, twincat, windows]
+    # A healthy run takes a few minutes. Without a limit a hung TcXaeShell blocks the single runner (and the
+    # CI of every repo) for the default 6 hours. On a timeout the job is cancelled and the `always()` cleanup
+    # step below still runs.
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      statuses: write   # the commit status below
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
-      - name: Build MonetRoof.sln
+      # A merge brings a new commit but often the tree that already passed on the branch. Then the build (and
+      # tests) below are skipped; the job still ends green, so the required `build` check is satisfied.
+      # See tools/Find-TestedTree.ps1 (best effort: on any doubt it answers "full build").
+      - name: Skip if this tree was already built and tested
+        id: same
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: .\tools\Find-TestedTree.ps1
+
+      # TcBuild starts TcXaeShell through COM (parent svchost, in the session of the runner service). A hung or
+      # cancelled build leaves it behind and it can break the next build. Stop what runs in this job's own
+      # session: a TcXaeShell someone opened interactively runs in another session and is left alone.
+      - name: Stop leftover TwinCAT build processes
+        if: always()
         shell: powershell
         run: |
-          # TcBuild exit codes: 0 = built, 1 = built with compile warnings (still a success),
-          # 2 = compile errors, 3 = COM busy (retry), 4/5 = other failure
-          for ($i = 1; $i -le 4; $i++) {
-            & "C:\Program Files\Industrial Brains B.V\TcBuild\TcBuild.exe" build MonetRoof.sln
-            if ($LASTEXITCODE -ne 3) { break }
-            Start-Sleep -Seconds 30
-          }
+          $session = (Get-Process -Id $PID).SessionId
+          Get-Process -Name TcXaeShell, TcBuild -ErrorAction SilentlyContinue |
+            Where-Object { $_.SessionId -eq $session } |
+            ForEach-Object { Write-Host "stopping $($_.ProcessName) $($_.Id)"; Stop-Process -Id $_.Id -Force }
+
+      # The PLC needs a license. The 7-day trial is renewed by hand. Once it has run out, or when a license the
+      # tests need is not in it, the tests cannot run: warn with a clear message and skip them (output ok=false)
+      # instead of failing the build, which would block releases (the compile steps do not need it).
+      - name: Get tctool
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ secrets.TCTOOL_TOKEN }}
+        run: .\tools\Get-TcTool.ps1
+
+      # The org libraries this repo pins in its .plcproj files are reinstalled from their GitHub release before the
+      # build. A `*` or `newest` reference picks the highest version in the shared library repository, and a branch
+      # build of that library overwrites its version slot, so the result depended on what ran last.
+      - name: Install pinned libraries
+        if: steps.same.outputs.same != 'true'
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: .\tools\Install-PinnedLibraries.ps1
+
+      # tctool (BROTLib/TcTool) drives XAE through its automation interface, waits for a cold XAE start and bounds
+      # every phase with a deadline. Exit 1 = built with compile warnings, still a success.
+      - name: Install MonetRoof
+        if: steps.same.outputs.same != 'true'
+        shell: powershell
+        run: |
+          $file = Join-Path $env:RUNNER_TEMP 'MonetRoof.library'
+          tctool MonetRoof.sln library --xae MonetRoof --plc MonetRoof --out $file --install
           if ($LASTEXITCODE -gt 1) { exit $LASTEXITCODE }
-          exit 0
+          exit 0   # exit 1 = built with compile warnings: still a success, but the step would end with code 1
+
+      # One tctool call: build the tests, then deploy them to the user-mode runtime and wait for TcUnit, in one XAE
+      # session. `run` checks the license and the runtime first and returns 13 if the tests cannot run: the build
+      # is checked either way, the job stays green with a warning (--skip-if-unavailable), and `ran` stays false so
+      # no `tests-passed` status is posted. Exit 0/1 = built and passed (1 = warnings), 2 = compile errors,
+      # 10 = a test failed or none ran, 11 = timeout, 14 = TwinCAT stayed in Config after the restart (license).
+      - name: Build and run MonetRoofTests
+        id: tests
+        if: steps.same.outputs.same != 'true'
+        shell: powershell
+        working-directory: MonetRoofTests
+        run: |
+          tctool MonetRoofTests.sln build run --require-valid-license --skip-if-unavailable
+          $code = $LASTEXITCODE
+          # (not `>>`: Windows PowerShell 5.1 would write UTF-16, which the runner cannot parse)
+          if ($code -le 1) { [IO.File]::AppendAllText($env:GITHUB_OUTPUT, "ran=true`n"); exit 0 }
+          if ($code -eq 13) { [IO.File]::AppendAllText($env:GITHUB_OUTPUT, "ran=false`n"); exit 0 }
+          exit $code
+
+      # Proof for tools/Find-TestedTree.ps1 that the tests really ran on this commit (a run that skipped them
+      # because the license or runtime was missing is green too and must not vouch for a later commit).
+      - name: Mark the commit as tested (status `tests-passed`)
+        if: steps.tests.outputs.ran == 'true'
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh api "repos/${{ github.repository }}/statuses/${{ github.sha }}" `
+            -f state=success -f context=tests-passed -f description="tests passed" -f target_url="$env:RUN_URL"
+          if ($LASTEXITCODE -ne 0) { Write-Host "::warning::posting the tests-passed status failed with exit code $LASTEXITCODE" }
+
+      # A workflow_dispatch run (release.yml dispatches one for the version bump) is not linked to the
+      # release PR, so its `build` check run does not satisfy the required `build` check on main and the PR
+      # stays blocked (IAG #6). A commit status is tied to the SHA only: report this job's result as one.
+      - name: Report the result as commit status `build`
+        if: always() && github.event_name == 'workflow_dispatch'
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STATE: ${{ job.status == 'success' && 'success' || 'failure' }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh api "repos/${{ github.repository }}/statuses/${{ github.sha }}" `
+            -f state="$env:STATE" -f context=build -f description="TcBuild (dispatched run)" -f target_url="$env:RUN_URL"
+          if ($LASTEXITCODE -ne 0) { throw "posting the commit status failed with exit code $LASTEXITCODE" }
+
+      # Same cleanup after the build, so a hung or timed-out build does not leave TcXaeShell behind.
+      - name: Stop leftover TwinCAT build processes (after the build)
+        if: always()
+        shell: powershell
+        run: |
+          $session = (Get-Process -Id $PID).SessionId
+          Get-Process -Name TcXaeShell, TcBuild -ErrorAction SilentlyContinue |
+            Where-Object { $_.SessionId -eq $session } |
+            ForEach-Object { Write-Host "stopping $($_.ProcessName) $($_.Id)"; Stop-Process -Id $_.Id -Force }

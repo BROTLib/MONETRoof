@@ -43,7 +43,7 @@ that works (it is how `FB_Roof` itself sets a position on a limit snap) — but 
 
 ## Running the tests
 
-TcBuild only compiles, so running the tests needs a TwinCAT runtime that executes the PLC, plus a (trial) license for it. CI runs these tests: `tests.yml` (every push) installs the library with TcBuild, builds the tests and runs the suites on the self-hosted runner's user-mode runtime. `tcbuild.yml` (every push) is only a compile check. The 7-day trial license is renewed by hand; the run fails with a clear message when it has expired.
+TcBuild only compiles, so running the tests needs a TwinCAT runtime that executes the PLC, plus a (trial) license for it. CI runs these tests: `tcbuild.yml` (every push) installs the library with TcBuild (this is the compile check), builds the tests and runs the suites on the self-hosted runner's user-mode runtime. The 7-day trial license is renewed by hand; when it has expired the tests are skipped with a warning and the build stays green.
 
 **Windows 11 note.** The TwinCAT 3.1 Build 4024 *real-time* runtime does not run on Windows 11
 ([Beckhoff system requirements](https://infosys.beckhoff.com/content/1033/tc3_overview/6162419083.html)); Run mode

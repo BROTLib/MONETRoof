@@ -1,6 +1,6 @@
 name: Release library
 
-# Builds the tagged version with TcBuild on the shared self-hosted runner, saves it as a .library and
+# Builds the tagged version with tctool on the shared self-hosted runner, saves it as a .library and
 # attaches it to the GitHub Release for that tag (creating the release if it does not exist yet).
 # tag-release.yml dispatches this after it pushes a new tag; it can also be run by hand to (re)build
 # one. Keep the trigger workflow_dispatch only, never push/pull_request -- a PR from any fork would
@@ -35,59 +35,34 @@ jobs:
         with:
           ref: ${{ inputs.tag }}
 
-      # TcBuild starts TcXaeShell through COM, in the session of the runner service. A leftover one from an
-      # earlier or cancelled job makes the next TcBuild fail with RPC_E_SERVERCALL_RETRYLATER (exit code 3).
-      # Only this job's own session is touched: an XAE someone opened interactively is left alone.
+      # tctool puts its own XAE into a job object, so it dies with it; this only removes what an earlier or
+      # cancelled job left behind. Only this job's own session is touched: an XAE someone opened interactively
+      # is left alone.
       - name: Stop leftover TwinCAT build processes
+        if: always()
         shell: powershell
         run: |
           $session = (Get-Process -Id $PID).SessionId
-          Get-Process -Name TcXaeShell, TcBuild -ErrorAction SilentlyContinue |
+          Get-Process -Name TcXaeShell -ErrorAction SilentlyContinue |
             Where-Object { $_.SessionId -eq $session } |
             ForEach-Object { Write-Host "stopping $($_.ProcessName) $($_.Id)"; Stop-Process -Id $_.Id -Force }
 
-      # A cold XAE start can outlast TcBuild's own COM retry window, which then fails with exit 3 (busy) on every
-      # retry below. Starting and quitting one XAE first leaves the following starts fast. Best effort: never
-      # fails the job, and only touches the XAE instance started here.
-      - name: Warm up XAE
+      - name: Get tctool
         shell: powershell
-        run: |
-          $before = @(Get-Process TcXaeShell -ErrorAction SilentlyContinue | ForEach-Object Id)
-          $dte = $null
-          $own = @()
-          try {
-            $dte = New-Object -ComObject 'TcXaeShell.DTE.15.0'
-            $own = @(Get-Process TcXaeShell -ErrorAction SilentlyContinue | Where-Object { $before -notcontains $_.Id } | ForEach-Object Id)
-            for ($n = 0; $n -lt 120; $n++) {
-              try { if ($null -ne $dte.Solution) { break } } catch { }
-              Start-Sleep -Seconds 1
-            }
-            Start-Sleep -Seconds 10
-            Write-Host "XAE ready after about $n s"
-          }
-          catch { Write-Host "::warning::XAE warm-up failed: $($_.Exception.Message)" }
-          finally {
-            if ($dte -and $own.Count -gt 0) { try { $dte.Quit() } catch { } }
-            Start-Sleep -Seconds 3
-            Get-Process TcXaeShell -ErrorAction SilentlyContinue | Where-Object { $own -contains $_.Id } | ForEach-Object { Stop-Process -Id $_.Id -Force }
-          }
-          exit 0
+        env:
+          GH_TOKEN: ${{ secrets.TCTOOL_TOKEN }}
+        run: .\tools\Get-TcTool.ps1
 
-      - name: Save library with TcBuild
+      - name: Save library
         shell: powershell
         env:
           TAG: ${{ inputs.tag }}
         run: |
           $file = Join-Path $env:RUNNER_TEMP "MONETRoof_$($env:TAG).library"
-          # TcBuild drives XAE over COM and is sometimes busy (RPC_E_SERVERCALL_RETRYLATER): retry
-          for ($i = 1; $i -le 6; $i++) {
-            & "C:\Program Files\Industrial Brains B.V\TcBuild\TcBuild.exe" install MonetRoof.sln -x MonetRoof -p MonetRoof -l $file
-            if ($LASTEXITCODE -ne 3) { break }
-            Start-Sleep -Seconds 60
-          }
-          # exit 1 = built with compile warnings, still a success (see tcbuild.yml)
-          if ($LASTEXITCODE -gt 1) { throw "TcBuild failed with exit code $LASTEXITCODE" }
-          if (-not (Test-Path $file)) { throw "TcBuild did not write $file" }
+          # tctool drives XAE through its automation interface. Exit 1 = built with compile warnings.
+          tctool MonetRoof.sln library --xae MonetRoof --plc MonetRoof --out $file --install
+          if ($LASTEXITCODE -gt 1) { throw "tctool failed with exit code $LASTEXITCODE" }
+          if (-not (Test-Path $file)) { throw "tctool did not write $file" }
           "LIBRARY_FILE=$file" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Attach to GitHub Release
@@ -106,11 +81,14 @@ jobs:
           }
           if ($LASTEXITCODE -ne 0) { throw "gh release failed with exit code $LASTEXITCODE" }
 
+      # tctool puts its own XAE into a job object, so it dies with it; this only removes what an earlier or
+      # cancelled job left behind. Only this job's own session is touched: an XAE someone opened interactively
+      # is left alone.
       - name: Stop leftover TwinCAT build processes
         if: always()
         shell: powershell
         run: |
           $session = (Get-Process -Id $PID).SessionId
-          Get-Process -Name TcXaeShell, TcBuild -ErrorAction SilentlyContinue |
+          Get-Process -Name TcXaeShell -ErrorAction SilentlyContinue |
             Where-Object { $_.SessionId -eq $session } |
             ForEach-Object { Write-Host "stopping $($_.ProcessName) $($_.Id)"; Stop-Process -Id $_.Id -Force }
