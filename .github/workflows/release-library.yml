@@ -1,6 +1,6 @@
 name: Release library
 
-# Builds the tagged version with TcBuild on the shared self-hosted runner, saves it as a .library and
+# Builds the tagged version with tctool on the shared self-hosted runner, saves it as a .library and
 # attaches it to the GitHub Release for that tag (creating the release if it does not exist yet).
 # tag-release.yml dispatches this after it pushes a new tag; it can also be run by hand to (re)build
 # one. Keep the trigger workflow_dispatch only, never push/pull_request -- a PR from any fork would
@@ -20,6 +20,8 @@ permissions:
 jobs:
   library:
     runs-on: [self-hosted, twincat, windows]
+    # A healthy library build takes a few minutes; without a limit a hung TcXaeShell blocks the single runner.
+    timeout-minutes: 30
     steps:
       - name: Validate tag
         shell: powershell
@@ -33,18 +35,34 @@ jobs:
         with:
           ref: ${{ inputs.tag }}
 
+      # tctool puts its own XAE into a job object, so it dies with it; this only removes what an earlier or
+      # cancelled job left behind. Only this job's own session is touched: an XAE someone opened interactively
+      # is left alone.
+      - name: Stop leftover TwinCAT build processes
+        if: always()
+        shell: powershell
+        run: |
+          $session = (Get-Process -Id $PID).SessionId
+          Get-Process -Name TcXaeShell -ErrorAction SilentlyContinue |
+            Where-Object { $_.SessionId -eq $session } |
+            ForEach-Object { Write-Host "stopping $($_.ProcessName) $($_.Id)"; Stop-Process -Id $_.Id -Force }
+
+      - name: Get tctool
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ secrets.TCTOOL_TOKEN }}
+        run: .\tools\Get-TcTool.ps1
+
       - name: Save library
         shell: powershell
         env:
           TAG: ${{ inputs.tag }}
         run: |
           $file = Join-Path $env:RUNNER_TEMP "MONETRoof_$($env:TAG).library"
-          # tools/Invoke-XaeBuild.ps1 drives XAE through its automation interface and replaces TcBuild.exe, which
-          # gave up after about 17 s on a cold XAE start (exit 3). It must be in the tagged tree, so a tag from
-          # before it was added cannot be re-released with this workflow. Exit 1 = built with compile warnings.
-          & "$env:GITHUB_WORKSPACE\tools\Invoke-XaeBuild.ps1" install MonetRoof.sln -XaeProject MonetRoof -PlcProject MonetRoof -LibraryFile $file
-          if ($LASTEXITCODE -gt 1) { throw "Invoke-XaeBuild.ps1 failed with exit code $LASTEXITCODE" }
-          if (-not (Test-Path $file)) { throw "Invoke-XaeBuild.ps1 did not write $file" }
+          # tctool drives XAE through its automation interface. Exit 1 = built with compile warnings.
+          tctool MonetRoof.sln library --xae MonetRoof --plc MonetRoof --out $file --install
+          if ($LASTEXITCODE -gt 1) { throw "tctool failed with exit code $LASTEXITCODE" }
+          if (-not (Test-Path $file)) { throw "tctool did not write $file" }
           "LIBRARY_FILE=$file" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
 
       - name: Attach to GitHub Release
@@ -62,3 +80,15 @@ jobs:
             gh release create $env:TAG $env:LIBRARY_FILE --verify-tag --title $env:TAG --generate-notes
           }
           if ($LASTEXITCODE -ne 0) { throw "gh release failed with exit code $LASTEXITCODE" }
+
+      # tctool puts its own XAE into a job object, so it dies with it; this only removes what an earlier or
+      # cancelled job left behind. Only this job's own session is touched: an XAE someone opened interactively
+      # is left alone.
+      - name: Stop leftover TwinCAT build processes
+        if: always()
+        shell: powershell
+        run: |
+          $session = (Get-Process -Id $PID).SessionId
+          Get-Process -Name TcXaeShell -ErrorAction SilentlyContinue |
+            Where-Object { $_.SessionId -eq $session } |
+            ForEach-Object { Write-Host "stopping $($_.ProcessName) $($_.Id)"; Stop-Process -Id $_.Id -Force }
