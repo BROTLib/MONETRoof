@@ -71,71 +71,45 @@ jobs:
       # The PLC needs a license. The 7-day trial is renewed by hand. Once it has run out, or when a license the
       # tests need is not in it, the tests cannot run: warn with a clear message and skip them (output ok=false)
       # instead of failing the build, which would block releases (the compile steps do not need it).
-      - name: Check TwinCAT license
-        if: steps.same.outputs.same != 'true'
-        id: license
+      - name: Get tctool
         shell: powershell
-        run: |
-          # (not `>>`: Windows PowerShell 5.1 would write UTF-16, which the runner cannot parse)
-          function Skip($msg) { Write-Host "::warning::$msg The tests are skipped."; [IO.File]::AppendAllText($env:GITHUB_OUTPUT, "ok=false`n"); exit 0 }
-          $file = 'C:\TwinCAT\3.1\Runtimes\UmRT_Default\3.1\Target\License\TrialLicense.tclrs'
-          if (-not (Test-Path $file)) { Skip "No trial license at $file." }
-          $expire = [datetime]([xml](Get-Content $file)).TcLicenseInfo.LicenseInfo.ExpireTime
-          $left = $expire - (Get-Date)
-          Write-Host "Trial license expires $expire ($([math]::Round($left.TotalHours)) h left)"
-          if ($left.TotalSeconds -le 0) { Skip "The TwinCAT trial license expired $expire. Renew it: XAE > SYSTEM > License > Manage Licenses > 7 Days Trial License." }
-          if ($left.TotalDays -lt 2) { Write-Host "::warning::TwinCAT trial license expires $expire" }
-          [IO.File]::AppendAllText($env:GITHUB_OUTPUT, "ok=true`n")
+        env:
+          GH_TOKEN: ${{ secrets.TCTOOL_TOKEN }}
+        run: .\tools\Get-TcTool.ps1
 
-      # The runtime is started at boot by the scheduled task 'TwinCAT UmRT_Default'.
-      # Not running: warn and skip the tests (output ok=false), same reason as the license check.
-      - name: Check user-mode runtime
-        if: steps.same.outputs.same != 'true'
-        id: runtime
-        shell: powershell
-        run: |
-          if (-not (Get-Process TcSystemServiceUm -ErrorAction SilentlyContinue)) {
-            Write-Host "::warning::The TwinCAT user-mode runtime is not running. It is started at boot by the scheduled task 'TwinCAT UmRT_Default'; start it with: Start-ScheduledTask 'TwinCAT UmRT_Default'. The tests are skipped."
-            [IO.File]::AppendAllText($env:GITHUB_OUTPUT, "ok=false`n")
-            exit 0
-          }
-          [IO.File]::AppendAllText($env:GITHUB_OUTPUT, "ok=true`n")
-
-      # tools/Invoke-XaeBuild.ps1 builds through the XAE automation interface and replaces TcBuild.exe: a cold XAE
-      # start (about 20 s of CPU on the runner) outlasts TcBuild's own COM retry window of about 17 s, so TcBuild
-      # failed with exit 3 (busy) on try after try, each restarting XAE. The script waits for XAE (up to 120 s).
-      # Same exit codes as TcBuild; exit 1 = built with compile warnings, still a success.
+      # tctool (BROTLib/TcTool) drives XAE through its automation interface, waits for a cold XAE start and bounds
+      # every phase with a deadline. Exit 1 = built with compile warnings, still a success.
       - name: Install MonetRoof
         if: steps.same.outputs.same != 'true'
         shell: powershell
         run: |
           $file = Join-Path $env:RUNNER_TEMP 'MonetRoof.library'
-          & "$env:GITHUB_WORKSPACE\tools\Invoke-XaeBuild.ps1" install MonetRoof.sln -XaeProject MonetRoof -PlcProject MonetRoof -LibraryFile $file
+          tctool MonetRoof.sln library --xae MonetRoof --plc MonetRoof --out $file --install
           if ($LASTEXITCODE -gt 1) { exit $LASTEXITCODE }
           exit 0   # exit 1 = built with compile warnings: still a success, but the step would end with code 1
 
-      - name: Build MonetRoofTests
+      # One tctool call: build the tests, then deploy them to the user-mode runtime and wait for TcUnit, in one XAE
+      # session. `run` checks the license and the runtime first and returns 13 if the tests cannot run: the build
+      # is checked either way, the job stays green with a warning (--skip-if-unavailable), and `ran` stays false so
+      # no `tests-passed` status is posted. Exit 0/1 = built and passed (1 = warnings), 2 = compile errors,
+      # 10 = a test failed or none ran, 11 = timeout, 14 = TwinCAT stayed in Config after the restart (license).
+      - name: Build and run MonetRoofTests
+        id: tests
         if: steps.same.outputs.same != 'true'
         shell: powershell
         working-directory: MonetRoofTests
         run: |
-          & "$env:GITHUB_WORKSPACE\tools\Invoke-XaeBuild.ps1" build MonetRoofTests.sln
-          if ($LASTEXITCODE -gt 1) { exit $LASTEXITCODE }
-          exit 0   # exit 1 = built with compile warnings: still a success, but the step would end with code 1
-
-      # Exit 0 = all passed, 1 = a test failed, 2 = no result within the timeout.
-      - name: Run tests
-        id: tests
-        if: steps.same.outputs.same != 'true' && steps.license.outputs.ok == 'true' && steps.runtime.outputs.ok == 'true'
-        shell: powershell
-        run: |
-          & .\MonetRoofTests\tools\Run-Tests.ps1
-          exit $LASTEXITCODE
+          tctool MonetRoofTests.sln build run --require-valid-license --skip-if-unavailable
+          $code = $LASTEXITCODE
+          # (not `>>`: Windows PowerShell 5.1 would write UTF-16, which the runner cannot parse)
+          if ($code -le 1) { [IO.File]::AppendAllText($env:GITHUB_OUTPUT, "ran=true`n"); exit 0 }
+          if ($code -eq 13) { [IO.File]::AppendAllText($env:GITHUB_OUTPUT, "ran=false`n"); exit 0 }
+          exit $code
 
       # Proof for tools/Find-TestedTree.ps1 that the tests really ran on this commit (a run that skipped them
       # because the license or runtime was missing is green too and must not vouch for a later commit).
       - name: Mark the commit as tested (status `tests-passed`)
-        if: steps.tests.outcome == 'success'
+        if: steps.tests.outputs.ran == 'true'
         shell: powershell
         env:
           GH_TOKEN: ${{ github.token }}
