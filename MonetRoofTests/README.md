@@ -43,11 +43,11 @@ that works (it is how `FB_Roof` itself sets a position on a limit snap) — but 
 
 ## Running the tests
 
-TcBuild only compiles, so running the tests needs a TwinCAT runtime that executes the PLC, plus a (trial) license for it. CI runs these tests: `tcbuild.yml` (every push) installs the library with TcBuild (this is the compile check), builds the tests and runs the suites on the self-hosted runner's user-mode runtime. The 7-day trial license is renewed by hand; when it has expired the tests are skipped with a warning and the build stays green.
+A build only compiles, so running the tests needs a TwinCAT runtime that executes the PLC, plus a (trial) license for it. CI runs these tests: `tcbuild.yml` (every push) installs the library with `tctool` (this is the compile check), then builds the tests and runs the suites on the self-hosted runner's user-mode runtime in one `tctool` call. The 7-day trial license is renewed by hand; when it has expired (or the runtime is not running) `tctool` returns 13, the tests are skipped with a warning and the build stays green.
 
 **Windows 11 note.** The TwinCAT 3.1 Build 4024 *real-time* runtime does not run on Windows 11
 ([Beckhoff system requirements](https://infosys.beckhoff.com/content/1033/tc3_overview/6162419083.html)); Run mode
-fails with `Init4\RTime: Start Interrupt: Ticker started >> AdsError: 6 (port 200)`. XAE and TcBuild are fine.
+fails with `Init4\RTime: Start Interrupt: Ticker started >> AdsError: 6 (port 200)`. XAE and tctool are fine.
 Use the beta **user-mode runtime** that ships with TwinCAT instead (`C:\TwinCAT\3.1\Runtimes\UmRT_Default`, see
 the `Readme.txt` there for its terms of use). It has no real-time guarantees.
 
@@ -60,7 +60,7 @@ One-time setup on a machine:
 2. Make sure the current MONETRoof (and BROTLib) is installed too (the tests use the *installed* copy, not the
    source tree):
    ```powershell
-   & "C:\Program Files\Industrial Brains B.V\TcBuild\TcBuild.exe" install ..\MonetRoof.sln -x MonetRoof -p MonetRoof -l MonetRoof.library
+   tctool MonetRoof.sln library --xae MonetRoof --plc MonetRoof --out MonetRoof.library --install
    ```
 
 Every run:
@@ -69,13 +69,12 @@ Every run:
    ```powershell
    cd C:\TwinCAT\3.1\Runtimes\UmRT_Default; .\Start.bat
    ```
-2. Build, deploy and run. Exit code 0 = all passed, 1 = a test failed, 2 = no result within the timeout:
+2. Build, deploy and run. Exit code 0 = all passed (1 = passed with warnings), 2 = compile errors, 10 = a test failed or none ran, 11 = timeout, 13 = license or runtime missing (the tests are skipped), 14 = TwinCAT stayed in Config:
    ```powershell
-   & "C:\Program Files\Industrial Brains B.V\TcBuild\TcBuild.exe" build MonetRoofTests.sln
-   .\MonetRoofTests\tools\Run-Tests.ps1
+   tctool MonetRoofTests.sln build run --require-valid-license
    ```
    It overwrites whatever boot project is on the target runtime (default `192.168.4.1.1.1`, override with
-   `-TargetNetId`). The counters are printed; the individual failing assertions are in the TwinCAT ADS log
+   `--target`). The counters are printed; the individual failing assertions are in the TwinCAT ADS log
    (XAE error list) when you open the project in XAE and connect to the target.
 
 To debug interactively instead: open `MonetRoofTests.sln` in XAE, choose the user-mode runtime as target,
