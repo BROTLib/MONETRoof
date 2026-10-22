@@ -77,6 +77,16 @@ jobs:
           GH_TOKEN: ${{ secrets.TCTOOL_TOKEN }}
         run: .\tools\Get-TcTool.ps1
 
+      # The org libraries this repo pins in its .plcproj files are reinstalled from their GitHub release before the
+      # build. A `*` or `newest` reference picks the highest version in the shared library repository, and a branch
+      # build of that library overwrites its version slot, so the result depended on what ran last.
+      - name: Install pinned libraries
+        if: steps.same.outputs.same != 'true'
+        shell: powershell
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: .\tools\Install-PinnedLibraries.ps1
+
       # tctool (BROTLib/TcTool) drives XAE through its automation interface, waits for a cold XAE start and bounds
       # every phase with a deadline. Exit 1 = built with compile warnings, still a success.
       - name: Install MonetRoof
