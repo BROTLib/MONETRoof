@@ -128,51 +128,51 @@ END_VAR
 ]]></Declaration>
       <Implementation>
         <ST><![CDATA[IF roof_state = E_RoofState.opened THEN
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '1.0');
+	fbComm.PublishLREAL('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', 1.0);
 ELSIF roof_state = E_RoofState.closed THEN
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '0.0');
+	fbComm.PublishLREAL('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', 0.0);
 ELSIF roof_state = E_RoofState.error THEN
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', '-1.0');
+	fbComm.PublishLREAL('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', -1.0);
 ELSE
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', LREAL_TO_STRING(percent_open / 100.0));
+	fbComm.PublishLREAL('telescope', 'dome', 'AUXILIARY.DOME.REALPOS', percent_open / 100.0);
 END_IF
 
 IF roof_state = E_RoofState.opened OR roof_state = E_RoofState.opening THEN
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.TARGETPOS', '1.0');
+	fbComm.PublishLREAL('telescope', 'dome', 'AUXILIARY.DOME.TARGETPOS', 1.0);
 ELSIF roof_state = E_RoofState.closed OR roof_state = E_RoofState.closing THEN
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.TARGETPOS', '0.0');
+	fbComm.PublishLREAL('telescope', 'dome', 'AUXILIARY.DOME.TARGETPOS', 0.0);
 ELSIF roof_state = E_RoofState.stopped THEN
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.TARGETPOS', LREAL_TO_STRING(percent_open / 100.0));
+	fbComm.PublishLREAL('telescope', 'dome', 'AUXILIARY.DOME.TARGETPOS', percent_open / 100.0);
 ELSE
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.TARGETPOS', '-1.0');
+	fbComm.PublishLREAL('telescope', 'dome', 'AUXILIARY.DOME.TARGETPOS', -1.0);
 END_IF
 
 IF roof_state = E_RoofState.error THEN
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.ERROR_STATE', '1');
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.READY_STATE', '-1.0');
+	fbComm.PublishINT('telescope', 'dome', 'AUXILIARY.DOME.ERROR_STATE', 1);
+	fbComm.PublishLREAL('telescope', 'dome', 'AUXILIARY.DOME.READY_STATE', -1.0);
 ELSE
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.ERROR_STATE', '0');
+	fbComm.PublishINT('telescope', 'dome', 'AUXILIARY.DOME.ERROR_STATE', 0);
 	IF roof_state = E_RoofState.closed THEN
-		fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.READY_STATE', '0.0');
+		fbComm.PublishLREAL('telescope', 'dome', 'AUXILIARY.DOME.READY_STATE', 0.0);
 	ELSE
-		fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.READY_STATE', '1.0');
+		fbComm.PublishLREAL('telescope', 'dome', 'AUXILIARY.DOME.READY_STATE', 1.0);
 	END_IF
 END_IF
 
 IF state = E_RoofState.opening OR state = E_RoofState.closing THEN
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.MOTION_STATE', '1.0');
+	fbComm.PublishLREAL('telescope', 'dome', 'AUXILIARY.DOME.MOTION_STATE', 1.0);
 ELSE
-	fbComm.Publish('telescope', 'dome', 'AUXILIARY.DOME.MOTION_STATE', '0.0');
+	fbComm.PublishLREAL('telescope', 'dome', 'AUXILIARY.DOME.MOTION_STATE', 0.0);
 END_IF
 
 // MONET specific
-fbComm.Publish('telescope', 'dome', 'MONET.ROOF.STATE', Status);
-fbComm.Publish('telescope', 'dome', 'MONET.ROOF.POS1', LREAL_TO_STRING(roofs[1].percent_open));
-fbComm.Publish('telescope', 'dome', 'MONET.ROOF.STATE1', roofs[1].Status);
-fbComm.Publish('telescope', 'dome', 'MONET.ROOF.ERROR1', roofs[1].Error);
-fbComm.Publish('telescope', 'dome', 'MONET.ROOF.POS2', LREAL_TO_STRING(roofs[2].percent_open));
-fbComm.Publish('telescope', 'dome', 'MONET.ROOF.STATE2', roofs[2].Status);
-fbComm.Publish('telescope', 'dome', 'MONET.ROOF.ERROR2', roofs[2].Error);]]></ST>
+fbComm.PublishString('telescope', 'dome', 'MONET.ROOF.STATE', Status);
+fbComm.PublishLREAL('telescope', 'dome', 'MONET.ROOF.POS1', roofs[1].percent_open);
+fbComm.PublishString('telescope', 'dome', 'MONET.ROOF.STATE1', roofs[1].Status);
+fbComm.PublishString('telescope', 'dome', 'MONET.ROOF.ERROR1', roofs[1].Error);
+fbComm.PublishLREAL('telescope', 'dome', 'MONET.ROOF.POS2', roofs[2].percent_open);
+fbComm.PublishString('telescope', 'dome', 'MONET.ROOF.STATE2', roofs[2].Status);
+fbComm.PublishString('telescope', 'dome', 'MONET.ROOF.ERROR2', roofs[2].Error);]]></ST>
       </Implementation>
     </Method>
     <Method Name="Close" Id="{09e5ef83-053e-434a-9daf-0f46715c9ca8}">
