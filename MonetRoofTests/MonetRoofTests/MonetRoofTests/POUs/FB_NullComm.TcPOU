@@ -32,6 +32,74 @@ published := TRUE;
 Publish := TRUE;]]></ST>
       </Implementation>
     </Method>
+    <Method Name="PublishLREAL" Id="{153e8781-8eb7-48b9-b661-6407f641db86}">
+      <Declaration><![CDATA[METHOD PublishLREAL : BOOL
+VAR_INPUT
+	domain			: STRING(255) := 'environment';
+	location		: STRING(255) := 'roof';
+	parameter		: STRING(255);
+	value			: LREAL;
+END_VAR
+VAR_OUTPUT
+	published	: BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[PublishLREAL := TRUE;
+published := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="PublishINT" Id="{355aec7d-3b34-4d89-a990-bb4d654b16b1}">
+      <Declaration><![CDATA[METHOD PublishINT : BOOL
+VAR_INPUT
+	domain			: STRING(255) := 'environment';
+	location		: STRING(255) := 'roof';
+	parameter		: STRING(255);
+	value			: LINT;
+END_VAR
+VAR_OUTPUT
+	published	: BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[PublishINT := TRUE;
+published := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="PublishBOOL" Id="{3dd0ba8c-ea63-414a-a9f9-349f856d5fa7}">
+      <Declaration><![CDATA[METHOD PublishBOOL : BOOL
+VAR_INPUT
+	domain			: STRING(255) := 'environment';
+	location		: STRING(255) := 'roof';
+	parameter		: STRING(255);
+	value			: BOOL;
+END_VAR
+VAR_OUTPUT
+	published	: BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[PublishBOOL := TRUE;
+published := TRUE;]]></ST>
+      </Implementation>
+    </Method>
+    <Method Name="PublishString" Id="{045ee03f-11e3-43e0-90e2-812d9bf44f07}">
+      <Declaration><![CDATA[METHOD PublishString : BOOL
+VAR_INPUT
+	domain			: STRING(255) := 'environment';
+	location		: STRING(255) := 'roof';
+	parameter		: STRING(255);
+	value			: STRING(255);
+END_VAR
+VAR_OUTPUT
+	published	: BOOL;
+END_VAR
+]]></Declaration>
+      <Implementation>
+        <ST><![CDATA[PublishString := TRUE;
+published := TRUE;]]></ST>
+      </Implementation>
+    </Method>
     <Method Name="PublishLog" Id="{e9980b27-b480-4670-a4bd-74e6f77ee55b}">
       <Declaration><![CDATA[METHOD PublishLog : BOOL
 VAR_INPUT
