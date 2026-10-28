@@ -10,10 +10,10 @@ VAR_GLOBAL CONSTANT
 	stLibVersion_MONETRoof : ST_LibVersion := (
 		iMajor := 1,
 		iMinor := 1,
-		iBuild := 8,
+		iBuild := 9,
 		iRevision := 0,
 		nFlags := 1,
-		sVersion := '1.1.8'
+		sVersion := '1.1.9'
 	);
 END_VAR]]></Declaration>
   </GVL>
